@@ -9,16 +9,16 @@
   <h1>Welcome to TripBox-IntelliOrganizer</h1>
   <p id="response">Loading message from backend...</p>
 
-  <script>
-    fetch("https://tripbox-intelliorganizer.onrender.com/api/hello")
-      .then(response => response.json())
-      .then(data => {
-        document.getElementById("response").textContent = data.message;
-      })
-      .catch(error => {
-        document.getElementById("response").textContent = "Error connecting to backend.";
-        console.error(error);
-      });
-  </script>
+ <script>
+  fetch('https://tripbox-intelliorganizer.onrender.com/api/hello')  // ✅ Your real backend
+    .then(response => response.json())
+    .then(data => {
+      document.getElementById('message').innerText = data.message;
+    })
+    .catch(error => {
+      document.getElementById('message').innerText = 'Error connecting to backend.';
+      console.error('Fetch error:', error);
+    });
+</script>
 </body>
 </html>
