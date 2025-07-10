@@ -1,19 +1,24 @@
-import unittest
-from app import app
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>TripBox-IntelliOrganizer</title>
+</head>
+<body>
+  <h1>Welcome to TripBox-IntelliOrganizer</h1>
+  <p id="response">Loading message from backend...</p>
 
-class FlaskAppTestCase(unittest.TestCase):
-    def setUp(self):
-        self.app = app.test_client()
-        self.app.testing = True
-
-    def test_hello_route(self):
-        response = self.app.get('/api/hello')
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.get_json(), {"message": "Hello from backend!"})
-
-    def test_404_route(self):
-        response = self.app.get('/api/unknown')
-        self.assertEqual(response.status_code, 404)
-
-if __name__ == '__main__':
-    unittest.main()
+  <script>
+    fetch("https://tripbox-intelliorganizer.onrender.com/api/hello")
+      .then(response => response.json())
+      .then(data => {
+        document.getElementById("response").textContent = data.message;
+      })
+      .catch(error => {
+        document.getElementById("response").textContent = "Error connecting to backend.";
+        console.error(error);
+      });
+  </script>
+</body>
+</html>
