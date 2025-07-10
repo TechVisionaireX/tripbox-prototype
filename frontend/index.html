@@ -4,22 +4,48 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>TripBox-IntelliOrganizer</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #f2f6ff, #e6ecff);
+      color: #333;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      margin: 0;
+    }
+
+    h1 {
+      color: #2e4a91;
+      font-size: 2.5rem;
+      margin-bottom: 0.5rem;
+    }
+
+    p {
+      font-size: 1.2rem;
+      background: #ffffff;
+      padding: 1rem 1.5rem;
+      border-radius: 10px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+  </style>
 </head>
 <body>
   <h1>Welcome to TripBox-IntelliOrganizer</h1>
-  <p id="response">Loading message from backend...</p>
+  <p id="message">Loading message from backend...</p>
 
   <script>
     fetch('https://tripbox-intelliorganizer.onrender.com/api/hello')
       .then(response => response.json())
       .then(data => {
-        document.getElementById('response').textContent = data.message;
+        document.getElementById('message').textContent = data.message;
       })
       .catch(error => {
-        document.getElementById('response').textContent = 'Error fetching message from backend.';
+        document.getElementById('message').textContent = '⚠️ Error fetching message from backend.';
         console.error(error);
       });
   </script>
-
 </body>
 </html>
