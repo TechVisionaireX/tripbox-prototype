@@ -9,8 +9,8 @@
   <h1>Welcome to TripBox-IntelliOrganizer</h1>
   <p id="response">Loading message from backend...</p>
 
- <script>
-  fetch('https://tripbox-intelliorganizer.onrender.com')  //  Your real backend
+<script>
+  fetch('https://tripbox-intelliorganizer.onrender.com/api/hello')
     .then(response => response.json())
     .then(data => {
       document.getElementById('message').textContent = data.message;
@@ -20,5 +20,6 @@
       console.error(error);
     });
 </script>
+
 </body>
 </html>
