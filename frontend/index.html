@@ -1,29 +1,19 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>TripBox Prototype</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            text-align: center;
-            padding-top: 50px;
-        }
-    </style>
-</head>
-<body>
-    <h1 id="output">Loading...</h1>
+import unittest
+from app import app
 
-    <script>
-        fetch("http://127.0.0.1:5000/api/hello")
-            .then(response => response.json())
-            .then(data => {
-                document.getElementById("output").textContent = data.message;
-            })
-            .catch(error => {
-                document.getElementById("output").textContent = "Error contacting backend!";
-                console.error(error);
-            });
-    </script>
-</body>
-</html>
+class FlaskAppTestCase(unittest.TestCase):
+    def setUp(self):
+        self.app = app.test_client()
+        self.app.testing = True
+
+    def test_hello_route(self):
+        response = self.app.get('/api/hello')
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.get_json(), {"message": "Hello from backend!"})
+
+    def test_404_route(self):
+        response = self.app.get('/api/unknown')
+        self.assertEqual(response.status_code, 404)
+
+if __name__ == '__main__':
+    unittest.main()
