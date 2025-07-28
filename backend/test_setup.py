@@ -31,21 +31,30 @@ def test_directory(path):
 def test_environment():
     required_vars = [
         'DATABASE_URL',
-        'JWT_SECRET_KEY',
+        'JWT_SECRET_KEY'
+    ]
+    
+    optional_vars = [
         'GOOGLE_PLACES_API_KEY',
         'GOOGLE_MAPS_API_KEY',
         'OPENWEATHER_API_KEY'
     ]
     
-    missing = []
+    missing_required = []
     for var in required_vars:
         if not os.getenv(var):
-            missing.append(var)
-            print(f"❌ Missing environment variable: {var}")
+            missing_required.append(var)
+            print(f"❌ Missing required environment variable: {var}")
         else:
-            print(f"✅ Found environment variable: {var}")
+            print(f"✅ Found required environment variable: {var}")
     
-    return len(missing) == 0
+    for var in optional_vars:
+        if not os.getenv(var):
+            print(f"⚠️  Missing optional environment variable: {var} (will use defaults)")
+        else:
+            print(f"✅ Found optional environment variable: {var}")
+    
+    return len(missing_required) == 0
 
 def main():
     print("\n=== Testing Python Version ===")
