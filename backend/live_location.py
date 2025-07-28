@@ -1,25 +1,10 @@
 from flask import Blueprint, request, jsonify
 from flask_jwt_extended import jwt_required, get_jwt_identity
-from models import db, GroupMember
+from models import db, GroupMember, LiveLocation
 from datetime import datetime, timedelta
 import json
 
 live_location_bp = Blueprint('live_location_bp', __name__)
-
-class LiveLocation(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    group_id = db.Column(db.Integer, nullable=False)
-    user_id = db.Column(db.Integer, nullable=False)
-    latitude = db.Column(db.Float, nullable=False)
-    longitude = db.Column(db.Float, nullable=False)
-    accuracy = db.Column(db.Float)
-    speed = db.Column(db.Float)
-    heading = db.Column(db.Float)
-    altitude = db.Column(db.Float)
-    timestamp = db.Column(db.DateTime, default=datetime.utcnow)
-    is_active = db.Column(db.Boolean, default=True)
-    battery_level = db.Column(db.Integer)
-    location_name = db.Column(db.String(255))
 
 @live_location_bp.route('/api/groups/<int:group_id>/live-location/update', methods=['POST'])
 @jwt_required()

@@ -67,33 +67,32 @@ try:
 except Exception as e:
     print("FAILED to import location_bp:", e)
 
-# ✅ NEW: AI Recommendations Blueprint
-try:
-    from ai_recommendations import ai_recommendations_bp
-    print("Imported ai_recommendations_bp successfully!")
-except Exception as e:
-    print("FAILED to import ai_recommendations_bp:", e)
+# ✅ NEW FEATURES: Temporarily disabled for deployment fix
+# Will re-enable once basic deployment is working
 
-# ✅ NEW: Live Location Blueprint
-try:
-    from live_location import live_location_bp
-    print("Imported live_location_bp successfully!")
-except Exception as e:
-    print("FAILED to import live_location_bp:", e)
+# try:
+#     from ai_recommendations import ai_recommendations_bp
+#     print("Imported ai_recommendations_bp successfully!")
+# except Exception as e:
+#     print("FAILED to import ai_recommendations_bp:", e)
 
-# ✅ NEW: PDF Generator Blueprint
-try:
-    from pdf_generator import pdf_generator_bp
-    print("Imported pdf_generator_bp successfully!")
-except Exception as e:
-    print("FAILED to import pdf_generator_bp:", e)
+# try:
+#     from live_location import live_location_bp
+#     print("Imported live_location_bp successfully!")
+# except Exception as e:
+#     print("FAILED to import live_location_bp:", e)
 
-# ✅ NEW: Real-time Chat Blueprint
-try:
-    from real_time_chat import real_time_chat_bp
-    print("Imported real_time_chat_bp successfully!")
-except Exception as e:
-    print("FAILED to import real_time_chat_bp:", e)
+# try:
+#     from pdf_generator import pdf_generator_bp
+#     print("Imported pdf_generator_bp successfully!")
+# except Exception as e:
+#     print("FAILED to import pdf_generator_bp:", e)
+
+# try:
+#     from real_time_chat import real_time_chat_bp
+#     print("Imported real_time_chat_bp successfully!")
+# except Exception as e:
+#     print("FAILED to import real_time_chat_bp:", e)
 
 # Initialize app
 app = Flask(__name__)
@@ -132,10 +131,11 @@ app.register_blueprint(checklist_bp)
 app.register_blueprint(budget_bp)
 app.register_blueprint(finalize_bp)
 app.register_blueprint(location_bp)  #  NEW
-app.register_blueprint(ai_recommendations_bp)  # AI Recommendations
-app.register_blueprint(live_location_bp)  # Live Location Tracking
-app.register_blueprint(pdf_generator_bp)  # PDF Generation
-app.register_blueprint(real_time_chat_bp)  # Enhanced Chat
+# Temporarily disabled new blueprints for deployment fix
+# app.register_blueprint(ai_recommendations_bp)  # AI Recommendations
+# app.register_blueprint(live_location_bp)  # Live Location Tracking
+# app.register_blueprint(pdf_generator_bp)  # PDF Generation
+# app.register_blueprint(real_time_chat_bp)  # Enhanced Chat
 
 # Create tables if not present
 with app.app_context():

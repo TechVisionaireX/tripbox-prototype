@@ -1,24 +1,10 @@
 from flask import Blueprint, request, jsonify
 from flask_jwt_extended import jwt_required, get_jwt_identity
-from models import db, Group, GroupMember, ChatMessage, User
+from models import db, Group, GroupMember, ChatMessage, User, EnhancedChatMessage
 from datetime import datetime
 import json
 
 real_time_chat_bp = Blueprint('real_time_chat_bp', __name__)
-
-# Enhanced chat message model (extending the existing one)
-class EnhancedChatMessage(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    group_id = db.Column(db.Integer, db.ForeignKey('group.id'), nullable=False)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    message = db.Column(db.Text, nullable=False)
-    message_type = db.Column(db.String(50), default='text')  # text, image, location, file
-    reply_to_message_id = db.Column(db.Integer, db.ForeignKey('enhanced_chat_message.id'))
-    is_edited = db.Column(db.Boolean, default=False)
-    edited_at = db.Column(db.DateTime)
-    read_by = db.Column(db.Text)  # JSON array of user IDs who read the message
-    timestamp = db.Column(db.DateTime, server_default=db.func.now())
-    metadata = db.Column(db.Text)  # JSON for additional data (location coords, file info, etc.)
 
 @real_time_chat_bp.route('/api/groups/<int:group_id>/chat/enhanced', methods=['POST'])
 @jwt_required()
