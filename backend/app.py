@@ -141,11 +141,21 @@ app.register_blueprint(checklist_bp)
 app.register_blueprint(budget_bp)
 app.register_blueprint(finalize_bp)
 app.register_blueprint(location_bp)  #  NEW
-# Advanced features enabled
-app.register_blueprint(ai_recommendations_bp)  # AI Recommendations
-app.register_blueprint(live_location_bp)  # Live Location Tracking
-app.register_blueprint(pdf_generator_bp)  # PDF Generation
-app.register_blueprint(real_time_chat_bp)  # Enhanced Chat
+# Advanced features will be enabled after initial deployment
+try:
+    from ai_recommendations import ai_recommendations_bp
+    from live_location import live_location_bp
+    from pdf_generator import pdf_generator_bp
+    from real_time_chat import real_time_chat_bp
+    
+    app.register_blueprint(ai_recommendations_bp)  # AI Recommendations
+    app.register_blueprint(live_location_bp)  # Live Location Tracking
+    app.register_blueprint(pdf_generator_bp)  # PDF Generation
+    app.register_blueprint(real_time_chat_bp)  # Enhanced Chat
+    print("Advanced features enabled successfully")
+except Exception as e:
+    print(f"Warning: Some advanced features could not be enabled: {e}")
+    # Continue without advanced features
 
 # Create tables if not present
 with app.app_context():
