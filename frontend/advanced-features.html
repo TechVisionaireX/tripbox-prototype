@@ -1,0 +1,1101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TripBox Advanced Features</title>
+    
+    <!-- Font Awesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Google Maps API -->
+    <script async defer src="https://maps.googleapis.com/maps/api/js?key=YOUR_GOOGLE_MAPS_API_KEY&libraries=places&callback=initMap"></script>
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary-color: #6366f1;
+            --primary-dark: #4f46e5;
+            --secondary-color: #f59e0b;
+            --accent-color: #10b981;
+            --success-color: #059669;
+            --warning-color: #d97706;
+            --error-color: #dc2626;
+            --text-primary: #1f2937;
+            --text-secondary: #6b7280;
+            --bg-primary: #ffffff;
+            --bg-secondary: #f9fafb;
+            --border-color: #e5e7eb;
+            --shadow-soft: 0 4px 6px rgba(0, 0, 0, 0.05);
+            --shadow-medium: 0 10px 25px rgba(0, 0, 0, 0.1);
+            --border-radius: 12px;
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--primary-color);
+            margin-bottom: 1rem;
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            color: var(--text-secondary);
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 2rem;
+            margin-bottom: 3rem;
+        }
+
+        .feature-card {
+            background: white;
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow-soft);
+            border: 1px solid var(--border-color);
+            overflow: hidden;
+            transition: var(--transition);
+        }
+
+        .feature-card:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-medium);
+        }
+
+        .feature-header {
+            padding: 1.5rem;
+            background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+            color: white;
+        }
+
+        .feature-header h3 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .feature-header p {
+            opacity: 0.9;
+            font-size: 0.9rem;
+        }
+
+        .feature-body {
+            padding: 1.5rem;
+        }
+
+        .feature-demo {
+            margin-top: 1rem;
+        }
+
+        .btn {
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: var(--border-radius);
+            font-weight: 500;
+            cursor: pointer;
+            transition: var(--transition);
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            text-decoration: none;
+            margin: 0.25rem;
+        }
+
+        .btn:hover {
+            background: var(--primary-dark);
+            transform: translateY(-1px);
+        }
+
+        .btn-secondary {
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+        }
+
+        .btn-success {
+            background: var(--success-color);
+        }
+
+        .btn-warning {
+            background: var(--warning-color);
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: var(--text-primary);
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 0.75rem;
+            border: 2px solid var(--border-color);
+            border-radius: var(--border-radius);
+            font-size: 0.9rem;
+            transition: var(--transition);
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+        }
+
+        .map-container {
+            height: 300px;
+            border-radius: var(--border-radius);
+            overflow: hidden;
+            margin: 1rem 0;
+            border: 2px solid var(--border-color);
+        }
+
+        .chat-container {
+            height: 300px;
+            border: 2px solid var(--border-color);
+            border-radius: var(--border-radius);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .chat-messages {
+            flex: 1;
+            padding: 1rem;
+            overflow-y: auto;
+            background: var(--bg-secondary);
+        }
+
+        .chat-input {
+            display: flex;
+            padding: 1rem;
+            gap: 0.5rem;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .chat-input input {
+            flex: 1;
+            padding: 0.75rem;
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius);
+        }
+
+        .message {
+            background: white;
+            padding: 0.75rem;
+            border-radius: var(--border-radius);
+            margin-bottom: 0.5rem;
+            box-shadow: var(--shadow-soft);
+        }
+
+        .message.own {
+            background: var(--primary-color);
+            color: white;
+            margin-left: 2rem;
+        }
+
+        .status-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            border-radius: var(--border-radius);
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+
+        .status-online {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .status-offline {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .recommendations-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .recommendation-card {
+            background: var(--bg-secondary);
+            padding: 1rem;
+            border-radius: var(--border-radius);
+            border: 1px solid var(--border-color);
+        }
+
+        .recommendation-card h4 {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: var(--text-primary);
+        }
+
+        .recommendation-card .rating {
+            color: var(--warning-color);
+            margin-bottom: 0.5rem;
+        }
+
+        .recommendation-card p {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+
+        .location-list {
+            max-height: 200px;
+            overflow-y: auto;
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius);
+            margin-top: 1rem;
+        }
+
+        .location-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.75rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .location-item:last-child {
+            border-bottom: none;
+        }
+
+        .location-item .user {
+            font-weight: 500;
+        }
+
+        .location-item .time {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+        }
+
+        .pdf-preview {
+            background: var(--bg-secondary);
+            padding: 1rem;
+            border-radius: var(--border-radius);
+            border: 1px solid var(--border-color);
+            margin-top: 1rem;
+        }
+
+        .pdf-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .pdf-stat {
+            text-align: center;
+        }
+
+        .pdf-stat .number {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary-color);
+        }
+
+        .pdf-stat .label {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+        }
+
+        .alert {
+            padding: 1rem;
+            border-radius: var(--border-radius);
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .alert.success {
+            background: #d1fae5;
+            color: #065f46;
+            border: 1px solid var(--success-color);
+        }
+
+        .alert.error {
+            background: #fee2e2;
+            color: #991b1b;
+            border: 1px solid var(--error-color);
+        }
+
+        .alert.info {
+            background: #dbeafe;
+            color: #1e40af;
+            border: 1px solid var(--primary-color);
+        }
+
+        @media (max-width: 768px) {
+            .features-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .container {
+                padding: 1rem;
+            }
+
+            .header h1 {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1><i class="fas fa-rocket"></i> TripBox Advanced Features</h1>
+            <p>Experience the future of travel planning with AI-powered recommendations, live tracking, and smart collaboration tools</p>
+        </div>
+
+        <div class="features-grid">
+            <!-- AI Recommendations -->
+            <div class="feature-card">
+                <div class="feature-header">
+                    <h3><i class="fas fa-brain"></i> AI Recommendations</h3>
+                    <p>Get personalized suggestions for places to visit, eat, and stay</p>
+                </div>
+                <div class="feature-body">
+                    <div class="form-group">
+                        <label>Your Location</label>
+                        <input type="text" id="locationInput" placeholder="Enter city or coordinates">
+                    </div>
+                    <div class="form-group">
+                        <label>Preferences</label>
+                        <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                            <button class="btn btn-secondary" data-preference="food">🍽️ Food</button>
+                            <button class="btn btn-secondary" data-preference="adventure">🏔️ Adventure</button>
+                            <button class="btn btn-secondary" data-preference="culture">🏛️ Culture</button>
+                            <button class="btn btn-secondary" data-preference="nature">🌿 Nature</button>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Budget</label>
+                        <select id="budgetSelect">
+                            <option value="low">Low ($)</option>
+                            <option value="medium" selected>Medium ($$)</option>
+                            <option value="high">High ($$$)</option>
+                        </select>
+                    </div>
+                    <button class="btn" onclick="getAIRecommendations()">
+                        <i class="fas fa-search"></i> Get Recommendations
+                    </button>
+                    <div id="recommendationsResult" class="recommendations-grid"></div>
+                </div>
+            </div>
+
+            <!-- Live Location Tracking -->
+            <div class="feature-card">
+                <div class="feature-header">
+                    <h3><i class="fas fa-map-marker-alt"></i> Live Location Tracking</h3>
+                    <p>Share your real-time location with group members</p>
+                </div>
+                <div class="feature-body">
+                    <div class="status-indicator" id="locationStatus">
+                        <i class="fas fa-circle"></i> Location Sharing Off
+                    </div>
+                    <div style="margin: 1rem 0;">
+                        <button class="btn" onclick="startLocationSharing()">
+                            <i class="fas fa-play"></i> Start Sharing
+                        </button>
+                        <button class="btn btn-warning" onclick="stopLocationSharing()">
+                            <i class="fas fa-stop"></i> Stop Sharing
+                        </button>
+                        <button class="btn btn-secondary" onclick="sendEmergencyAlert()">
+                            <i class="fas fa-exclamation-triangle"></i> Emergency
+                        </button>
+                    </div>
+                    <div class="map-container" id="liveMap"></div>
+                    <div class="location-list" id="groupLocations">
+                        <div class="location-item">
+                            <div>
+                                <div class="user">Demo User 1</div>
+                                <div class="time">2 minutes ago</div>
+                            </div>
+                            <div class="status-indicator status-online">Online</div>
+                        </div>
+                        <div class="location-item">
+                            <div>
+                                <div class="user">Demo User 2</div>
+                                <div class="time">5 minutes ago</div>
+                            </div>
+                            <div class="status-indicator status-online">Online</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Enhanced Real-time Chat -->
+            <div class="feature-card">
+                <div class="feature-header">
+                    <h3><i class="fas fa-comments"></i> Enhanced Chat</h3>
+                    <p>Rich messaging with location sharing, file uploads, and more</p>
+                </div>
+                <div class="feature-body">
+                    <div class="chat-container">
+                        <div class="chat-messages" id="chatMessages">
+                            <div class="message">
+                                <strong>John:</strong> Hey everyone! Just arrived at the hotel 🏨
+                            </div>
+                            <div class="message own">
+                                <strong>You:</strong> Great! I'm still on my way 🚗
+                            </div>
+                            <div class="message">
+                                <strong>Sarah:</strong> 📍 Shared location: Central Park
+                            </div>
+                        </div>
+                        <div class="chat-input">
+                            <input type="text" id="messageInput" placeholder="Type a message...">
+                            <button class="btn" onclick="sendMessage()">
+                                <i class="fas fa-paper-plane"></i>
+                            </button>
+                            <button class="btn btn-secondary" onclick="shareLocation()">
+                                <i class="fas fa-map-marker-alt"></i>
+                            </button>
+                            <button class="btn btn-secondary" onclick="uploadFile()">
+                                <i class="fas fa-paperclip"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div style="margin-top: 1rem;">
+                        <small class="text-secondary">
+                            <i class="fas fa-users"></i> 3 members online • 
+                            <i class="fas fa-eye"></i> Last read: 2 min ago
+                        </small>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Expense Management -->
+            <div class="feature-card">
+                <div class="feature-header">
+                    <h3><i class="fas fa-wallet"></i> Smart Expense Tracking</h3>
+                    <p>Track expenses and split costs automatically</p>
+                </div>
+                <div class="feature-body">
+                    <div class="form-group">
+                        <label>Expense Amount</label>
+                        <input type="number" id="expenseAmount" placeholder="25.50">
+                    </div>
+                    <div class="form-group">
+                        <label>Category</label>
+                        <select id="expenseCategory">
+                            <option value="food">🍽️ Food & Dining</option>
+                            <option value="transport">🚗 Transportation</option>
+                            <option value="accommodation">🏨 Accommodation</option>
+                            <option value="activities">🎯 Activities</option>
+                            <option value="shopping">🛍️ Shopping</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Description</label>
+                        <input type="text" id="expenseNote" placeholder="Dinner at Italian restaurant">
+                    </div>
+                    <button class="btn" onclick="addExpense()">
+                        <i class="fas fa-plus"></i> Add Expense
+                    </button>
+                    <div style="margin-top: 1rem; padding: 1rem; background: var(--bg-secondary); border-radius: var(--border-radius);">
+                        <h4>Trip Summary</h4>
+                        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-top: 0.5rem;">
+                            <div class="text-center">
+                                <div style="font-size: 1.5rem; font-weight: bold; color: var(--primary-color);">$1,250</div>
+                                <div style="font-size: 0.8rem; color: var(--text-secondary);">Total Spent</div>
+                            </div>
+                            <div class="text-center">
+                                <div style="font-size: 1.5rem; font-weight: bold; color: var(--success-color);">$416</div>
+                                <div style="font-size: 0.8rem; color: var(--text-secondary);">Per Person</div>
+                            </div>
+                            <div class="text-center">
+                                <div style="font-size: 1.5rem; font-weight: bold; color: var(--warning-color);">3</div>
+                                <div style="font-size: 0.8rem; color: var(--text-secondary);">Members</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Gallery -->
+            <div class="feature-card">
+                <div class="feature-header">
+                    <h3><i class="fas fa-camera"></i> Smart Gallery</h3>
+                    <p>Upload and organize your travel memories</p>
+                </div>
+                <div class="feature-body">
+                    <div class="form-group">
+                        <label>Upload Photos</label>
+                        <input type="file" id="photoUpload" multiple accept="image/*" onchange="uploadPhotos()">
+                    </div>
+                    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.5rem; margin-top: 1rem;">
+                        <div style="aspect-ratio: 1; background: var(--bg-secondary); border-radius: var(--border-radius); display: flex; align-items: center; justify-content: center; border: 2px dashed var(--border-color);">
+                            <i class="fas fa-image" style="font-size: 2rem; color: var(--text-secondary);"></i>
+                        </div>
+                        <div style="aspect-ratio: 1; background: var(--bg-secondary); border-radius: var(--border-radius); display: flex; align-items: center; justify-content: center; border: 2px dashed var(--border-color);">
+                            <i class="fas fa-image" style="font-size: 2rem; color: var(--text-secondary);"></i>
+                        </div>
+                        <div style="aspect-ratio: 1; background: var(--bg-secondary); border-radius: var(--border-radius); display: flex; align-items: center; justify-content: center; border: 2px dashed var(--border-color);">
+                            <i class="fas fa-plus" style="font-size: 2rem; color: var(--text-secondary);"></i>
+                        </div>
+                    </div>
+                    <div style="margin-top: 1rem;">
+                        <button class="btn btn-secondary">
+                            <i class="fas fa-eye"></i> View All Photos (24)
+                        </button>
+                        <button class="btn btn-secondary">
+                            <i class="fas fa-download"></i> Download Album
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- PDF Trip Report -->
+            <div class="feature-card">
+                <div class="feature-header">
+                    <h3><i class="fas fa-file-pdf"></i> Trip Report Generator</h3>
+                    <p>Generate comprehensive PDF reports of your trips</p>
+                </div>
+                <div class="feature-body">
+                    <div class="pdf-preview">
+                        <h4>Report Preview</h4>
+                        <div class="pdf-stats">
+                            <div class="pdf-stat">
+                                <div class="number">5</div>
+                                <div class="label">Days</div>
+                            </div>
+                            <div class="pdf-stat">
+                                <div class="number">3</div>
+                                <div class="label">Members</div>
+                            </div>
+                            <div class="pdf-stat">
+                                <div class="number">24</div>
+                                <div class="label">Photos</div>
+                            </div>
+                            <div class="pdf-stat">
+                                <div class="number">12</div>
+                                <div class="label">Expenses</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Include Sections</label>
+                        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.5rem;">
+                            <label style="display: flex; align-items: center; gap: 0.5rem;">
+                                <input type="checkbox" checked> Trip Overview
+                            </label>
+                            <label style="display: flex; align-items: center; gap: 0.5rem;">
+                                <input type="checkbox" checked> Expenses
+                            </label>
+                            <label style="display: flex; align-items: center; gap: 0.5rem;">
+                                <input type="checkbox" checked> Checklist
+                            </label>
+                            <label style="display: flex; align-items: center; gap: 0.5rem;">
+                                <input type="checkbox"> Chat History
+                            </label>
+                            <label style="display: flex; align-items: center; gap: 0.5rem;">
+                                <input type="checkbox" checked> Recommendations
+                            </label>
+                            <label style="display: flex; align-items: center; gap: 0.5rem;">
+                                <input type="checkbox"> Photo Gallery
+                            </label>
+                        </div>
+                    </div>
+                    <button class="btn" onclick="generatePDF()">
+                        <i class="fas fa-file-pdf"></i> Generate PDF Report
+                    </button>
+                    <button class="btn btn-secondary" onclick="previewPDF()">
+                        <i class="fas fa-eye"></i> Preview
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Demo Controls -->
+        <div class="feature-card" style="margin-top: 2rem;">
+            <div class="feature-header">
+                <h3><i class="fas fa-cogs"></i> Demo Controls</h3>
+                <p>Test all features with sample data</p>
+            </div>
+            <div class="feature-body">
+                <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+                    <button class="btn" onclick="window.location.href='dashboard.html'">
+                        <i class="fas fa-arrow-left"></i> Back to Dashboard
+                    </button>
+                    <button class="btn btn-success" onclick="runFullDemo()">
+                        <i class="fas fa-play"></i> Run Full Demo
+                    </button>
+                    <button class="btn btn-secondary" onclick="resetDemo()">
+                        <i class="fas fa-redo"></i> Reset Demo
+                    </button>
+                </div>
+                <div id="demoMessages" style="margin-top: 1rem;"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // API Configuration
+        const API_BASE = 'https://tripbox-intelliorganizer.onrender.com';
+        let selectedPreferences = [];
+        let locationSharingActive = false;
+        let demoGroupId = 1; // Demo group ID
+
+        // Get auth headers
+        function getAuthHeaders() {
+            return {
+                'Authorization': `Bearer ${localStorage.getItem('token')}`,
+                'Content-Type': 'application/json'
+            };
+        }
+
+        // Show message function
+        function showMessage(message, type = 'info') {
+            const alertDiv = document.createElement('div');
+            alertDiv.className = `alert ${type}`;
+            alertDiv.innerHTML = `
+                <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-triangle' : 'info-circle'}"></i>
+                ${message}
+            `;
+            
+            const container = document.getElementById('demoMessages');
+            container.appendChild(alertDiv);
+            
+            setTimeout(() => {
+                alertDiv.remove();
+            }, 5000);
+        }
+
+        // Preference selection
+        document.querySelectorAll('[data-preference]').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const pref = this.getAttribute('data-preference');
+                if (selectedPreferences.includes(pref)) {
+                    selectedPreferences = selectedPreferences.filter(p => p !== pref);
+                    this.classList.remove('btn-primary');
+                    this.classList.add('btn-secondary');
+                } else {
+                    selectedPreferences.push(pref);
+                    this.classList.remove('btn-secondary');
+                    this.classList.add('btn-primary');
+                }
+            });
+        });
+
+        // AI Recommendations
+        async function getAIRecommendations() {
+            const location = document.getElementById('locationInput').value;
+            const budget = document.getElementById('budgetSelect').value;
+            
+            if (!location) {
+                showMessage('Please enter a location', 'error');
+                return;
+            }
+
+            // Get user's location if available
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(async (position) => {
+                    try {
+                        const response = await fetch(`${API_BASE}/api/groups/${demoGroupId}/ai-recommendations/personalized`, {
+                            method: 'POST',
+                            headers: getAuthHeaders(),
+                            body: JSON.stringify({
+                                preferences: selectedPreferences,
+                                budget: budget,
+                                location: location,
+                                latitude: position.coords.latitude,
+                                longitude: position.coords.longitude
+                            })
+                        });
+
+                        const data = await response.json();
+                        displayRecommendations(data.personalized_recommendations || []);
+                        showMessage('AI recommendations generated!', 'success');
+                    } catch (error) {
+                        showMessage('Using demo recommendations', 'info');
+                        displayDemoRecommendations();
+                    }
+                });
+            } else {
+                displayDemoRecommendations();
+            }
+        }
+
+        function displayRecommendations(recommendations) {
+            const container = document.getElementById('recommendationsResult');
+            container.innerHTML = '';
+
+            recommendations.forEach(rec => {
+                const card = document.createElement('div');
+                card.className = 'recommendation-card';
+                card.innerHTML = `
+                    <h4>${rec.name}</h4>
+                    <div class="rating">${'⭐'.repeat(Math.floor(Math.random() * 5) + 1)}</div>
+                    <p>${rec.description}</p>
+                    <small>Cost: ${rec.estimated_cost} • Time: ${rec.time_needed}</small>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        function displayDemoRecommendations() {
+            const demoRecs = [
+                { name: 'Local Bistro', description: 'Authentic local cuisine with great reviews', estimated_cost: '$$', time_needed: '1-2 hours' },
+                { name: 'City Museum', description: 'Rich cultural heritage and artifacts', estimated_cost: '$', time_needed: '2-3 hours' },
+                { name: 'Adventure Park', description: 'Outdoor activities and adventure sports', estimated_cost: '$$$', time_needed: '4-6 hours' },
+                { name: 'Nature Trail', description: 'Scenic hiking trails with beautiful views', estimated_cost: 'Free', time_needed: '2-4 hours' }
+            ];
+            displayRecommendations(demoRecs);
+        }
+
+        // Location Tracking
+        function startLocationSharing() {
+            if (navigator.geolocation) {
+                locationSharingActive = true;
+                document.getElementById('locationStatus').innerHTML = '<i class="fas fa-circle" style="color: green;"></i> Location Sharing Active';
+                document.getElementById('locationStatus').className = 'status-indicator status-online';
+                
+                navigator.geolocation.watchPosition(updateLocation, handleLocationError, {
+                    enableHighAccuracy: true,
+                    maximumAge: 30000,
+                    timeout: 27000
+                });
+                
+                showMessage('Location sharing started!', 'success');
+            } else {
+                showMessage('Geolocation not supported', 'error');
+            }
+        }
+
+        function stopLocationSharing() {
+            locationSharingActive = false;
+            document.getElementById('locationStatus').innerHTML = '<i class="fas fa-circle" style="color: red;"></i> Location Sharing Off';
+            document.getElementById('locationStatus').className = 'status-indicator status-offline';
+            showMessage('Location sharing stopped', 'info');
+        }
+
+        async function updateLocation(position) {
+            if (!locationSharingActive) return;
+
+            try {
+                const response = await fetch(`${API_BASE}/api/groups/${demoGroupId}/live-location/update`, {
+                    method: 'POST',
+                    headers: getAuthHeaders(),
+                    body: JSON.stringify({
+                        latitude: position.coords.latitude,
+                        longitude: position.coords.longitude,
+                        accuracy: position.coords.accuracy,
+                        speed: position.coords.speed,
+                        battery_level: 85 // Mock battery level
+                    })
+                });
+
+                if (response.ok) {
+                    console.log('Location updated successfully');
+                }
+            } catch (error) {
+                console.log('Location update failed (demo mode)');
+            }
+        }
+
+        function handleLocationError(error) {
+            showMessage(`Location error: ${error.message}`, 'error');
+        }
+
+        async function sendEmergencyAlert() {
+            try {
+                const response = await fetch(`${API_BASE}/api/groups/${demoGroupId}/live-location/emergency`, {
+                    method: 'POST',
+                    headers: getAuthHeaders(),
+                    body: JSON.stringify({
+                        message: 'Emergency! I need help!'
+                    })
+                });
+
+                showMessage('Emergency alert sent to all group members!', 'success');
+            } catch (error) {
+                showMessage('Emergency alert sent (demo mode)', 'info');
+            }
+        }
+
+        // Chat Functions
+        async function sendMessage() {
+            const input = document.getElementById('messageInput');
+            const message = input.value.trim();
+            
+            if (!message) return;
+
+            try {
+                const response = await fetch(`${API_BASE}/api/groups/${demoGroupId}/chat/enhanced`, {
+                    method: 'POST',
+                    headers: getAuthHeaders(),
+                    body: JSON.stringify({
+                        message: message,
+                        type: 'text'
+                    })
+                });
+
+                if (response.ok) {
+                    addMessageToChat('You', message, true);
+                    input.value = '';
+                    
+                    // Simulate response
+                    setTimeout(() => {
+                        const responses = [
+                            'Sounds great!', 'I agree!', 'Let me check that out', 'Thanks for the update!', 'See you there!'
+                        ];
+                        const randomResponse = responses[Math.floor(Math.random() * responses.length)];
+                        addMessageToChat('Demo User', randomResponse, false);
+                    }, 1000);
+                }
+            } catch (error) {
+                addMessageToChat('You', message, true);
+                input.value = '';
+                showMessage('Message sent (demo mode)', 'info');
+            }
+        }
+
+        function addMessageToChat(user, message, isOwn) {
+            const messagesContainer = document.getElementById('chatMessages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${isOwn ? 'own' : ''}`;
+            messageDiv.innerHTML = `<strong>${user}:</strong> ${message}`;
+            messagesContainer.appendChild(messageDiv);
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }
+
+        function shareLocation() {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition((position) => {
+                    const locationMsg = `📍 Shared location: Lat ${position.coords.latitude.toFixed(4)}, Lng ${position.coords.longitude.toFixed(4)}`;
+                    addMessageToChat('You', locationMsg, true);
+                    showMessage('Location shared!', 'success');
+                });
+            } else {
+                addMessageToChat('You', '📍 Shared location: Demo Location', true);
+                showMessage('Location shared (demo)', 'info');
+            }
+        }
+
+        function uploadFile() {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.onchange = function(e) {
+                const file = e.target.files[0];
+                if (file) {
+                    addMessageToChat('You', `📎 Shared file: ${file.name}`, true);
+                    showMessage('File uploaded!', 'success');
+                }
+            };
+            input.click();
+        }
+
+        // Expense Management
+        async function addExpense() {
+            const amount = document.getElementById('expenseAmount').value;
+            const category = document.getElementById('expenseCategory').value;
+            const note = document.getElementById('expenseNote').value;
+
+            if (!amount) {
+                showMessage('Please enter an amount', 'error');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE}/api/groups/${demoGroupId}/expenses`, {
+                    method: 'POST',
+                    headers: getAuthHeaders(),
+                    body: JSON.stringify({
+                        amount: parseFloat(amount),
+                        category: category,
+                        note: note
+                    })
+                });
+
+                if (response.ok) {
+                    showMessage('Expense added successfully!', 'success');
+                    document.getElementById('expenseAmount').value = '';
+                    document.getElementById('expenseNote').value = '';
+                }
+            } catch (error) {
+                showMessage('Expense added (demo mode)', 'info');
+                document.getElementById('expenseAmount').value = '';
+                document.getElementById('expenseNote').value = '';
+            }
+        }
+
+        // Photo Upload
+        function uploadPhotos() {
+            const files = document.getElementById('photoUpload').files;
+            if (files.length > 0) {
+                showMessage(`${files.length} photos uploaded!`, 'success');
+            }
+        }
+
+        // PDF Generation
+        async function generatePDF() {
+            try {
+                const response = await fetch(`${API_BASE}/api/trips/1/generate-pdf`, {
+                    method: 'POST',
+                    headers: getAuthHeaders(),
+                    body: JSON.stringify({
+                        include_sections: {
+                            members: true,
+                            budget: true,
+                            expenses: true,
+                            checklist: true,
+                            recommendations: true
+                        }
+                    })
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    showMessage('PDF report generated successfully!', 'success');
+                    // In a real app, you would download the PDF here
+                } else {
+                    throw new Error('PDF generation failed');
+                }
+            } catch (error) {
+                showMessage('PDF report generated (demo mode)', 'info');
+            }
+        }
+
+        function previewPDF() {
+            showMessage('PDF preview would open in a new window', 'info');
+        }
+
+        // Demo Functions
+        function runFullDemo() {
+            showMessage('Running full demo...', 'info');
+            
+            setTimeout(() => {
+                document.getElementById('locationInput').value = 'New York, NY';
+                selectedPreferences = ['food', 'culture'];
+                updatePreferenceButtons();
+                getAIRecommendations();
+            }, 1000);
+
+            setTimeout(() => {
+                startLocationSharing();
+            }, 2000);
+
+            setTimeout(() => {
+                addMessageToChat('Demo Bot', 'Welcome to the TripBox demo!', false);
+            }, 3000);
+
+            setTimeout(() => {
+                document.getElementById('expenseAmount').value = '50.00';
+                document.getElementById('expenseNote').value = 'Demo lunch expense';
+                addExpense();
+            }, 4000);
+        }
+
+        function updatePreferenceButtons() {
+            document.querySelectorAll('[data-preference]').forEach(btn => {
+                const pref = btn.getAttribute('data-preference');
+                if (selectedPreferences.includes(pref)) {
+                    btn.classList.remove('btn-secondary');
+                    btn.classList.add('btn-primary');
+                }
+            });
+        }
+
+        function resetDemo() {
+            selectedPreferences = [];
+            locationSharingActive = false;
+            document.getElementById('recommendationsResult').innerHTML = '';
+            document.getElementById('chatMessages').innerHTML = `
+                <div class="message">
+                    <strong>John:</strong> Hey everyone! Just arrived at the hotel 🏨
+                </div>
+                <div class="message own">
+                    <strong>You:</strong> Great! I'm still on my way 🚗
+                </div>
+                <div class="message">
+                    <strong>Sarah:</strong> 📍 Shared location: Central Park
+                </div>
+            `;
+            document.getElementById('locationStatus').innerHTML = '<i class="fas fa-circle"></i> Location Sharing Off';
+            document.getElementById('locationStatus').className = 'status-indicator status-offline';
+            document.getElementById('demoMessages').innerHTML = '';
+            
+            // Reset form fields
+            document.getElementById('locationInput').value = '';
+            document.getElementById('expenseAmount').value = '';
+            document.getElementById('expenseNote').value = '';
+            
+            // Reset preference buttons
+            document.querySelectorAll('[data-preference]').forEach(btn => {
+                btn.classList.remove('btn-primary');
+                btn.classList.add('btn-secondary');
+            });
+            
+            showMessage('Demo reset complete', 'success');
+        }
+
+        // Initialize Google Maps (placeholder)
+        function initMap() {
+            // This would initialize Google Maps for live location tracking
+            console.log('Google Maps initialized');
+        }
+
+        // Allow Enter key to send messages
+        document.getElementById('messageInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                sendMessage();
+            }
+        });
+
+        // Initialize demo
+        document.addEventListener('DOMContentLoaded', function() {
+            showMessage('Advanced features demo loaded! Use the controls to test each feature.', 'info');
+        });
+    </script>
+</body>
+</html> 
