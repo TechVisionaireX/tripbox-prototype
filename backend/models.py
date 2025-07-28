@@ -116,4 +116,63 @@ class EnhancedChatMessage(db.Model):
     edited_at = db.Column(db.DateTime)
     read_by = db.Column(db.Text)  # JSON array of user IDs who read the message
     timestamp = db.Column(db.DateTime, server_default=db.func.now())
-    metadata = db.Column(db.Text)  # JSON for additional data
+    message_metadata = db.Column(db.Text)  # JSON for additional data
+
+# NEW MODELS FOR MISSING FEATURES
+
+class ItineraryItem(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    group_id = db.Column(db.Integer, db.ForeignKey('group.id'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    type = db.Column(db.String(50), nullable=False)  # hotel, flight, activity, restaurant
+    title = db.Column(db.String(200), nullable=False)
+    description = db.Column(db.Text)
+    location = db.Column(db.String(200))
+    date = db.Column(db.String(20))
+    time = db.Column(db.String(10))
+    cost = db.Column(db.Float)
+    booking_reference = db.Column(db.String(100))
+    confirmed = db.Column(db.Boolean, default=False)
+    timestamp = db.Column(db.DateTime, default=datetime.utcnow)
+
+class Poll(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    group_id = db.Column(db.Integer, db.ForeignKey('group.id'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    question = db.Column(db.String(300), nullable=False)
+    options = db.Column(db.Text, nullable=False)  # JSON array of options
+    votes = db.Column(db.Text)  # JSON object with user_id: option_index
+    is_active = db.Column(db.Boolean, default=True)
+    multiple_choice = db.Column(db.Boolean, default=False)
+    timestamp = db.Column(db.DateTime, default=datetime.utcnow)
+    expires_at = db.Column(db.DateTime)
+
+class RecommendationVote(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    recommendation_id = db.Column(db.Integer, db.ForeignKey('recommendation.id'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    vote = db.Column(db.String(20), nullable=False)  # approve, reject, neutral
+    comment = db.Column(db.Text)
+    timestamp = db.Column(db.DateTime, default=datetime.utcnow)
+
+class TripFinalization(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    trip_id = db.Column(db.Integer, db.ForeignKey('trip.id'), nullable=False)
+    group_id = db.Column(db.Integer, db.ForeignKey('group.id'), nullable=False)
+    finalized_by = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    final_itinerary = db.Column(db.Text)  # JSON of final confirmed items
+    final_budget = db.Column(db.Float)
+    final_recommendations = db.Column(db.Text)  # JSON of approved recommendations
+    summary = db.Column(db.Text)
+    timestamp = db.Column(db.DateTime, default=datetime.utcnow)
+
+class Notification(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    group_id = db.Column(db.Integer, db.ForeignKey('group.id'))
+    type = db.Column(db.String(50), nullable=False)  # message, vote, expense, etc.
+    title = db.Column(db.String(200), nullable=False)
+    message = db.Column(db.Text)
+    read = db.Column(db.Boolean, default=False)
+    action_url = db.Column(db.String(300))
+    timestamp = db.Column(db.DateTime, default=datetime.utcnow)

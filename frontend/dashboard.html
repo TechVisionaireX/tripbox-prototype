@@ -1383,7 +1383,7 @@
                     <div class="checklist-section">
                         <div class="checklist-header">
                             <h3 class="checklist-title">To-Do List</h3>
-                            <button class="btn btn-primary btn-sm" onclick="openAddTodoModal()">
+                            <button class="btn btn-primary btn-sm" onclick="document.getElementById('newTodoInput').focus()">
                                 <i class="fas fa-plus"></i>
                                 Add Item
                             </button>
@@ -1402,7 +1402,7 @@
                     <div class="checklist-section">
                         <div class="checklist-header">
                             <h3 class="checklist-title">Packing List</h3>
-                            <button class="btn btn-primary btn-sm" onclick="openAddPackingModal()">
+                            <button class="btn btn-primary btn-sm" onclick="document.getElementById('newPackingInput').focus()">
                                 <i class="fas fa-plus"></i>
                                 Add Item
                             </button>
@@ -2134,23 +2134,29 @@
             const form = document.getElementById('createGroupForm');
             const formData = new FormData(form);
             
+            console.log('Creating group with form data:', Object.fromEntries(formData));
+            
             try {
                 const groupData = {
                     name: formData.get('groupName'),
                     description: formData.get('groupDesc')
                 };
 
+                console.log('Sending group data:', groupData);
+
                 await apiCall('/api/groups', {
                     method: 'POST',
                     body: groupData
                 });
 
+                console.log('Group created successfully');
                 showMessage('Group created successfully!');
                 closeModal('createGroupModal');
                 await loadGroups();
                 displayGroups();
                 updateDashboardStats();
             } catch (error) {
+                console.error('Error creating group:', error);
                 showMessage('Error creating group: ' + error.message, 'error');
             }
         }
@@ -2412,6 +2418,8 @@
             const input = document.getElementById('newTodoInput');
             const text = input.value.trim();
             
+            console.log('Adding todo item:', text);
+            
             if (!text) return;
             
             const todos = JSON.parse(localStorage.getItem('tripTodos') || '[]');
@@ -2420,11 +2428,14 @@
             
             input.value = '';
             displayTodoList(todos);
+            console.log('Todo item added successfully');
         }
 
         function addPackingItem() {
             const input = document.getElementById('newPackingInput');
             const text = input.value.trim();
+            
+            console.log('Adding packing item:', text);
             
             if (!text) return;
             
@@ -2434,6 +2445,7 @@
             
             input.value = '';
             displayPackingList(packing);
+            console.log('Packing item added successfully');
         }
 
         function toggleTodo(index) {

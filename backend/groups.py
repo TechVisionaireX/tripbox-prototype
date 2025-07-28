@@ -13,10 +13,13 @@ def create_group():
     name = data.get('name')
     trip_id = data.get('trip_id')
 
-    # Verify trip exists
-    trip = Trip.query.filter_by(id=trip_id, user_id=user_id).first()
-    if not trip:
-        return jsonify({'error': 'Trip not found or unauthorized'}), 404
+    # If trip_id is provided, verify trip exists
+    if trip_id:
+        trip = Trip.query.filter_by(id=trip_id, user_id=user_id).first()
+        if not trip:
+            return jsonify({'error': 'Trip not found or unauthorized'}), 404
+    else:
+        trip_id = None  # Allow groups without trips
 
     group = Group(name=name, creator_id=user_id, trip_id=trip_id)
     db.session.add(group)
