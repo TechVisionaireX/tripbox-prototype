@@ -411,10 +411,10 @@
                     <div class="form-group">
                         <label>Preferences</label>
                         <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
-                            <button class="btn btn-secondary" data-preference="food">🍽️ Food</button>
-                            <button class="btn btn-secondary" data-preference="adventure">🏔️ Adventure</button>
-                            <button class="btn btn-secondary" data-preference="culture">🏛️ Culture</button>
-                            <button class="btn btn-secondary" data-preference="nature">🌿 Nature</button>
+                                                    <button class="btn btn-secondary" data-preference="food">Food</button>
+                        <button class="btn btn-secondary" data-preference="adventure">Adventure</button>
+                        <button class="btn btn-secondary" data-preference="culture">Culture</button>
+                            <button class="btn btn-secondary" data-preference="nature">Nature</button>
                         </div>
                     </div>
                     <div class="form-group">
@@ -483,10 +483,10 @@
                     <div class="chat-container">
                         <div class="chat-messages" id="chatMessages">
                             <div class="message">
-                                <strong>John:</strong> Hey everyone! Just arrived at the hotel 🏨
+                                <strong>John:</strong> Hey everyone! Just arrived at the hotel
                             </div>
                             <div class="message own">
-                                <strong>You:</strong> Great! I'm still on my way 🚗
+                                <strong>You:</strong> Great! I'm still on my way
                             </div>
                             <div class="message">
                                 <strong>Sarah:</strong> 📍 Shared location: Central Park
@@ -528,11 +528,11 @@
                     <div class="form-group">
                         <label>Category</label>
                         <select id="expenseCategory">
-                            <option value="food">🍽️ Food & Dining</option>
-                            <option value="transport">🚗 Transportation</option>
-                            <option value="accommodation">🏨 Accommodation</option>
-                            <option value="activities">🎯 Activities</option>
-                            <option value="shopping">🛍️ Shopping</option>
+                            <option value="food">Food & Dining</option>
+                            <option value="transport">Transportation</option>
+                            <option value="accommodation">Accommodation</option>
+                            <option value="activities">Activities</option>
+                            <option value="shopping">Shopping</option>
                         </select>
                     </div>
                     <div class="form-group">
@@ -775,7 +775,7 @@
                 card.className = 'recommendation-card';
                 card.innerHTML = `
                     <h4>${rec.name}</h4>
-                    <div class="rating">${'⭐'.repeat(Math.floor(Math.random() * 5) + 1)}</div>
+                    <div class="rating">${'★'.repeat(Math.floor(Math.random() * 5) + 1)}</div>
                     <p>${rec.description}</p>
                     <small>Cost: ${rec.estimated_cost} • Time: ${rec.time_needed}</small>
                 `;
@@ -912,12 +912,12 @@
         function shareLocation() {
             if (navigator.geolocation) {
                 navigator.geolocation.getCurrentPosition((position) => {
-                    const locationMsg = `📍 Shared location: Lat ${position.coords.latitude.toFixed(4)}, Lng ${position.coords.longitude.toFixed(4)}`;
-                    addMessageToChat('You', locationMsg, true);
-                    showMessage('Location shared!', 'success');
-                });
-            } else {
-                addMessageToChat('You', '📍 Shared location: Demo Location', true);
+                                    const locationMsg = `Shared location: Lat ${position.coords.latitude.toFixed(4)}, Lng ${position.coords.longitude.toFixed(4)}`;
+                addMessageToChat('You', locationMsg, true);
+                showMessage('Location shared!', 'success');
+            });
+        } else {
+            addMessageToChat('You', 'Shared location: Demo Location', true);
                 showMessage('Location shared (demo)', 'info');
             }
         }
@@ -928,7 +928,7 @@
             input.onchange = function(e) {
                 const file = e.target.files[0];
                 if (file) {
-                    addMessageToChat('You', `📎 Shared file: ${file.name}`, true);
+                    addMessageToChat('You', `Shared file: ${file.name}`, true);
                     showMessage('File uploaded!', 'success');
                 }
             };
@@ -1052,10 +1052,10 @@
             document.getElementById('recommendationsResult').innerHTML = '';
             document.getElementById('chatMessages').innerHTML = `
                 <div class="message">
-                    <strong>John:</strong> Hey everyone! Just arrived at the hotel 🏨
+                    <strong>John:</strong> Hey everyone! Just arrived at the hotel
                 </div>
                 <div class="message own">
-                    <strong>You:</strong> Great! I'm still on my way 🚗
+                    <strong>You:</strong> Great! I'm still on my way
                 </div>
                 <div class="message">
                     <strong>Sarah:</strong> 📍 Shared location: Central Park

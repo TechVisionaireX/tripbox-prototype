@@ -11,7 +11,7 @@
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     
-    <style>
+  <style>
         * {
             margin: 0;
             padding: 0;
@@ -34,7 +34,7 @@
             --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
-        body {
+    body {
             font-family: 'Inter', sans-serif;
             line-height: 1.6;
             color: var(--text-primary);
@@ -182,7 +182,7 @@
         }
 
         .hero-buttons {
-            display: flex;
+      display: flex;
             gap: 1rem;
             animation: slideInLeft 1s ease-out 0.4s both;
         }
@@ -216,7 +216,7 @@
             font-weight: 600;
             transition: var(--transition);
             display: inline-flex;
-            align-items: center;
+      align-items: center;
             gap: 0.5rem;
         }
 
@@ -227,7 +227,7 @@
 
         .hero-visual {
             display: flex;
-            justify-content: center;
+      justify-content: center;
             align-items: center;
             animation: slideInRight 1s ease-out;
         }
@@ -262,8 +262,8 @@
         .feature-card i {
             font-size: 2rem;
             color: white;
-            margin-bottom: 0.5rem;
-        }
+      margin-bottom: 0.5rem;
+    }
 
         .feature-card h3 {
             color: white;
@@ -558,8 +558,8 @@
 
         @keyframes spin {
             to { transform: rotate(360deg); }
-        }
-    </style>
+    }
+  </style>
 </head>
 <body>
     <!-- Header -->
@@ -726,7 +726,7 @@
         </div>
     </section>
 
-    <script>
+  <script>
         // API Base URL
         const API_BASE = 'https://tripbox-intelliorganizer.onrender.com';
 
@@ -873,13 +873,13 @@
 
         // Test backend connection
         fetch(`${API_BASE}/api/hello`)
-            .then(response => response.json())
-            .then(data => {
+      .then(response => response.json())
+      .then(data => {
                 console.log('Backend connected:', data.message);
-            })
-            .catch(error => {
+      })
+      .catch(error => {
                 console.error('Backend connection failed:', error);
-            });
-    </script>
+      });
+  </script>
 </body>
 </html>
