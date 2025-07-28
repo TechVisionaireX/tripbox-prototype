@@ -22,7 +22,6 @@ def register():
     return jsonify({'message': 'Registration successful'})
 
 @auth_bp.route('/api/login', methods=['POST'])
-@auth_bp.route('/api/login', methods=['POST'])
 def login():
     data = request.get_json()
     email = data.get('email')

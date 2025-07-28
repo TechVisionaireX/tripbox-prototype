@@ -3,6 +3,7 @@ from flask_cors import CORS
 from flask_jwt_extended import JWTManager
 from models import db
 from auth import auth_bp, bcrypt
+import os
 
 # Import your feature blueprints
 try:
@@ -35,21 +36,56 @@ try:
 except Exception as e:
     print("FAILED to import expense_bp:", e)
 
-# 🔁 NEW: Import gallery_bp
 try:
     from gallery import gallery_bp
     print("Imported gallery_bp successfully!")
 except Exception as e:
     print("FAILED to import gallery_bp:", e)
 
+try:
+    from checklist import checklist_bp
+    print("Imported checklist_bp successfully!")
+except Exception as e:
+    print("FAILED to import checklist_bp:", e)
+
+try:
+    from budget import budget_bp
+    print("Imported budget_bp successfully!")
+except Exception as e:
+    print("FAILED to import budget_bp:", e)
+
+try:
+    from finalize import finalize_bp
+    print("Imported finalize_bp successfully!")
+except Exception as e:
+    print("FAILED to import finalize_bp:", e)
+
+# ✅ NEW: Location Check-in Blueprint
+try:
+    from location import location_bp
+    print("Imported location_bp successfully!")
+except Exception as e:
+    print("FAILED to import location_bp:", e)
+
 # Initialize app
 app = Flask(__name__)
-CORS(app)
+
+# Update CORS configuration for production
+CORS(app, origins=[
+    "http://localhost:3000",
+    "https://resilient-marshmallow-13df59.netlify.app",
+    "https://*.netlify.app"  # Allow any Netlify subdomain
+])
 
 # Configurations
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///tripbox.db'
+# Use environment variable for database URL in production, fallback to SQLite for development
+app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'sqlite:///tripbox.db')
+# Fix for Render's postgres:// URL (needs to be postgresql://)
+if app.config['SQLALCHEMY_DATABASE_URI'].startswith('postgres://'):
+    app.config['SQLALCHEMY_DATABASE_URI'] = app.config['SQLALCHEMY_DATABASE_URI'].replace('postgres://', 'postgresql://', 1)
+
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-app.config['JWT_SECRET_KEY'] = 'your_secret_key_here'
+app.config['JWT_SECRET_KEY'] = os.environ.get('JWT_SECRET_KEY', 'your_secret_key_here')
 
 # Initialize extensions
 db.init_app(app)
@@ -63,7 +99,11 @@ app.register_blueprint(groups_bp)
 app.register_blueprint(chat_bp)
 app.register_blueprint(recommend_bp)
 app.register_blueprint(expense_bp)
-app.register_blueprint(gallery_bp)  # 🔁 NEW
+app.register_blueprint(gallery_bp)
+app.register_blueprint(checklist_bp)
+app.register_blueprint(budget_bp)
+app.register_blueprint(finalize_bp)
+app.register_blueprint(location_bp)  #  NEW
 
 # Create tables if not present
 with app.app_context():
@@ -80,4 +120,5 @@ def hello():
 
 # Run server
 if __name__ == '__main__':
-    app.run(host="0.0.0.0", port=5000)
+    port = int(os.environ.get('PORT', 5000))
+    app.run(host="0.0.0.0", port=port, debug=False)

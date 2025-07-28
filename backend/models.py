@@ -1,4 +1,6 @@
 from flask_sqlalchemy import SQLAlchemy
+from datetime import datetime
+
 
 db = SQLAlchemy()
 
@@ -15,6 +17,8 @@ class Trip(db.Model):
     start_date = db.Column(db.String(20), nullable=False)
     end_date = db.Column(db.String(20), nullable=False)
     description = db.Column(db.String(300), nullable=True)
+    finalized = db.Column(db.Boolean, default=False)
+
 
 # ---- CLEARLY ADD THESE TWO NEW MODELS BELOW ----
 
@@ -59,3 +63,27 @@ class GalleryImage(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     filename = db.Column(db.String(200), nullable=False)
     timestamp = db.Column(db.DateTime, server_default=db.func.now())
+
+class ChecklistItem(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    group_id = db.Column(db.Integer, nullable=False)
+    user_id = db.Column(db.Integer, nullable=False)
+    type = db.Column(db.String(20), default="checklist")
+    text = db.Column(db.String(255), nullable=False)
+    completed = db.Column(db.Boolean, default=False)
+    timestamp = db.Column(db.DateTime, default=datetime.utcnow)
+
+class BudgetItem(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    group_id = db.Column(db.Integer, nullable=False)
+    user_id = db.Column(db.Integer, nullable=False)
+    category = db.Column(db.String(100), nullable=False)
+    amount = db.Column(db.Float, nullable=False)
+    timestamp = db.Column(db.DateTime, default=datetime.utcnow)
+
+class LocationCheckin(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    group_id = db.Column(db.Integer, nullable=False)
+    user_id = db.Column(db.Integer, nullable=False)
+    message = db.Column(db.String(255))
+    timestamp = db.Column(db.DateTime, default=datetime.utcnow)
