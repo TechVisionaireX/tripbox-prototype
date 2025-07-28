@@ -9,8 +9,6 @@ try:
 except Exception as e:
     print("FAILED to import trips_bp:", e)
 
-
-
 app = Flask(__name__)
 CORS(app)
 
@@ -25,13 +23,17 @@ jwt = JWTManager(app)
 app.register_blueprint(auth_bp)
 app.register_blueprint(trips_bp)
 
-
 with app.app_context():
     db.create_all()
 
 @app.route('/')
 def home():
     return jsonify(message="TripBox-IntelliOrganizer backend is running!")
+
+# Add this route so your test_app.py test will pass
+@app.route('/api/hello')
+def hello():
+    return jsonify(message="Hello from backend!")
 
 if __name__ == '__main__':
     app.run(host="0.0.0.0", port=5000)
