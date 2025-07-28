@@ -1,51 +1,885 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>TripBox-IntelliOrganizer</title>
-  <style>
-    body {
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background: linear-gradient(135deg, #f2f6ff, #e6ecff);
-      color: #333;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      height: 100vh;
-      margin: 0;
-    }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TripBox - Smart Travel Planning</title>
+    
+    <!-- Font Awesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
-    h1 {
-      color: #2e4a91;
-      font-size: 2.5rem;
-      margin-bottom: 0.5rem;
-    }
+        :root {
+            --primary-color: #6366f1;
+            --primary-dark: #4f46e5;
+            --secondary-color: #f59e0b;
+            --accent-color: #10b981;
+            --text-primary: #1f2937;
+            --text-secondary: #6b7280;
+            --bg-primary: #ffffff;
+            --bg-secondary: #f9fafb;
+            --bg-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --shadow-soft: 0 10px 25px rgba(0, 0, 0, 0.1);
+            --shadow-medium: 0 20px 40px rgba(0, 0, 0, 0.1);
+            --border-radius: 16px;
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
 
-    p {
-      font-size: 1.2rem;
-      background: #ffffff;
-      padding: 1rem 1.5rem;
-      border-radius: 10px;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-    }
-  </style>
+        body {
+            font-family: 'Inter', sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            overflow-x: hidden;
+        }
+
+        /* Header */
+        .header {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            z-index: 1000;
+            padding: 1rem 0;
+            transition: var(--transition);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .nav {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 2rem;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary-color);
+            text-decoration: none;
+        }
+
+        .logo i {
+            font-size: 2rem;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+            list-style: none;
+        }
+
+        .nav-links a {
+            text-decoration: none;
+            color: var(--text-primary);
+            font-weight: 500;
+            transition: var(--transition);
+            position: relative;
+        }
+
+        .nav-links a:hover {
+            color: var(--primary-color);
+        }
+
+        .nav-links a::after {
+            content: '';
+            position: absolute;
+            width: 0;
+            height: 2px;
+            bottom: -5px;
+            left: 0;
+            background: var(--primary-color);
+            transition: var(--transition);
+        }
+
+        .nav-links a:hover::after {
+            width: 100%;
+        }
+
+        .cta-button {
+            background: var(--primary-color);
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 50px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: var(--transition);
+            box-shadow: var(--shadow-soft);
+        }
+
+        .cta-button:hover {
+            background: var(--primary-dark);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-medium);
+        }
+
+        /* Hero Section */
+        .hero {
+            background: var(--bg-gradient);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000"><defs><radialGradient id="a" cx="50%" cy="50%"><stop offset="0%" style="stop-color:rgba(255,255,255,0.1)"/><stop offset="100%" style="stop-color:rgba(255,255,255,0)"/></radialGradient></defs><circle cx="50%" cy="50%" r="500" fill="url(%23a)"/></svg>');
+            animation: float 6s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-20px); }
+        }
+
+        .hero-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2rem;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 4rem;
+            align-items: center;
+            position: relative;
+            z-index: 1;
+        }
+
+        .hero-text h1 {
+            font-size: 3.5rem;
+            font-weight: 800;
+            color: white;
+            margin-bottom: 1.5rem;
+            line-height: 1.2;
+            animation: slideInLeft 1s ease-out;
+        }
+
+        .hero-text p {
+            font-size: 1.25rem;
+            color: rgba(255, 255, 255, 0.9);
+            margin-bottom: 2rem;
+            animation: slideInLeft 1s ease-out 0.2s both;
+        }
+
+        .hero-buttons {
+            display: flex;
+            gap: 1rem;
+            animation: slideInLeft 1s ease-out 0.4s both;
+        }
+
+        .btn-primary {
+            background: white;
+            color: var(--primary-color);
+            padding: 1rem 2rem;
+            border-radius: 50px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: var(--transition);
+            box-shadow: var(--shadow-soft);
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-3px);
+            box-shadow: var(--shadow-medium);
+        }
+
+        .btn-secondary {
+            background: transparent;
+            color: white;
+            padding: 1rem 2rem;
+            border: 2px solid white;
+            border-radius: 50px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: var(--transition);
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-secondary:hover {
+            background: white;
+            color: var(--primary-color);
+        }
+
+        .hero-visual {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            animation: slideInRight 1s ease-out;
+        }
+
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1.5rem;
+            max-width: 400px;
+        }
+
+        .feature-card {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            padding: 1.5rem;
+            border-radius: var(--border-radius);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            text-align: center;
+            transition: var(--transition);
+            animation: bounceIn 1s ease-out;
+        }
+
+        .feature-card:nth-child(2) { animation-delay: 0.2s; }
+        .feature-card:nth-child(3) { animation-delay: 0.4s; }
+        .feature-card:nth-child(4) { animation-delay: 0.6s; }
+
+        .feature-card:hover {
+            transform: translateY(-5px);
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .feature-card i {
+            font-size: 2rem;
+            color: white;
+            margin-bottom: 0.5rem;
+        }
+
+        .feature-card h3 {
+            color: white;
+            font-size: 1rem;
+            font-weight: 600;
+        }
+
+        /* Features Section */
+        .features {
+            padding: 6rem 0;
+            background: var(--bg-secondary);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2rem;
+        }
+
+        .section-header {
+            text-align: center;
+            margin-bottom: 4rem;
+        }
+
+        .section-header h2 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 1rem;
+        }
+
+        .section-header p {
+            font-size: 1.1rem;
+            color: var(--text-secondary);
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+        }
+
+        .feature-item {
+            background: white;
+            padding: 2rem;
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow-soft);
+            transition: var(--transition);
+            border: 1px solid rgba(0, 0, 0, 0.05);
+        }
+
+        .feature-item:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--shadow-medium);
+        }
+
+        .feature-icon {
+            width: 60px;
+            height: 60px;
+            background: var(--primary-color);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 1rem;
+            font-size: 1.5rem;
+            color: white;
+        }
+
+        .feature-item h3 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: var(--text-primary);
+        }
+
+        .feature-item p {
+            color: var(--text-secondary);
+            line-height: 1.6;
+        }
+
+        /* Auth Section */
+        .auth-section {
+            padding: 6rem 0;
+            background: white;
+        }
+
+        .auth-container {
+            max-width: 500px;
+            margin: 0 auto;
+            padding: 3rem;
+            background: white;
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow-medium);
+            border: 1px solid rgba(0, 0, 0, 0.05);
+        }
+
+        .auth-toggle {
+            display: flex;
+            background: var(--bg-secondary);
+            border-radius: 50px;
+            padding: 0.25rem;
+            margin-bottom: 2rem;
+        }
+
+        .auth-toggle button {
+            flex: 1;
+            padding: 0.75rem;
+            border: none;
+            background: transparent;
+            border-radius: 50px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .auth-toggle button.active {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: var(--text-primary);
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: var(--transition);
+            background: white;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+        }
+
+        .submit-btn {
+            width: 100%;
+            background: var(--primary-color);
+            color: white;
+            padding: 0.875rem;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            margin-bottom: 1rem;
+        }
+
+        .submit-btn:hover {
+            background: var(--primary-dark);
+        }
+
+        .submit-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .message {
+            padding: 0.75rem 1rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            text-align: center;
+            font-weight: 500;
+        }
+
+        .message.success {
+            background: #d1fae5;
+            color: #065f46;
+            border: 1px solid #10b981;
+        }
+
+        .message.error {
+            background: #fee2e2;
+            color: #991b1b;
+            border: 1px solid #ef4444;
+        }
+
+        /* Animations */
+        @keyframes slideInLeft {
+            from {
+                opacity: 0;
+                transform: translateX(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        @keyframes slideInRight {
+            from {
+                opacity: 0;
+                transform: translateX(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        @keyframes bounceIn {
+            from {
+                opacity: 0;
+                transform: scale(0.3);
+            }
+            50% {
+                opacity: 1;
+                transform: scale(1.05);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .nav {
+                padding: 0 1rem;
+            }
+
+            .nav-links {
+                display: none;
+            }
+
+            .hero-content {
+                grid-template-columns: 1fr;
+                text-align: center;
+                gap: 2rem;
+            }
+
+            .hero-text h1 {
+                font-size: 2.5rem;
+            }
+
+            .hero-buttons {
+                justify-content: center;
+                flex-wrap: wrap;
+            }
+
+            .feature-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .section-header h2 {
+                font-size: 2rem;
+            }
+
+            .auth-container {
+                margin: 0 1rem;
+                padding: 2rem;
+            }
+        }
+
+        /* Loading Animation */
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
 </head>
 <body>
-  <h1>Welcome to TripBox-IntelliOrganizer</h1>
-  <p id="message">Loading message from backend...</p>
+    <!-- Header -->
+    <header class="header">
+        <nav class="nav">
+            <a href="#" class="logo">
+                <i class="fas fa-suitcase"></i>
+                TripBox
+            </a>
+            <ul class="nav-links">
+                <li><a href="#features">Features</a></li>
+                <li><a href="#auth">Get Started</a></li>
+                <li><a href="dashboard.html">Dashboard</a></li>
+            </ul>
+            <a href="#auth" class="cta-button">Start Planning</a>
+        </nav>
+    </header>
 
-  <script>
-    fetch('https://tripbox-intelliorganizer.onrender.com/api/hello')
-      .then(response => response.json())
-      .then(data => {
-        document.getElementById('message').textContent = data.message;
-      })
-      .catch(error => {
-        document.getElementById('message').textContent = '⚠️ Error fetching message from backend.';
-        console.error(error);
-      });
-  </script>
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="hero-content">
+            <div class="hero-text">
+                <h1>Plan Your Perfect Trip with AI-Powered Intelligence</h1>
+                <p>Organize, collaborate, and create unforgettable travel experiences with our comprehensive trip planning platform. From budgets to itineraries, we've got you covered.</p>
+                <div class="hero-buttons">
+                    <a href="#auth" class="btn-primary">
+                        <i class="fas fa-rocket"></i>
+                        Start Free
+                    </a>
+                    <a href="#features" class="btn-secondary">
+                        <i class="fas fa-play"></i>
+                        Watch Demo
+                    </a>
+                </div>
+            </div>
+            <div class="hero-visual">
+                <div class="feature-grid">
+                    <div class="feature-card">
+                        <i class="fas fa-users"></i>
+                        <h3>Collaborate</h3>
+                    </div>
+                    <div class="feature-card">
+                        <i class="fas fa-wallet"></i>
+                        <h3>Budget Track</h3>
+                    </div>
+                    <div class="feature-card">
+                        <i class="fas fa-map-marked-alt"></i>
+                        <h3>Smart Routes</h3>
+                    </div>
+                    <div class="feature-card">
+                        <i class="fas fa-camera"></i>
+                        <h3>Memories</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section class="features" id="features">
+        <div class="container">
+            <div class="section-header">
+                <h2>Everything You Need for Perfect Trips</h2>
+                <p>Comprehensive tools to plan, organize, and enjoy your travels with friends and family</p>
+            </div>
+            <div class="features-grid">
+                <div class="feature-item">
+                    <div class="feature-icon">
+                        <i class="fas fa-route"></i>
+                    </div>
+                    <h3>Smart Trip Planning</h3>
+                    <p>Create detailed itineraries with intelligent suggestions for routes, activities, and accommodations based on your preferences.</p>
+                </div>
+                <div class="feature-item">
+                    <div class="feature-icon">
+                        <i class="fas fa-users"></i>
+                    </div>
+                    <h3>Group Collaboration</h3>
+                    <p>Invite friends and family to collaborate on trip planning. Share ideas, vote on activities, and coordinate schedules seamlessly.</p>
+                </div>
+                <div class="feature-item">
+                    <div class="feature-icon">
+                        <i class="fas fa-calculator"></i>
+                    </div>
+                    <h3>Budget Management</h3>
+                    <p>Track expenses, split costs among group members, and stay within budget with our comprehensive financial tools.</p>
+                </div>
+                <div class="feature-item">
+                    <div class="feature-icon">
+                        <i class="fas fa-comments"></i>
+                    </div>
+                    <h3>Real-time Chat</h3>
+                    <p>Stay connected with your travel group through integrated messaging. Share updates, photos, and coordinate on the go.</p>
+                </div>
+                <div class="feature-item">
+                    <div class="feature-icon">
+                        <i class="fas fa-check-square"></i>
+                    </div>
+                    <h3>Packing Lists</h3>
+                    <p>Never forget essentials with smart packing lists. Customize for different trip types and check off items as you pack.</p>
+                </div>
+                <div class="feature-item">
+                    <div class="feature-icon">
+                        <i class="fas fa-star"></i>
+                    </div>
+                    <h3>AI Recommendations</h3>
+                    <p>Get personalized suggestions for restaurants, activities, and attractions based on your interests and travel history.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Auth Section -->
+    <section class="auth-section" id="auth">
+        <div class="container">
+            <div class="section-header">
+                <h2>Join TripBox Today</h2>
+                <p>Create your account and start planning amazing trips in minutes</p>
+            </div>
+            <div class="auth-container">
+                <div class="auth-toggle">
+                    <button type="button" class="active" onclick="showLogin()">Login</button>
+                    <button type="button" onclick="showRegister()">Sign Up</button>
+                </div>
+
+                <!-- Login Form -->
+                <form id="loginForm" style="display: block;">
+                    <div class="form-group">
+                        <label for="loginEmail">Email Address</label>
+                        <input type="email" id="loginEmail" required placeholder="your@email.com">
+                    </div>
+                    <div class="form-group">
+                        <label for="loginPassword">Password</label>
+                        <input type="password" id="loginPassword" required placeholder="••••••••">
+                    </div>
+                    <button type="submit" class="submit-btn">
+                        <span class="btn-text">Sign In</span>
+                        <span class="loading" style="display: none;"></span>
+                    </button>
+                    <div id="loginMessage" class="message" style="display: none;"></div>
+                </form>
+
+                <!-- Register Form -->
+                <form id="registerForm" style="display: none;">
+                    <div class="form-group">
+                        <label for="registerName">Full Name</label>
+                        <input type="text" id="registerName" required placeholder="John Doe">
+                    </div>
+                    <div class="form-group">
+                        <label for="registerEmail">Email Address</label>
+                        <input type="email" id="registerEmail" required placeholder="your@email.com">
+                    </div>
+                    <div class="form-group">
+                        <label for="registerPassword">Password</label>
+                        <input type="password" id="registerPassword" required placeholder="••••••••">
+                    </div>
+                    <button type="submit" class="submit-btn">
+                        <span class="btn-text">Create Account</span>
+                        <span class="loading" style="display: none;"></span>
+                    </button>
+                    <div id="registerMessage" class="message" style="display: none;"></div>
+                </form>
+            </div>
+        </div>
+    </section>
+
+    <script>
+        // API Base URL
+        const API_BASE = 'https://tripbox-intelliorganizer.onrender.com';
+
+        // Auth Toggle Functions
+        function showLogin() {
+            document.getElementById('loginForm').style.display = 'block';
+            document.getElementById('registerForm').style.display = 'none';
+            document.querySelector('.auth-toggle button:first-child').classList.add('active');
+            document.querySelector('.auth-toggle button:last-child').classList.remove('active');
+        }
+
+        function showRegister() {
+            document.getElementById('loginForm').style.display = 'none';
+            document.getElementById('registerForm').style.display = 'block';
+            document.querySelector('.auth-toggle button:first-child').classList.remove('active');
+            document.querySelector('.auth-toggle button:last-child').classList.add('active');
+        }
+
+        // Utility Functions
+        function showMessage(elementId, message, type) {
+            const messageEl = document.getElementById(elementId);
+            messageEl.textContent = message;
+            messageEl.className = `message ${type}`;
+            messageEl.style.display = 'block';
+        }
+
+        function setLoading(formId, loading) {
+            const form = document.getElementById(formId);
+            const btnText = form.querySelector('.btn-text');
+            const loadingSpinner = form.querySelector('.loading');
+            const submitBtn = form.querySelector('.submit-btn');
+
+            if (loading) {
+                btnText.style.display = 'none';
+                loadingSpinner.style.display = 'inline-block';
+                submitBtn.disabled = true;
+            } else {
+                btnText.style.display = 'inline';
+                loadingSpinner.style.display = 'none';
+                submitBtn.disabled = false;
+            }
+        }
+
+        // Login Form Handler
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const email = document.getElementById('loginEmail').value;
+            const password = document.getElementById('loginPassword').value;
+            
+            setLoading('loginForm', true);
+            
+            try {
+                const response = await fetch(`${API_BASE}/api/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ email, password })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    localStorage.setItem('token', data.token);
+                    localStorage.setItem('user', JSON.stringify(data.user));
+                    showMessage('loginMessage', 'Login successful! Redirecting...', 'success');
+                    setTimeout(() => {
+                        window.location.href = 'dashboard.html';
+                    }, 1500);
+                } else {
+                    showMessage('loginMessage', data.error || 'Login failed', 'error');
+                }
+            } catch (error) {
+                showMessage('loginMessage', 'Network error. Please try again.', 'error');
+            } finally {
+                setLoading('loginForm', false);
+            }
+        });
+
+        // Register Form Handler
+        document.getElementById('registerForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const name = document.getElementById('registerName').value;
+            const email = document.getElementById('registerEmail').value;
+            const password = document.getElementById('registerPassword').value;
+            
+            setLoading('registerForm', true);
+            
+            try {
+                const response = await fetch(`${API_BASE}/api/register`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ name, email, password })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    showMessage('registerMessage', 'Account created successfully! Please login.', 'success');
+                    setTimeout(() => {
+                        showLogin();
+                        document.getElementById('registerForm').reset();
+                        document.getElementById('registerMessage').style.display = 'none';
+                    }, 2000);
+                } else {
+                    showMessage('registerMessage', data.error || 'Registration failed', 'error');
+                }
+            } catch (error) {
+                showMessage('registerMessage', 'Network error. Please try again.', 'error');
+            } finally {
+                setLoading('registerForm', false);
+            }
+        });
+
+        // Smooth scrolling for navigation links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+
+        // Header scroll effect
+        window.addEventListener('scroll', () => {
+            const header = document.querySelector('.header');
+            if (window.scrollY > 50) {
+                header.style.background = 'rgba(255, 255, 255, 0.98)';
+                header.style.boxShadow = '0 2px 20px rgba(0, 0, 0, 0.1)';
+            } else {
+                header.style.background = 'rgba(255, 255, 255, 0.95)';
+                header.style.boxShadow = 'none';
+            }
+        });
+
+        // Test backend connection
+        fetch(`${API_BASE}/api/hello`)
+            .then(response => response.json())
+            .then(data => {
+                console.log('Backend connected:', data.message);
+            })
+            .catch(error => {
+                console.error('Backend connection failed:', error);
+            });
+    </script>
 </body>
 </html>

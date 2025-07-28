@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TripBox Features - Everything You Need</title>
+    
+    <!-- Font Awesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary-color: #6366f1;
+            --primary-dark: #4f46e5;
+            --secondary-color: #f59e0b;
+            --accent-color: #10b981;
+            --text-primary: #1f2937;
+            --text-secondary: #6b7280;
+            --bg-primary: #ffffff;
+            --bg-secondary: #f9fafb;
+            --shadow-soft: 0 10px 25px rgba(0, 0, 0, 0.1);
+            --shadow-medium: 0 20px 40px rgba(0, 0, 0, 0.1);
+            --border-radius: 16px;
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+        }
+
+        .header {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            z-index: 1000;
+            padding: 1rem 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .nav {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 2rem;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary-color);
+            text-decoration: none;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+            list-style: none;
+        }
+
+        .nav-links a {
+            text-decoration: none;
+            color: var(--text-primary);
+            font-weight: 500;
+            transition: var(--transition);
+        }
+
+        .nav-links a:hover {
+            color: var(--primary-color);
+        }
+
+        .cta-button {
+            background: var(--primary-color);
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 50px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: var(--transition);
+        }
+
+        .cta-button:hover {
+            background: var(--primary-dark);
+            transform: translateY(-2px);
+        }
+
+        .hero {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 8rem 0 4rem;
+            text-align: center;
+            color: white;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2rem;
+        }
+
+        .hero h1 {
+            font-size: 3rem;
+            font-weight: 800;
+            margin-bottom: 1rem;
+        }
+
+        .hero p {
+            font-size: 1.25rem;
+            opacity: 0.9;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .features-section {
+            padding: 6rem 0;
+            background: var(--bg-secondary);
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 2rem;
+            margin-top: 3rem;
+        }
+
+        .feature-card {
+            background: white;
+            padding: 2.5rem;
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow-soft);
+            transition: var(--transition);
+            border: 1px solid rgba(0, 0, 0, 0.05);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .feature-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--primary-color), var(--accent-color));
+        }
+
+        .feature-card:hover {
+            transform: translateY(-8px);
+            box-shadow: var(--shadow-medium);
+        }
+
+        .feature-icon {
+            width: 80px;
+            height: 80px;
+            background: var(--primary-color);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 1.5rem;
+            font-size: 2rem;
+            color: white;
+        }
+
+        .feature-card h3 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            color: var(--text-primary);
+        }
+
+        .feature-card p {
+            color: var(--text-secondary);
+            margin-bottom: 1.5rem;
+            line-height: 1.7;
+        }
+
+        .feature-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .feature-list li {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 0.5rem;
+            color: var(--text-secondary);
+        }
+
+        .feature-list i {
+            color: var(--accent-color);
+            font-size: 0.9rem;
+        }
+
+        .demo-section {
+            padding: 6rem 0;
+            background: white;
+        }
+
+        .demo-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 4rem;
+            align-items: center;
+            margin-top: 3rem;
+        }
+
+        .demo-content h3 {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            color: var(--text-primary);
+        }
+
+        .demo-content p {
+            color: var(--text-secondary);
+            margin-bottom: 2rem;
+            font-size: 1.1rem;
+        }
+
+        .demo-visual {
+            background: var(--bg-secondary);
+            border-radius: var(--border-radius);
+            padding: 2rem;
+            text-align: center;
+            border: 2px dashed var(--primary-color);
+        }
+
+        .demo-visual i {
+            font-size: 4rem;
+            color: var(--primary-color);
+            margin-bottom: 1rem;
+        }
+
+        .pricing-section {
+            padding: 6rem 0;
+            background: var(--bg-secondary);
+        }
+
+        .pricing-card {
+            background: white;
+            padding: 3rem 2rem;
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow-soft);
+            text-align: center;
+            max-width: 400px;
+            margin: 0 auto;
+            border: 1px solid rgba(0, 0, 0, 0.05);
+        }
+
+        .pricing-card.featured {
+            border: 2px solid var(--primary-color);
+            transform: scale(1.05);
+        }
+
+        .price {
+            font-size: 3rem;
+            font-weight: 800;
+            color: var(--primary-color);
+            margin-bottom: 0.5rem;
+        }
+
+        .price-label {
+            color: var(--text-secondary);
+            margin-bottom: 2rem;
+        }
+
+        .btn {
+            background: var(--primary-color);
+            color: white;
+            padding: 1rem 2rem;
+            border-radius: 50px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: var(--transition);
+            display: inline-block;
+            margin-top: 2rem;
+        }
+
+        .btn:hover {
+            background: var(--primary-dark);
+            transform: translateY(-2px);
+        }
+
+        @media (max-width: 768px) {
+            .hero h1 {
+                font-size: 2rem;
+            }
+            
+            .demo-grid {
+                grid-template-columns: 1fr;
+                gap: 2rem;
+            }
+            
+            .features-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .nav-links {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <nav class="nav">
+            <a href="index.html" class="logo">
+                <i class="fas fa-suitcase"></i>
+                TripBox
+            </a>
+            <ul class="nav-links">
+                <li><a href="index.html">Home</a></li>
+                <li><a href="features.html">Features</a></li>
+                <li><a href="dashboard.html">Dashboard</a></li>
+            </ul>
+            <a href="index.html#auth" class="cta-button">Get Started</a>
+        </nav>
+    </header>
+
+    <section class="hero">
+        <div class="container">
+            <h1>Complete Travel Planning Solution</h1>
+            <p>Everything you need to plan, organize, and enjoy perfect trips with your friends and family</p>
+        </div>
+    </section>
+
+    <section class="features-section">
+        <div class="container">
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-route"></i>
+                    </div>
+                    <h3>Smart Trip Planning</h3>
+                    <p>Create detailed itineraries with intelligent suggestions and automated planning tools.</p>
+                    <ul class="feature-list">
+                        <li><i class="fas fa-check"></i> AI-powered recommendations</li>
+                        <li><i class="fas fa-check"></i> Custom itinerary builder</li>
+                        <li><i class="fas fa-check"></i> Route optimization</li>
+                        <li><i class="fas fa-check"></i> Weather integration</li>
+                    </ul>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-users"></i>
+                    </div>
+                    <h3>Group Collaboration</h3>
+                    <p>Invite friends and family to collaborate seamlessly on every aspect of your trip.</p>
+                    <ul class="feature-list">
+                        <li><i class="fas fa-check"></i> Real-time collaboration</li>
+                        <li><i class="fas fa-check"></i> Group voting system</li>
+                        <li><i class="fas fa-check"></i> Role-based permissions</li>
+                        <li><i class="fas fa-check"></i> Activity coordination</li>
+                    </ul>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-calculator"></i>
+                    </div>
+                    <h3>Advanced Budget Management</h3>
+                    <p>Track expenses, split costs, and stay within budget with comprehensive financial tools.</p>
+                    <ul class="feature-list">
+                        <li><i class="fas fa-check"></i> Expense tracking</li>
+                        <li><i class="fas fa-check"></i> Automatic cost splitting</li>
+                        <li><i class="fas fa-check"></i> Budget alerts</li>
+                        <li><i class="fas fa-check"></i> Currency conversion</li>
+                    </ul>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-comments"></i>
+                    </div>
+                    <h3>Real-time Communication</h3>
+                    <p>Stay connected with your travel group through integrated messaging and updates.</p>
+                    <ul class="feature-list">
+                        <li><i class="fas fa-check"></i> Group chat</li>
+                        <li><i class="fas fa-check"></i> Live updates</li>
+                        <li><i class="fas fa-check"></i> Photo sharing</li>
+                        <li><i class="fas fa-check"></i> Offline messaging</li>
+                    </ul>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-camera"></i>
+                    </div>
+                    <h3>Memory Gallery</h3>
+                    <p>Capture and organize your travel memories with intelligent photo management.</p>
+                    <ul class="feature-list">
+                        <li><i class="fas fa-check"></i> Unlimited photo storage</li>
+                        <li><i class="fas fa-check"></i> Auto-organization</li>
+                        <li><i class="fas fa-check"></i> Group photo albums</li>
+                        <li><i class="fas fa-check"></i> Location tagging</li>
+                    </ul>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-check-square"></i>
+                    </div>
+                    <h3>Smart Checklists</h3>
+                    <p>Never forget essentials with AI-powered packing lists and travel checklists.</p>
+                    <ul class="feature-list">
+                        <li><i class="fas fa-check"></i> Smart packing suggestions</li>
+                        <li><i class="fas fa-check"></i> Custom checklists</li>
+                        <li><i class="fas fa-check"></i> Shared task management</li>
+                        <li><i class="fas fa-check"></i> Progress tracking</li>
+                    </ul>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-map-marked-alt"></i>
+                    </div>
+                    <h3>Location Services</h3>
+                    <p>Share your location, check-in at destinations, and coordinate with your group.</p>
+                    <ul class="feature-list">
+                        <li><i class="fas fa-check"></i> Real-time location sharing</li>
+                        <li><i class="fas fa-check"></i> Check-in system</li>
+                        <li><i class="fas fa-check"></i> Location history</li>
+                        <li><i class="fas fa-check"></i> Safety features</li>
+                    </ul>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-star"></i>
+                    </div>
+                    <h3>AI Recommendations</h3>
+                    <p>Get personalized suggestions based on your preferences and travel history.</p>
+                    <ul class="feature-list">
+                        <li><i class="fas fa-check"></i> Restaurant recommendations</li>
+                        <li><i class="fas fa-check"></i> Activity suggestions</li>
+                        <li><i class="fas fa-check"></i> Local insights</li>
+                        <li><i class="fas fa-check"></i> Personalized experiences</li>
+                    </ul>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-shield-alt"></i>
+                    </div>
+                    <h3>Security & Privacy</h3>
+                    <p>Your data is protected with enterprise-grade security and privacy controls.</p>
+                    <ul class="feature-list">
+                        <li><i class="fas fa-check"></i> End-to-end encryption</li>
+                        <li><i class="fas fa-check"></i> Private group sharing</li>
+                        <li><i class="fas fa-check"></i> Data backup</li>
+                        <li><i class="fas fa-check"></i> GDPR compliant</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="demo-section">
+        <div class="container">
+            <div class="demo-grid">
+                <div class="demo-content">
+                    <h3>See TripBox in Action</h3>
+                    <p>Watch how TripBox transforms the way you plan and experience travel. From initial planning to sharing memories, every step is designed to be intuitive and enjoyable.</p>
+                    <a href="dashboard.html" class="btn">Try Demo</a>
+                </div>
+                <div class="demo-visual">
+                    <i class="fas fa-play-circle"></i>
+                    <h4>Interactive Demo</h4>
+                    <p>Experience all features firsthand</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="pricing-section">
+        <div class="container">
+            <div class="pricing-card featured">
+                <h3>Free Forever</h3>
+                <div class="price">$0</div>
+                <div class="price-label">All features included</div>
+                <ul class="feature-list">
+                    <li><i class="fas fa-check"></i> Unlimited trips</li>
+                    <li><i class="fas fa-check"></i> Group collaboration</li>
+                    <li><i class="fas fa-check"></i> All planning tools</li>
+                    <li><i class="fas fa-check"></i> Photo storage</li>
+                    <li><i class="fas fa-check"></i> Premium support</li>
+                </ul>
+                <a href="index.html#auth" class="btn">Get Started Free</a>
+            </div>
+        </div>
+    </section>
+</body>
+</html> 

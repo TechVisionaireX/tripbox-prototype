@@ -1,196 +1,1237 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>TripBox Dashboard</title>
-  <style>
-    body {
-      background: linear-gradient(135deg, #e9f1ff 0%, #f3f6fb 100%);
-      min-height: 100vh;
-      margin: 0;
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    }
-    .container {
-      max-width: 700px;
-      margin: 2rem auto;
-      background: #fff;
-      padding: 2rem 2.5rem 2.5rem 2.5rem;
-      border-radius: 18px;
-      box-shadow: 0 6px 32px rgba(80,100,220,0.13);
-    }
-    h1 {
-      color: #2d437e;
-      margin-bottom: 2rem;
-      text-align: center;
-      font-size: 2.1rem;
-      font-weight: 600;
-    }
-    #trips-list {
-      list-style: none;
-      padding: 0;
-      margin: 1rem 0 2.2rem 0;
-    }
-    .trip-card {
-      background: #f4f7fc;
-      border-radius: 10px;
-      margin-bottom: 1.1rem;
-      padding: 1.1rem 1.5rem;
-      box-shadow: 0 2px 8px rgba(85,120,180,0.09);
-      display: flex;
-      flex-direction: column;
-      gap: 0.4rem;
-    }
-    .trip-card .trip-title {
-      color: #204378;
-      font-size: 1.2rem;
-      font-weight: 600;
-    }
-    .trip-card .trip-dates {
-      color: #5e6986;
-      font-size: 1rem;
-    }
-    .trip-card .trip-desc {
-      color: #6d758c;
-      font-size: 0.98rem;
-      margin-bottom: 0.3rem;
-    }
-    form {
-      background: #f6fafd;
-      border-radius: 10px;
-      padding: 1.5rem 1.5rem 1rem 1.5rem;
-      box-shadow: 0 2px 8px rgba(85,120,180,0.07);
-      display: flex;
-      flex-direction: column;
-      gap: 1rem;
-      margin-bottom: 2rem;
-    }
-    input, textarea {
-      font-size: 1rem;
-      padding: 0.5rem 0.8rem;
-      border-radius: 7px;
-      border: 1px solid #b2c5e3;
-      background: #f9fbfe;
-      outline: none;
-      transition: border 0.2s;
-    }
-    input:focus, textarea:focus {
-      border: 1.5px solid #2d437e;
-      background: #f2f7fd;
-    }
-    button {
-      background: #2e4a91;
-      color: #fff;
-      border: none;
-      border-radius: 7px;
-      font-size: 1.06rem;
-      font-weight: 500;
-      padding: 0.7rem 0;
-      cursor: pointer;
-      margin-top: 0.4rem;
-      transition: background 0.18s;
-    }
-    button:hover {
-      background: #203463;
-    }
-    .msg {
-      text-align: center;
-      color: #257045;
-      font-weight: 500;
-      margin-top: 0.7rem;
-      margin-bottom: 0.3rem;
-    }
-    @media (max-width: 620px) {
-      .container { padding: 1rem 0.3rem; }
-      form { padding: 1rem 0.5rem; }
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TripBox Dashboard - Manage Your Adventures</title>
+    
+    <!-- Font Awesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary-color: #6366f1;
+            --primary-dark: #4f46e5;
+            --secondary-color: #f59e0b;
+            --accent-color: #10b981;
+            --success-color: #059669;
+            --warning-color: #d97706;
+            --error-color: #dc2626;
+            --text-primary: #1f2937;
+            --text-secondary: #6b7280;
+            --text-light: #9ca3af;
+            --bg-primary: #ffffff;
+            --bg-secondary: #f9fafb;
+            --bg-tertiary: #f3f4f6;
+            --border-color: #e5e7eb;
+            --shadow-soft: 0 4px 6px rgba(0, 0, 0, 0.05);
+            --shadow-medium: 0 10px 25px rgba(0, 0, 0, 0.1);
+            --shadow-strong: 0 20px 40px rgba(0, 0, 0, 0.15);
+            --border-radius: 12px;
+            --border-radius-lg: 16px;
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            line-height: 1.6;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            position: fixed;
+            left: 0;
+            top: 0;
+            width: 280px;
+            height: 100vh;
+            background: white;
+            box-shadow: var(--shadow-medium);
+            z-index: 1000;
+            overflow-y: auto;
+            transition: var(--transition);
+        }
+
+        .sidebar-header {
+            padding: 2rem 1.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary-color);
+            text-decoration: none;
+        }
+
+        .logo i {
+            font-size: 2rem;
+        }
+
+        .user-info {
+            margin-top: 1rem;
+            padding: 1rem;
+            background: var(--bg-secondary);
+            border-radius: var(--border-radius);
+        }
+
+        .user-info h3 {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 0.25rem;
+        }
+
+        .user-info p {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+        }
+
+        .nav-menu {
+            padding: 1.5rem 0;
+        }
+
+        .nav-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .nav-link {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.875rem 1.5rem;
+            color: var(--text-secondary);
+            text-decoration: none;
+            transition: var(--transition);
+            position: relative;
+        }
+
+        .nav-link:hover, .nav-link.active {
+            color: var(--primary-color);
+            background: rgba(99, 102, 241, 0.1);
+        }
+
+        .nav-link.active::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 4px;
+            background: var(--primary-color);
+        }
+
+        .nav-link i {
+            font-size: 1.1rem;
+            width: 20px;
+        }
+
+        .logout-btn {
+            position: absolute;
+            bottom: 2rem;
+            left: 1.5rem;
+            right: 1.5rem;
+            background: var(--error-color);
+            color: white;
+            border: none;
+            padding: 0.75rem;
+            border-radius: var(--border-radius);
+            font-weight: 500;
+            cursor: pointer;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        .logout-btn:hover {
+            background: #b91c1c;
+        }
+
+        /* Main Content */
+        .main-content {
+            margin-left: 280px;
+            min-height: 100vh;
+        }
+
+        .header {
+            background: white;
+            padding: 1.5rem 2rem;
+            border-bottom: 1px solid var(--border-color);
+            box-shadow: var(--shadow-soft);
+        }
+
+        .header h1 {
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 0.5rem;
+        }
+
+        .header p {
+            color: var(--text-secondary);
+        }
+
+        .content {
+            padding: 2rem;
+        }
+
+        /* Cards */
+        .card {
+            background: white;
+            border-radius: var(--border-radius-lg);
+            box-shadow: var(--shadow-soft);
+            border: 1px solid var(--border-color);
+            transition: var(--transition);
+            overflow: hidden;
+        }
+
+        .card:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-medium);
+        }
+
+        .card-header {
+            padding: 1.5rem 2rem;
+            border-bottom: 1px solid var(--border-color);
+            background: var(--bg-secondary);
+        }
+
+        .card-header h2 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .card-body {
+            padding: 2rem;
+        }
+
+        /* Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: var(--border-radius-lg);
+            box-shadow: var(--shadow-soft);
+            border: 1px solid var(--border-color);
+            transition: var(--transition);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--primary-color), var(--accent-color));
+        }
+
+        .stat-card:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-medium);
+        }
+
+        .stat-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 1rem;
+        }
+
+        .stat-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            color: white;
+        }
+
+        .stat-icon.primary { background: var(--primary-color); }
+        .stat-icon.success { background: var(--success-color); }
+        .stat-icon.warning { background: var(--warning-color); }
+        .stat-icon.secondary { background: var(--secondary-color); }
+
+        .stat-number {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 0.25rem;
+        }
+
+        .stat-label {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+        /* Form Styles */
+        .form-section {
+            margin-bottom: 2rem;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            font-size: 0.9rem;
+        }
+
+        .form-group input,
+        .form-group textarea,
+        .form-group select {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border: 2px solid var(--border-color);
+            border-radius: var(--border-radius);
+            font-size: 0.95rem;
+            transition: var(--transition);
+            background: white;
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+        }
+
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: var(--border-radius);
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            text-decoration: none;
+            justify-content: center;
+        }
+
+        .btn-primary {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-dark);
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-medium);
+        }
+
+        .btn-success {
+            background: var(--success-color);
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #047857;
+        }
+
+        .btn-secondary {
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+        }
+
+        .btn-secondary:hover {
+            background: var(--border-color);
+        }
+
+        .btn-sm {
+            padding: 0.5rem 1rem;
+            font-size: 0.85rem;
+        }
+
+        /* Trip Cards */
+        .trips-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 1.5rem;
+            margin-top: 1.5rem;
+        }
+
+        .trip-card {
+            background: white;
+            border-radius: var(--border-radius-lg);
+            box-shadow: var(--shadow-soft);
+            border: 1px solid var(--border-color);
+            overflow: hidden;
+            transition: var(--transition);
+            position: relative;
+        }
+
+        .trip-card:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-strong);
+        }
+
+        .trip-card-header {
+            padding: 1.5rem;
+            background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+            color: white;
+            position: relative;
+        }
+
+        .trip-card-header::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .trip-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .trip-dates {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+
+        .trip-card-body {
+            padding: 1.5rem;
+        }
+
+        .trip-description {
+            color: var(--text-secondary);
+            margin-bottom: 1rem;
+            line-height: 1.5;
+        }
+
+        .trip-actions {
+            display: flex;
+            gap: 0.75rem;
+            flex-wrap: wrap;
+        }
+
+        /* Messages */
+        .message {
+            padding: 1rem 1.25rem;
+            border-radius: var(--border-radius);
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            font-weight: 500;
+            animation: slideInDown 0.3s ease-out;
+        }
+
+        .message.success {
+            background: #d1fae5;
+            color: #065f46;
+            border: 1px solid var(--success-color);
+        }
+
+        .message.error {
+            background: #fee2e2;
+            color: #991b1b;
+            border: 1px solid var(--error-color);
+        }
+
+        .message.info {
+            background: #dbeafe;
+            color: #1e40af;
+            border: 1px solid var(--primary-color);
+        }
+
+        /* Loading States */
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(99, 102, 241, 0.3);
+            border-radius: 50%;
+            border-top-color: var(--primary-color);
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .skeleton {
+            background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+            background-size: 200% 100%;
+            animation: loading 1.5s infinite;
+            border-radius: var(--border-radius);
+        }
+
+        @keyframes loading {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+
+        /* Animations */
+        @keyframes slideInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes slideInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .fade-in {
+            animation: fadeIn 0.5s ease-out;
+        }
+
+        .slide-in-up {
+            animation: slideInUp 0.5s ease-out;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 1024px) {
+            .sidebar {
+                width: 260px;
+            }
+            
+            .main-content {
+                margin-left: 260px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+            
+            .sidebar.open {
+                transform: translateX(0);
+            }
+            
+            .main-content {
+                margin-left: 0;
+            }
+            
+            .content {
+                padding: 1rem;
+            }
+            
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .trips-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Hide scrollbar but keep functionality */
+        .sidebar::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .sidebar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .sidebar::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 3px;
+        }
+
+        .sidebar::-webkit-scrollbar-thumb:hover {
+            background: var(--text-light);
+        }
+
+        /* Mobile menu button */
+        .menu-toggle {
+            display: none;
+            position: fixed;
+            top: 1rem;
+            left: 1rem;
+            z-index: 1001;
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .menu-toggle:hover {
+            background: var(--primary-dark);
+        }
+
+        @media (max-width: 768px) {
+            .menu-toggle {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 3rem 1rem;
+            color: var(--text-secondary);
+        }
+
+        .empty-state i {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            opacity: 0.5;
+        }
+
+        .empty-state h3 {
+            font-size: 1.25rem;
+            margin-bottom: 0.5rem;
+            color: var(--text-primary);
+        }
+    </style>
 </head>
 <body>
-  <div class="container">
-    <h1>My Trips</h1>
-    <form id="addTripForm">
-      <input type="text" id="tripName" placeholder="Trip Name" required />
-      <input type="date" id="startDate" required />
-      <input type="date" id="endDate" required />
-      <textarea id="tripDesc" placeholder="Description" rows="2"></textarea>
-      <button type="submit">Add Trip</button>
-      <div class="msg" id="addTripMsg"></div>
-    </form>
-    <ul id="trips-list"></ul>
-  </div>
-  <script>
-    // ---- Helper: get token from login.html ----
-    function getToken() {
-      return localStorage.getItem('token');
-    }
-    // ---- Fetch & Render all trips ----
-    async function loadTrips() {
-      const token = getToken();
-      if (!token) {
-        document.getElementById('trips-list').innerHTML = '<li style="color:red;">You are not logged in!</li>';
-        return;
-      }
-      const res = await fetch('https://tripbox-intelliorganizer.onrender.com/api/trips', {
-        headers: { 'Authorization': 'Bearer ' + token }
-      });
-      if (!res.ok) {
-        document.getElementById('trips-list').innerHTML = '<li style="color:red;">Error loading trips</li>';
-        return;
-      }
-      const trips = await res.json();
-      const list = document.getElementById('trips-list');
-      list.innerHTML = '';
-      if (trips.length === 0) {
-        list.innerHTML = '<li style="color:#8a93aa;">No trips yet. Add your first trip above!</li>';
-      }
-      trips.forEach(trip => {
-        const li = document.createElement('li');
-        li.className = 'trip-card';
-        li.innerHTML = `
-          <div class="trip-title">${trip.name}</div>
-          <div class="trip-dates">${trip.start_date} – ${trip.end_date}</div>
-          <div class="trip-desc">${trip.description || ''}</div>
-        `;
-        list.appendChild(li);
-      });
-    }
+    <!-- Mobile Menu Toggle -->
+    <button class="menu-toggle" onclick="toggleSidebar()">
+        <i class="fas fa-bars"></i>
+    </button>
 
-    // ---- Handle Add Trip ----
-    document.getElementById('addTripForm').addEventListener('submit', async function(e) {
-      e.preventDefault();
-      const name = document.getElementById('tripName').value.trim();
-      const start_date = document.getElementById('startDate').value;
-      const end_date = document.getElementById('endDate').value;
-      const description = document.getElementById('tripDesc').value.trim();
-      const token = getToken();
-      document.getElementById('addTripMsg').textContent = "";
-      if (!token) {
-        document.getElementById('addTripMsg').textContent = "You must be logged in!";
-        return;
-      }
-      const res = await fetch('https://tripbox-intelliorganizer.onrender.com/api/trips', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer ' + token
-        },
-        body: JSON.stringify({ name, start_date, end_date, description })
-      });
-      const data = await res.json();
-      if (res.ok) {
-        document.getElementById('addTripMsg').style.color = "#257045";
-        document.getElementById('addTripMsg').textContent = "Trip added!";
-        loadTrips();
-        document.getElementById('addTripForm').reset();
-      } else {
-        document.getElementById('addTripMsg').style.color = "#d9534f";
-        document.getElementById('addTripMsg').textContent = data.error || "Failed to add trip!";
-      }
-    });
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <a href="index.html" class="logo">
+                <i class="fas fa-suitcase"></i>
+                TripBox
+            </a>
+            <div class="user-info" id="userInfo">
+                <h3 id="userName">Loading...</h3>
+                <p id="userEmail">user@example.com</p>
+            </div>
+        </div>
+        
+        <nav class="nav-menu">
+            <div class="nav-item">
+                <a href="#" class="nav-link active" onclick="showSection('dashboard')">
+                    <i class="fas fa-home"></i>
+                    Dashboard
+                </a>
+            </div>
+            <div class="nav-item">
+                <a href="#" class="nav-link" onclick="showSection('trips')">
+                    <i class="fas fa-route"></i>
+                    My Trips
+                </a>
+            </div>
+            <div class="nav-item">
+                <a href="#" class="nav-link" onclick="showSection('groups')">
+                    <i class="fas fa-users"></i>
+                    Groups
+                </a>
+            </div>
+            <div class="nav-item">
+                <a href="#" class="nav-link" onclick="showSection('expenses')">
+                    <i class="fas fa-wallet"></i>
+                    Expenses
+                </a>
+            </div>
+            <div class="nav-item">
+                <a href="#" class="nav-link" onclick="showSection('gallery')">
+                    <i class="fas fa-camera"></i>
+                    Gallery
+                </a>
+            </div>
+            <div class="nav-item">
+                <a href="#" class="nav-link" onclick="showSection('checklist')">
+                    <i class="fas fa-check-square"></i>
+                    Checklists
+                </a>
+            </div>
+        </nav>
+        
+        <button class="logout-btn" onclick="logout()">
+            <i class="fas fa-sign-out-alt"></i>
+            Logout
+        </button>
+    </aside>
 
-    // ---- Load all trips on page load ----
-    window.onload = loadTrips;
-  </script>
+    <!-- Main Content -->
+    <main class="main-content">
+        <!-- Dashboard Section -->
+        <section id="dashboardSection" class="section active">
+            <div class="header">
+                <h1>Welcome Back!</h1>
+                <p>Here's what's happening with your trips today</p>
+            </div>
+            
+            <div class="content">
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-header">
+                            <div>
+                                <div class="stat-number" id="totalTrips">-</div>
+                                <div class="stat-label">Total Trips</div>
+                            </div>
+                            <div class="stat-icon primary">
+                                <i class="fas fa-route"></i>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <div class="stat-header">
+                            <div>
+                                <div class="stat-number" id="activeGroups">-</div>
+                                <div class="stat-label">Active Groups</div>
+                            </div>
+                            <div class="stat-icon success">
+                                <i class="fas fa-users"></i>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <div class="stat-header">
+                            <div>
+                                <div class="stat-number" id="totalExpenses">$0</div>
+                                <div class="stat-label">Total Expenses</div>
+                            </div>
+                            <div class="stat-icon warning">
+                                <i class="fas fa-dollar-sign"></i>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <div class="stat-header">
+                            <div>
+                                <div class="stat-number" id="photosCount">-</div>
+                                <div class="stat-label">Photos Shared</div>
+                            </div>
+                            <div class="stat-icon secondary">
+                                <i class="fas fa-camera"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h2>
+                            <i class="fas fa-route"></i>
+                            Recent Trips
+                        </h2>
+                    </div>
+                    <div class="card-body">
+                        <div id="recentTrips" class="trips-grid">
+                            <!-- Trips will be loaded here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Trips Section -->
+        <section id="tripsSection" class="section" style="display: none;">
+            <div class="header">
+                <h1>My Trips</h1>
+                <p>Plan and organize your adventures</p>
+            </div>
+            
+            <div class="content">
+                <div class="card form-section">
+                    <div class="card-header">
+                        <h2>
+                            <i class="fas fa-plus"></i>
+                            Create New Trip
+                        </h2>
+                    </div>
+                    <div class="card-body">
+                        <form id="addTripForm">
+                            <div class="form-grid">
+                                <div class="form-group">
+                                    <label for="tripName">Trip Name</label>
+                                    <input type="text" id="tripName" placeholder="Amazing Adventure" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="startDate">Start Date</label>
+                                    <input type="date" id="startDate" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="endDate">End Date</label>
+                                    <input type="date" id="endDate" required>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="tripDesc">Description</label>
+                                <textarea id="tripDesc" placeholder="Describe your trip..." rows="3"></textarea>
+                            </div>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-plus"></i>
+                                Create Trip
+                            </button>
+                            <div id="addTripMessage" class="message" style="display: none;"></div>
+                        </form>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h2>
+                            <i class="fas fa-list"></i>
+                            All Trips
+                        </h2>
+                    </div>
+                    <div class="card-body">
+                        <div id="allTrips" class="trips-grid">
+                            <!-- All trips will be loaded here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Placeholder sections for other features -->
+        <section id="groupsSection" class="section" style="display: none;">
+            <div class="header">
+                <h1>Groups</h1>
+                <p>Collaborate with your travel companions</p>
+            </div>
+            <div class="content">
+                <div class="empty-state">
+                    <i class="fas fa-users"></i>
+                    <h3>Groups Feature</h3>
+                    <p>Create and manage travel groups to collaborate on trip planning.</p>
+                    <button class="btn btn-primary" style="margin-top: 1rem;">
+                        <i class="fas fa-plus"></i>
+                        Create Group
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <section id="expensesSection" class="section" style="display: none;">
+            <div class="header">
+                <h1>Expenses</h1>
+                <p>Track and split your travel costs</p>
+            </div>
+            <div class="content">
+                <div class="empty-state">
+                    <i class="fas fa-wallet"></i>
+                    <h3>Expense Tracking</h3>
+                    <p>Monitor your spending and split costs with group members.</p>
+                    <button class="btn btn-primary" style="margin-top: 1rem;">
+                        <i class="fas fa-plus"></i>
+                        Add Expense
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <section id="gallerySection" class="section" style="display: none;">
+            <div class="header">
+                <h1>Gallery</h1>
+                <p>Share and preserve your travel memories</p>
+            </div>
+            <div class="content">
+                <div class="empty-state">
+                    <i class="fas fa-camera"></i>
+                    <h3>Photo Gallery</h3>
+                    <p>Upload and share photos from your adventures with your group.</p>
+                    <button class="btn btn-primary" style="margin-top: 1rem;">
+                        <i class="fas fa-upload"></i>
+                        Upload Photos
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <section id="checklistSection" class="section" style="display: none;">
+            <div class="header">
+                <h1>Checklists</h1>
+                <p>Stay organized with packing and to-do lists</p>
+            </div>
+            <div class="content">
+                <div class="empty-state">
+                    <i class="fas fa-check-square"></i>
+                    <h3>Smart Checklists</h3>
+                    <p>Create packing lists and to-do items to ensure you don't forget anything.</p>
+                    <button class="btn btn-primary" style="margin-top: 1rem;">
+                        <i class="fas fa-plus"></i>
+                        Create Checklist
+                    </button>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        // API Configuration
+        const API_BASE = 'https://tripbox-intelliorganizer.onrender.com';
+        
+        // Global State
+        let currentUser = null;
+        let currentTrips = [];
+
+        // Authentication Check
+        function checkAuth() {
+            const token = localStorage.getItem('token');
+            const user = localStorage.getItem('user');
+            
+            if (!token || !user) {
+                window.location.href = 'index.html';
+                return false;
+            }
+            
+            try {
+                currentUser = JSON.parse(user);
+                updateUserInfo();
+                return true;
+            } catch (error) {
+                console.error('Error parsing user data:', error);
+                logout();
+                return false;
+            }
+        }
+
+        // Update User Info in Sidebar
+        function updateUserInfo() {
+            if (currentUser) {
+                document.getElementById('userName').textContent = currentUser.name || 'User';
+                document.getElementById('userEmail').textContent = currentUser.email || '';
+            }
+        }
+
+        // Navigation Functions
+        function showSection(sectionName) {
+            // Hide all sections
+            document.querySelectorAll('.section').forEach(section => {
+                section.style.display = 'none';
+            });
+            
+            // Remove active class from all nav links
+            document.querySelectorAll('.nav-link').forEach(link => {
+                link.classList.remove('active');
+            });
+            
+            // Show selected section
+            document.getElementById(sectionName + 'Section').style.display = 'block';
+            
+            // Add active class to clicked nav link
+            event.target.classList.add('active');
+            
+            // Load section-specific data
+            switch(sectionName) {
+                case 'dashboard':
+                    loadDashboardData();
+                    break;
+                case 'trips':
+                    loadAllTrips();
+                    break;
+                // Add cases for other sections as needed
+            }
+        }
+
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('open');
+        }
+
+        // API Helper Functions
+        function getAuthHeaders() {
+            return {
+                'Authorization': `Bearer ${localStorage.getItem('token')}`,
+                'Content-Type': 'application/json'
+            };
+        }
+
+        async function apiCall(endpoint, options = {}) {
+            try {
+                const response = await fetch(`${API_BASE}${endpoint}`, {
+                    ...options,
+                    headers: {
+                        ...getAuthHeaders(),
+                        ...options.headers
+                    }
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                return await response.json();
+            } catch (error) {
+                console.error('API call failed:', error);
+                throw error;
+            }
+        }
+
+        // Dashboard Functions
+        async function loadDashboardData() {
+            try {
+                // Load trips for dashboard stats
+                await loadTrips();
+                updateDashboardStats();
+                displayRecentTrips();
+            } catch (error) {
+                console.error('Error loading dashboard data:', error);
+            }
+        }
+
+        function updateDashboardStats() {
+            document.getElementById('totalTrips').textContent = currentTrips.length;
+            // Add more stats calculations here
+            document.getElementById('activeGroups').textContent = '0';
+            document.getElementById('totalExpenses').textContent = '$0';
+            document.getElementById('photosCount').textContent = '0';
+        }
+
+        function displayRecentTrips() {
+            const recentTripsContainer = document.getElementById('recentTrips');
+            const recentTrips = currentTrips.slice(0, 3); // Show only first 3 trips
+            
+            if (recentTrips.length === 0) {
+                recentTripsContainer.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-route"></i>
+                        <h3>No trips yet</h3>
+                        <p>Create your first trip to get started!</p>
+                        <button class="btn btn-primary" onclick="showSection('trips')" style="margin-top: 1rem;">
+                            <i class="fas fa-plus"></i>
+                            Create Trip
+                        </button>
+                    </div>
+                `;
+                return;
+            }
+            
+            recentTripsContainer.innerHTML = recentTrips.map(trip => createTripCard(trip)).join('');
+        }
+
+        // Trip Functions
+        async function loadTrips() {
+            try {
+                currentTrips = await apiCall('/api/trips');
+            } catch (error) {
+                console.error('Error loading trips:', error);
+                showMessage('Error loading trips', 'error');
+            }
+        }
+
+        async function loadAllTrips() {
+            try {
+                await loadTrips();
+                displayAllTrips();
+            } catch (error) {
+                console.error('Error loading trips:', error);
+            }
+        }
+
+        function displayAllTrips() {
+            const allTripsContainer = document.getElementById('allTrips');
+            
+            if (currentTrips.length === 0) {
+                allTripsContainer.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-route"></i>
+                        <h3>No trips yet</h3>
+                        <p>Create your first amazing adventure!</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            allTripsContainer.innerHTML = currentTrips.map(trip => createTripCard(trip, true)).join('');
+        }
+
+        function createTripCard(trip, showActions = false) {
+            return `
+                <div class="trip-card slide-in-up">
+                    <div class="trip-card-header">
+                        <div class="trip-title">${trip.name}</div>
+                        <div class="trip-dates">
+                            <i class="fas fa-calendar"></i>
+                            ${trip.start_date} - ${trip.end_date}
+                        </div>
+                    </div>
+                    <div class="trip-card-body">
+                        <div class="trip-description">
+                            ${trip.description || 'No description provided'}
+                        </div>
+                        ${showActions ? `
+                            <div class="trip-actions">
+                                <button class="btn btn-primary btn-sm">
+                                    <i class="fas fa-edit"></i>
+                                    Edit
+                                </button>
+                                <button class="btn btn-secondary btn-sm">
+                                    <i class="fas fa-users"></i>
+                                    Manage Group
+                                </button>
+                                <button class="btn btn-success btn-sm">
+                                    <i class="fas fa-check"></i>
+                                    Finalize
+                                </button>
+                            </div>
+                        ` : ''}
+                    </div>
+                </div>
+            `;
+        }
+
+        // Form Handlers
+        document.getElementById('addTripForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const formData = {
+                name: document.getElementById('tripName').value.trim(),
+                start_date: document.getElementById('startDate').value,
+                end_date: document.getElementById('endDate').value,
+                description: document.getElementById('tripDesc').value.trim()
+            };
+            
+            try {
+                const submitBtn = e.target.querySelector('button[type="submit"]');
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = '<span class="loading"></span> Creating...';
+                
+                await apiCall('/api/trips', {
+                    method: 'POST',
+                    body: JSON.stringify(formData)
+                });
+                
+                showMessage('addTripMessage', 'Trip created successfully!', 'success');
+                document.getElementById('addTripForm').reset();
+                
+                // Reload trips data
+                await loadTrips();
+                if (document.getElementById('tripsSection').style.display !== 'none') {
+                    displayAllTrips();
+                }
+                if (document.getElementById('dashboardSection').style.display !== 'none') {
+                    updateDashboardStats();
+                    displayRecentTrips();
+                }
+                
+            } catch (error) {
+                showMessage('addTripMessage', 'Failed to create trip. Please try again.', 'error');
+            } finally {
+                const submitBtn = e.target.querySelector('button[type="submit"]');
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<i class="fas fa-plus"></i> Create Trip';
+            }
+        });
+
+        // Utility Functions
+        function showMessage(elementId, message, type) {
+            const messageEl = document.getElementById(elementId);
+            messageEl.innerHTML = `
+                <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-triangle' : 'info-circle'}"></i>
+                ${message}
+            `;
+            messageEl.className = `message ${type}`;
+            messageEl.style.display = 'flex';
+            
+            // Auto-hide success messages
+            if (type === 'success') {
+                setTimeout(() => {
+                    messageEl.style.display = 'none';
+                }, 5000);
+            }
+        }
+
+        function logout() {
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+            window.location.href = 'index.html';
+        }
+
+        // Initialize App
+        document.addEventListener('DOMContentLoaded', () => {
+            if (checkAuth()) {
+                loadDashboardData();
+            }
+        });
+
+        // Close mobile sidebar when clicking outside
+        document.addEventListener('click', (e) => {
+            const sidebar = document.getElementById('sidebar');
+            const menuToggle = document.querySelector('.menu-toggle');
+            
+            if (window.innerWidth <= 768 && 
+                !sidebar.contains(e.target) && 
+                !menuToggle.contains(e.target) && 
+                sidebar.classList.contains('open')) {
+                sidebar.classList.remove('open');
+            }
+        });
+    </script>
 </body>
 </html>
