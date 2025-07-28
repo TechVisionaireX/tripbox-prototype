@@ -67,39 +67,65 @@ try:
 except Exception as e:
     print("FAILED to import location_bp:", e)
 
-# ✅ NEW FEATURES: Temporarily disabled for deployment fix
-# Will re-enable once basic deployment is working
+# ✅ NEW: Additional Feature Blueprints
+try:
+    from itinerary import itinerary_bp
+    print("Imported itinerary_bp successfully!")
+except Exception as e:
+    print("FAILED to import itinerary_bp:", e)
 
-# try:
-#     from ai_recommendations import ai_recommendations_bp
-#     print("Imported ai_recommendations_bp successfully!")
-# except Exception as e:
-#     print("FAILED to import ai_recommendations_bp:", e)
+try:
+    from polls import polls_bp
+    print("Imported polls_bp successfully!")
+except Exception as e:
+    print("FAILED to import polls_bp:", e)
 
-# try:
-#     from live_location import live_location_bp
-#     print("Imported live_location_bp successfully!")
-# except Exception as e:
-#     print("FAILED to import live_location_bp:", e)
+try:
+    from trip_finalization import trip_finalization_bp
+    print("Imported trip_finalization_bp successfully!")
+except Exception as e:
+    print("FAILED to import trip_finalization_bp:", e)
 
-# try:
-#     from pdf_generator import pdf_generator_bp
-#     print("Imported pdf_generator_bp successfully!")
-# except Exception as e:
-#     print("FAILED to import pdf_generator_bp:", e)
+try:
+    from enhanced_chat import enhanced_chat_bp
+    print("Imported enhanced_chat_bp successfully!")
+except Exception as e:
+    print("FAILED to import enhanced_chat_bp:", e)
 
-# try:
-#     from real_time_chat import real_time_chat_bp
-#     print("Imported real_time_chat_bp successfully!")
-# except Exception as e:
-#     print("FAILED to import real_time_chat_bp:", e)
+# Re-enable all advanced features
+try:
+    from ai_recommendations import ai_recommendations_bp
+    print("Imported ai_recommendations_bp successfully!")
+except Exception as e:
+    print("FAILED to import ai_recommendations_bp:", e)
+
+try:
+    from live_location import live_location_bp
+    print("Imported live_location_bp successfully!")
+except Exception as e:
+    print("FAILED to import live_location_bp:", e)
+
+try:
+    from pdf_generator import pdf_generator_bp
+    print("Imported pdf_generator_bp successfully!")
+except Exception as e:
+    print("FAILED to import pdf_generator_bp:", e)
+
+try:
+    from real_time_chat import real_time_chat_bp
+    print("Imported real_time_chat_bp successfully!")
+except Exception as e:
+    print("FAILED to import real_time_chat_bp:", e)
 
 # Initialize app
 app = Flask(__name__)
 
-# Update CORS configuration for production
+# Update CORS configuration for production and development
 CORS(app, origins=[
     "http://localhost:3000",
+    "http://localhost:5000",
+    "http://127.0.0.1:5000",
+    "http://127.0.0.1:3000",
     "https://resilient-marshmallow-13df59.netlify.app",
     "https://*.netlify.app"  # Allow any Netlify subdomain
 ])
@@ -140,7 +166,11 @@ app.register_blueprint(gallery_bp)
 app.register_blueprint(checklist_bp)
 app.register_blueprint(budget_bp)
 app.register_blueprint(finalize_bp)
-app.register_blueprint(location_bp)  #  NEW
+app.register_blueprint(location_bp)  # NEW
+app.register_blueprint(itinerary_bp)  # NEW - Itinerary Planning
+app.register_blueprint(polls_bp)  # NEW - Polls and Voting
+app.register_blueprint(trip_finalization_bp)  # NEW - Trip Finalization
+app.register_blueprint(enhanced_chat_bp)  # NEW - Enhanced Chat Features
 # Advanced features will be enabled after initial deployment
 try:
     from ai_recommendations import ai_recommendations_bp
@@ -168,7 +198,25 @@ def home():
 
 @app.route('/api/hello')
 def hello():
-    return jsonify(message="Hello from backend!")
+    return jsonify(message="TripBox-IntelliOrganizer backend is running!")
+
+@app.route('/api/create-test-user', methods=['POST'])
+def create_test_user():
+    try:
+        # Check if test user already exists
+        test_user = User.query.filter_by(email='test@test.com').first()
+        if test_user:
+            return jsonify({'message': 'Test user already exists', 'email': 'test@test.com', 'password': 'test123'})
+        
+        # Create test user
+        hashed_password = bcrypt.generate_password_hash('test123').decode('utf-8')
+        test_user = User(email='test@test.com', password=hashed_password, name='Test User')
+        db.session.add(test_user)
+        db.session.commit()
+        
+        return jsonify({'message': 'Test user created successfully', 'email': 'test@test.com', 'password': 'test123'})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
 # Run server
 if __name__ == '__main__':

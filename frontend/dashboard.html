@@ -608,6 +608,16 @@
             .form-grid {
                 grid-template-columns: 1fr;
             }
+            
+            .checklist-container,
+            .grid-container {
+                grid-template-columns: 1fr;
+            }
+            
+            .modal-content {
+                width: 95%;
+                max-height: 95vh;
+            }
         }
 
         /* Hide scrollbar but keep functionality */
@@ -1105,6 +1115,30 @@
                 </a>
             </div>
             <div class="nav-item">
+                <a href="#" class="nav-link" onclick="showSection('itinerary')">
+                    <i class="fas fa-calendar-alt"></i>
+                    Itinerary
+                </a>
+            </div>
+            <div class="nav-item">
+                <a href="#" class="nav-link" onclick="showSection('polls')">
+                    <i class="fas fa-poll-h"></i>
+                    Polls & Voting
+                </a>
+            </div>
+            <div class="nav-item">
+                <a href="#" class="nav-link" onclick="showSection('enhanced-chat')">
+                    <i class="fas fa-comments"></i>
+                    Enhanced Chat
+                </a>
+            </div>
+            <div class="nav-item">
+                <a href="#" class="nav-link" onclick="showSection('finalization')">
+                    <i class="fas fa-lock"></i>
+                    Trip Finalization
+                </a>
+            </div>
+            <div class="nav-item">
                 <a href="advanced-features.html" class="nav-link">
                     <i class="fas fa-rocket"></i>
                     Advanced Features
@@ -1392,44 +1426,333 @@
                 <div id="checklistMessage" class="message" style="display: none;"></div>
             </div>
         </section>
+
+        <!-- NEW: Itinerary Section -->
+        <section id="itinerarySection" class="section" style="display: none;">
+            <div class="header">
+                <h1>Itinerary Planning</h1>
+                <p>Plan your trip schedule with hotels, flights, and activities</p>
+                <button class="btn btn-primary" onclick="openAddItineraryModal()">
+                    <i class="fas fa-plus"></i>
+                    Add Itinerary Item
+                </button>
+            </div>
+            <div class="content">
+                <div class="form-section">
+                    <div class="form-group">
+                        <label for="itineraryGroupSelect">Select Group</label>
+                        <select id="itineraryGroupSelect" onchange="loadItinerary()">
+                            <option value="">Choose a group...</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div id="itineraryContainer">
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-header">
+                                <div>
+                                    <div class="stat-number" id="confirmedItems">0</div>
+                                    <div class="stat-label">Confirmed Items</div>
+                                </div>
+                                <div class="stat-icon success">
+                                    <i class="fas fa-check"></i>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-header">
+                                <div>
+                                    <div class="stat-number" id="pendingItems">0</div>
+                                    <div class="stat-label">Pending Items</div>
+                                </div>
+                                <div class="stat-icon warning">
+                                    <i class="fas fa-clock"></i>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-header">
+                                <div>
+                                    <div class="stat-number" id="totalCost">$0</div>
+                                    <div class="stat-label">Total Estimated Cost</div>
+                                </div>
+                                <div class="stat-icon primary">
+                                    <i class="fas fa-dollar-sign"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div id="itineraryList" class="grid-container">
+                        <!-- Itinerary items will be loaded here -->
+                    </div>
+                </div>
+                
+                <div id="emptyItineraryState" class="empty-state" style="display: none;">
+                    <i class="fas fa-calendar-alt"></i>
+                    <h3>No itinerary items yet</h3>
+                    <p>Start planning your trip by adding hotels, flights, and activities.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- NEW: Polls & Voting Section -->
+        <section id="pollsSection" class="section" style="display: none;">
+            <div class="header">
+                <h1>Polls & Voting</h1>
+                <p>Make group decisions with live polls and voting</p>
+                <button class="btn btn-primary" onclick="openCreatePollModal()">
+                    <i class="fas fa-plus"></i>
+                    Create Poll
+                </button>
+            </div>
+            <div class="content">
+                <div class="form-section">
+                    <div class="form-group">
+                        <label for="pollsGroupSelect">Select Group</label>
+                        <select id="pollsGroupSelect" onchange="loadPolls()">
+                            <option value="">Choose a group...</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div id="pollsContainer">
+                    <div id="activePollsSection">
+                        <h2><i class="fas fa-poll"></i> Active Polls</h2>
+                        <div id="activePollsList" class="grid-container">
+                            <!-- Active polls will be loaded here -->
+                        </div>
+                    </div>
+                    
+                    <div id="recommendationVotingSection" style="margin-top: 2rem;">
+                        <h2><i class="fas fa-thumbs-up"></i> Recommendation Voting</h2>
+                        <div id="recommendationsList" class="grid-container">
+                            <!-- Recommendations for voting will be loaded here -->
+                        </div>
+                    </div>
+                </div>
+                
+                <div id="emptyPollsState" class="empty-state" style="display: none;">
+                    <i class="fas fa-poll-h"></i>
+                    <h3>No polls yet</h3>
+                    <p>Create your first poll to get group feedback on decisions.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- NEW: Enhanced Chat Section -->
+        <section id="enhanced-chatSection" class="section" style="display: none;">
+            <div class="header">
+                <h1>Enhanced Chat</h1>
+                <p>Real-time messaging with advanced features</p>
+            </div>
+            <div class="content">
+                <div class="form-section">
+                    <div class="form-group">
+                        <label for="chatGroupSelect">Select Group</label>
+                        <select id="chatGroupSelect" onchange="loadEnhancedChat()">
+                            <option value="">Choose a group...</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div id="enhancedChatContainer" style="display: none;">
+                    <div class="chat-features" style="margin-bottom: 1rem;">
+                        <input type="text" id="chatSearchInput" placeholder="Search messages..." style="flex: 1; margin-right: 1rem;">
+                        <button class="btn btn-secondary btn-sm" onclick="searchMessages()">
+                            <i class="fas fa-search"></i> Search
+                        </button>
+                    </div>
+                    
+                    <div id="chatMessages" style="height: 400px; overflow-y: auto; border: 1px solid var(--border-color); border-radius: var(--border-radius); padding: 1rem; margin-bottom: 1rem; background: white;">
+                        <!-- Enhanced chat messages will be loaded here -->
+                    </div>
+                    
+                    <div class="chat-input-container" style="display: flex; gap: 0.5rem;">
+                        <input type="text" id="newChatMessage" placeholder="Type your message..." style="flex: 1;" onkeypress="handleChatKeyPress(event)">
+                        <button class="btn btn-primary" onclick="sendEnhancedMessage()">
+                            <i class="fas fa-paper-plane"></i> Send
+                        </button>
+                    </div>
+                </div>
+                
+                <div id="emptyChatState" class="empty-state">
+                    <i class="fas fa-comments"></i>
+                    <h3>Select a group to start chatting</h3>
+                    <p>Choose a group from the dropdown to view and send messages.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- NEW: Trip Finalization Section -->
+        <section id="finalizationSection" class="section" style="display: none;">
+            <div class="header">
+                <h1>Trip Finalization - "Eternity"</h1>
+                <p>Lock your final trip plans and create lasting memories</p>
+            </div>
+            <div class="content">
+                <div class="form-section">
+                    <div class="form-group">
+                        <label for="finalizationTripSelect">Select Trip</label>
+                        <select id="finalizationTripSelect" onchange="loadFinalizationPreview()">
+                            <option value="">Choose a trip...</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div id="finalizationContainer">
+                    <div id="finalizationPreview" style="display: none;">
+                        <div class="card">
+                            <div class="card-header">
+                                <h2><i class="fas fa-eye"></i> Finalization Preview</h2>
+                            </div>
+                            <div class="card-body">
+                                <div class="stats-grid">
+                                    <div class="stat-card">
+                                        <div class="stat-header">
+                                            <div>
+                                                <div class="stat-number" id="previewConfirmedItems">0</div>
+                                                <div class="stat-label">Confirmed Itinerary</div>
+                                            </div>
+                                            <div class="stat-icon success">
+                                                <i class="fas fa-check-circle"></i>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="stat-card">
+                                        <div class="stat-header">
+                                            <div>
+                                                <div class="stat-number" id="previewApprovedRecs">0</div>
+                                                <div class="stat-label">Approved Recommendations</div>
+                                            </div>
+                                            <div class="stat-icon primary">
+                                                <i class="fas fa-thumbs-up"></i>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="stat-card">
+                                        <div class="stat-header">
+                                            <div>
+                                                <div class="stat-number" id="previewTotalExpenses">$0</div>
+                                                <div class="stat-label">Total Expenses</div>
+                                            </div>
+                                            <div class="stat-icon warning">
+                                                <i class="fas fa-dollar-sign"></i>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div style="margin-top: 2rem; text-align: center;">
+                                    <button id="finalizeButton" class="btn btn-accent" onclick="finalizeTrip()" style="font-size: 1.1rem; padding: 1rem 2rem;">
+                                        <i class="fas fa-lock"></i>
+                                        Finalize Trip - Enter Eternity
+                                    </button>
+                                    <p style="margin-top: 1rem; color: var(--text-secondary); font-style: italic;">
+                                        Once finalized, your trip plans will be locked and preserved forever.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div id="finalizationSummary" style="display: none;">
+                        <div class="card">
+                            <div class="card-header">
+                                <h2><i class="fas fa-trophy"></i> Trip Finalized - Welcome to Eternity!</h2>
+                            </div>
+                            <div class="card-body">
+                                <div id="finalizationSummaryContent">
+                                    <!-- Finalization summary will be loaded here -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div id="emptyFinalizationState" class="empty-state">
+                    <i class="fas fa-lock"></i>
+                    <h3>Select a trip to finalize</h3>
+                    <p>Choose a trip from the dropdown to preview and finalize your plans.</p>
+                </div>
+            </div>
+        </section>
     </main>
 
   <script>
-        const API_BASE = 'https://tripbox-intelliorganizer.onrender.com';
+        const API_BASE = 'http://127.0.0.1:5000';
         let currentTrips = [];
         let currentGroups = [];
         let currentExpenses = [];
         let currentGallery = [];
         let currentUser = null;
+        let currentItinerary = [];
+        let currentPolls = [];
+        let selectedGroupId = null;
+        let selectedTripId = null;
 
         // Initialize the application
         document.addEventListener('DOMContentLoaded', function() {
             checkAuth();
-            loadDashboardData();
+            validateTokenAndLoadData();
         });
+
+        async function validateTokenAndLoadData() {
+            try {
+                console.log('Validating token...');
+                const response = await apiCall('/api/validate-token');
+                console.log('Token validation successful:', response);
+                loadDashboardData();
+            } catch (error) {
+                console.error('Token validation failed:', error);
+                // Don't logout immediately, just show an error
+                showMessage('Token validation failed. Please login again.', 'error');
+                setTimeout(() => {
+                    logout();
+                }, 2000);
+            }
+        }
 
         function checkAuth() {
             const token = localStorage.getItem('token');
-            const userData = localStorage.getItem('userData');
+            const userData = localStorage.getItem('user');
+            
+            console.log('Checking authentication...');
+            console.log('Token present:', !!token);
+            console.log('User data present:', !!userData);
             
             if (!token || !userData) {
+                console.log('No token or user data found, redirecting to login');
                 window.location.href = 'index.html';
                 return;
             }
             
-            currentUser = JSON.parse(userData);
-            document.getElementById('userName').textContent = currentUser.name;
+            try {
+                currentUser = JSON.parse(userData);
+                console.log('Current user:', currentUser);
+                document.getElementById('userName').textContent = currentUser.name;
+            } catch (error) {
+                console.error('Error parsing user data:', error);
+                localStorage.removeItem('token');
+                localStorage.removeItem('user');
+                window.location.href = 'index.html';
+                return;
+            }
         }
 
         function logout() {
             localStorage.removeItem('token');
-            localStorage.removeItem('userData');
+            localStorage.removeItem('user');
             window.location.href = 'index.html';
         }
 
         // Enhanced API call function with better error handling
         async function apiCall(endpoint, options = {}) {
             const token = localStorage.getItem('token');
+            
+            console.log(`Making API call to: ${endpoint}`);
+            console.log('Token present:', !!token);
             
             const config = {
                 headers: {
@@ -1449,13 +1772,16 @@
 
             try {
                 const response = await fetch(`${API_BASE}${endpoint}`, config);
+                console.log(`API response status: ${response.status} for ${endpoint}`);
                 
                 if (response.status === 401) {
+                    console.log('Unauthorized access, logging out');
                     logout();
                     return;
                 }
 
                 const data = await response.json();
+                console.log(`API response data for ${endpoint}:`, data);
                 
                 if (!response.ok) {
                     throw new Error(data.message || 'Request failed');
@@ -1463,7 +1789,7 @@
                 
                 return data;
             } catch (error) {
-                console.error('API Error:', error);
+                console.error(`API Error for ${endpoint}:`, error);
                 throw error;
             }
         }
@@ -1531,6 +1857,18 @@
                     case 'checklist':
                         loadChecklists();
                         break;
+                    case 'itinerary':
+                        loadItinerary();
+                        break;
+                    case 'polls':
+                        loadPolls();
+                        break;
+                    case 'enhanced-chat':
+                        loadEnhancedChat();
+                        break;
+                    case 'finalization':
+                        loadFinalizationPreview();
+                        break;
                 }
             }
         }
@@ -1569,15 +1907,32 @@
 
         // Dashboard Functions
         async function loadDashboardData() {
+            console.log('Loading dashboard data...');
             try {
-                await Promise.all([
-                    loadTrips(),
-                    loadGroups(),
-                    loadExpenses(),
-                    loadGallery()
-                ]);
+                // Load data individually to handle errors gracefully
+                await loadTrips().catch(error => {
+                    console.error('Error loading trips:', error);
+                    currentTrips = [];
+                });
+                
+                await loadGroups().catch(error => {
+                    console.error('Error loading groups:', error);
+                    currentGroups = [];
+                });
+                
+                await loadExpenses().catch(error => {
+                    console.error('Error loading expenses:', error);
+                    currentExpenses = [];
+                });
+                
+                await loadGallery().catch(error => {
+                    console.error('Error loading gallery:', error);
+                    currentGallery = [];
+                });
+                
                 updateDashboardStats();
                 displayRecentTrips();
+                console.log('Dashboard data loaded successfully');
             } catch (error) {
                 console.error('Error loading dashboard data:', error);
             }
@@ -2160,9 +2515,642 @@
                     setTimeout(() => displayExpenses(), 100);
                 } else if (sectionName === 'gallery') {
                     setTimeout(() => displayGallery(), 100);
+                } else if (sectionName === 'itinerary') {
+                    setTimeout(() => loadGroupsForItinerary(), 100);
+                } else if (sectionName === 'polls') {
+                    setTimeout(() => loadGroupsForPolls(), 100);
+                } else if (sectionName === 'enhanced-chat') {
+                    setTimeout(() => loadGroupsForChat(), 100);
+                } else if (sectionName === 'finalization') {
+                    setTimeout(() => loadTripsForFinalization(), 100);
                 }
             };
         });
+
+        // NEW FUNCTIONS FOR ITINERARY MANAGEMENT
+        async function loadGroupsForItinerary() {
+            const select = document.getElementById('itineraryGroupSelect');
+            select.innerHTML = '<option value="">Choose a group...</option>';
+            
+            currentGroups.forEach(group => {
+                const option = document.createElement('option');
+                option.value = group.id;
+                option.textContent = group.name;
+                select.appendChild(option);
+            });
+        }
+
+        async function loadItinerary() {
+            const groupId = document.getElementById('itineraryGroupSelect').value;
+            if (!groupId) {
+                document.getElementById('itineraryContainer').innerHTML = '';
+                document.getElementById('emptyItineraryState').style.display = 'block';
+                return;
+            }
+
+            selectedGroupId = groupId;
+            document.getElementById('emptyItineraryState').style.display = 'none';
+
+            try {
+                const response = await apiCall(`/api/groups/${groupId}/itinerary`);
+                currentItinerary = response.itinerary || [];
+                displayItinerary();
+            } catch (error) {
+                showMessage('Error loading itinerary: ' + error.message, 'error');
+                currentItinerary = [];
+                displayItinerary();
+            }
+        }
+
+        function displayItinerary() {
+            const container = document.getElementById('itineraryList');
+            
+            // Update stats
+            const confirmed = currentItinerary.filter(item => item.confirmed).length;
+            const pending = currentItinerary.filter(item => !item.confirmed).length;
+            const totalCost = currentItinerary.reduce((sum, item) => sum + (item.cost || 0), 0);
+            
+            document.getElementById('confirmedItems').textContent = confirmed;
+            document.getElementById('pendingItems').textContent = pending;
+            document.getElementById('totalCost').textContent = `$${totalCost.toFixed(2)}`;
+            
+            if (currentItinerary.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-calendar-alt"></i>
+                        <h3>No itinerary items yet</h3>
+                        <p>Add your first item to start planning!</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            container.innerHTML = currentItinerary.map(item => `
+                <div class="card" style="margin-bottom: 1rem;">
+                    <div class="card-header" style="background: ${item.confirmed ? 'var(--success-color)' : 'var(--warning-color)'}; color: white;">
+                        <h3 style="margin: 0; display: flex; align-items: center; gap: 0.5rem;">
+                            <i class="fas fa-${getItineraryIcon(item.type)}"></i>
+                            ${item.title}
+                            ${item.confirmed ? '<i class="fas fa-check-circle" style="margin-left: auto;"></i>' : '<i class="fas fa-clock" style="margin-left: auto;"></i>'}
+                        </h3>
+                    </div>
+                    <div class="card-body">
+                        <p><strong>Type:</strong> ${item.type}</p>
+                        <p><strong>Date:</strong> ${item.date} ${item.time ? `at ${item.time}` : ''}</p>
+                        ${item.location ? `<p><strong>Location:</strong> ${item.location}</p>` : ''}
+                        ${item.description ? `<p><strong>Description:</strong> ${item.description}</p>` : ''}
+                        ${item.cost ? `<p><strong>Cost:</strong> $${item.cost}</p>` : ''}
+                        ${item.booking_reference ? `<p><strong>Booking:</strong> ${item.booking_reference}</p>` : ''}
+                        <div style="margin-top: 1rem; display: flex; gap: 0.5rem;">
+                            <button class="btn btn-primary btn-sm" onclick="editItineraryItem(${item.id})">
+                                <i class="fas fa-edit"></i> Edit
+                            </button>
+                            <button class="btn ${item.confirmed ? 'btn-warning' : 'btn-success'} btn-sm" onclick="toggleItineraryConfirmation(${item.id})">
+                                <i class="fas fa-${item.confirmed ? 'clock' : 'check'}"></i>
+                                ${item.confirmed ? 'Mark Pending' : 'Confirm'}
+                            </button>
+                            <button class="btn btn-danger btn-sm" onclick="deleteItineraryItem(${item.id})">
+                                <i class="fas fa-trash"></i> Delete
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function getItineraryIcon(type) {
+            const icons = {
+                'hotel': 'bed',
+                'flight': 'plane',
+                'activity': 'star',
+                'restaurant': 'utensils',
+                'transport': 'bus',
+                'other': 'map-marker-alt'
+            };
+            return icons[type] || 'map-marker-alt';
+        }
+
+        async function addItineraryItem() {
+            const form = document.getElementById('addItineraryForm');
+            const formData = new FormData(form);
+            
+            try {
+                const itemData = {
+                    type: formData.get('type'),
+                    title: formData.get('title'),
+                    description: formData.get('description'),
+                    location: formData.get('location'),
+                    date: formData.get('date'),
+                    time: formData.get('time'),
+                    cost: formData.get('cost') ? parseFloat(formData.get('cost')) : null,
+                    booking_reference: formData.get('booking_reference'),
+                    confirmed: formData.get('confirmed') === 'on'
+                };
+
+                await apiCall(`/api/groups/${selectedGroupId}/itinerary`, {
+                    method: 'POST',
+                    body: itemData
+                });
+
+                showMessage('Itinerary item added successfully!');
+                closeModal('addItineraryModal');
+                await loadItinerary();
+            } catch (error) {
+                showMessage('Error adding itinerary item: ' + error.message, 'error');
+            }
+        }
+
+        async function toggleItineraryConfirmation(itemId) {
+            const item = currentItinerary.find(i => i.id === itemId);
+            if (!item) return;
+
+            try {
+                await apiCall(`/api/itinerary/${itemId}`, {
+                    method: 'PUT',
+                    body: { confirmed: !item.confirmed }
+                });
+
+                showMessage(`Item ${item.confirmed ? 'marked as pending' : 'confirmed'}!`);
+                await loadItinerary();
+            } catch (error) {
+                showMessage('Error updating item: ' + error.message, 'error');
+            }
+        }
+
+        async function deleteItineraryItem(itemId) {
+            if (!confirm('Are you sure you want to delete this itinerary item?')) return;
+            
+            try {
+                await apiCall(`/api/itinerary/${itemId}`, {
+                    method: 'DELETE'
+                });
+                
+                showMessage('Itinerary item deleted successfully!');
+                await loadItinerary();
+            } catch (error) {
+                showMessage('Error deleting item: ' + error.message, 'error');
+            }
+        }
+
+        // NEW FUNCTIONS FOR POLLS AND VOTING
+        async function loadGroupsForPolls() {
+            const select = document.getElementById('pollsGroupSelect');
+            select.innerHTML = '<option value="">Choose a group...</option>';
+            
+            currentGroups.forEach(group => {
+                const option = document.createElement('option');
+                option.value = group.id;
+                option.textContent = group.name;
+                select.appendChild(option);
+            });
+        }
+
+        async function loadPolls() {
+            const groupId = document.getElementById('pollsGroupSelect').value;
+            if (!groupId) {
+                document.getElementById('pollsContainer').innerHTML = '';
+                document.getElementById('emptyPollsState').style.display = 'block';
+                return;
+            }
+
+            selectedGroupId = groupId;
+            document.getElementById('emptyPollsState').style.display = 'none';
+
+            try {
+                const [pollsResponse, recommendationsResponse] = await Promise.all([
+                    apiCall(`/api/groups/${groupId}/polls`),
+                    apiCall(`/api/groups/${groupId}/recommendations`)
+                ]);
+                
+                currentPolls = pollsResponse.polls || [];
+                const recommendations = recommendationsResponse.recommendations || [];
+                
+                displayPolls();
+                displayRecommendationsForVoting(recommendations);
+            } catch (error) {
+                showMessage('Error loading polls: ' + error.message, 'error');
+            }
+        }
+
+        function displayPolls() {
+            const container = document.getElementById('activePollsList');
+            const activePolls = currentPolls.filter(poll => poll.is_active);
+            
+            if (activePolls.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-poll"></i>
+                        <h3>No active polls</h3>
+                        <p>Create a poll to get group feedback!</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            container.innerHTML = activePolls.map(poll => {
+                const voteResults = calculateVoteResults(poll);
+                return `
+                    <div class="card">
+                        <div class="card-header">
+                            <h3>${poll.question}</h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="poll-options">
+                                ${poll.options.map((option, index) => `
+                                    <div class="poll-option" style="margin-bottom: 1rem;">
+                                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                                            <label>
+                                                <input type="${poll.multiple_choice ? 'checkbox' : 'radio'}" 
+                                                       name="poll_${poll.id}" 
+                                                       value="${index}"
+                                                       onchange="voteInPoll(${poll.id}, ${index}, '${poll.multiple_choice}')">
+                                                ${option}
+                                            </label>
+                                            <span>${voteResults[index] || 0} votes</span>
+                                        </div>
+                                        <div class="vote-bar" style="background: var(--bg-tertiary); height: 8px; border-radius: 4px; overflow: hidden;">
+                                            <div style="background: var(--primary-color); height: 100%; width: ${(voteResults[index] || 0) / Math.max(Object.values(voteResults).reduce((a, b) => a + b, 0), 1) * 100}%; transition: width 0.3s;"></div>
+                                        </div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                            <div style="margin-top: 1rem; display: flex; justify-content: space-between; align-items: center;">
+                                <small>Total votes: ${Object.values(voteResults).reduce((a, b) => a + b, 0)}</small>
+                                <button class="btn btn-secondary btn-sm" onclick="closePoll(${poll.id})">
+                                    <i class="fas fa-stop"></i> Close Poll
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function calculateVoteResults(poll) {
+            const results = {};
+            poll.options.forEach((_, index) => results[index] = 0);
+            
+            Object.values(poll.votes).forEach(vote => {
+                if (Array.isArray(vote)) {
+                    vote.forEach(v => results[v] = (results[v] || 0) + 1);
+                } else {
+                    results[vote] = (results[vote] || 0) + 1;
+                }
+            });
+            
+            return results;
+        }
+
+        async function voteInPoll(pollId, optionIndex, multipleChoice) {
+            try {
+                await apiCall(`/api/polls/${pollId}/vote`, {
+                    method: 'POST',
+                    body: { option_index: optionIndex }
+                });
+                
+                showMessage('Vote recorded!');
+                await loadPolls();
+            } catch (error) {
+                showMessage('Error voting: ' + error.message, 'error');
+            }
+        }
+
+        async function createPoll() {
+            const form = document.getElementById('createPollForm');
+            const formData = new FormData(form);
+            
+            const options = [];
+            const optionInputs = form.querySelectorAll('input[name^="option"]');
+            optionInputs.forEach(input => {
+                if (input.value.trim()) options.push(input.value.trim());
+            });
+            
+            if (options.length < 2) {
+                showMessage('Please provide at least 2 options', 'error');
+                return;
+            }
+            
+            try {
+                await apiCall(`/api/groups/${selectedGroupId}/polls`, {
+                    method: 'POST',
+                    body: {
+                        question: formData.get('question'),
+                        options: options,
+                        multiple_choice: formData.get('multiple_choice') === 'on',
+                        expires_in_hours: formData.get('expires_in_hours') ? parseInt(formData.get('expires_in_hours')) : null
+                    }
+                });
+
+                showMessage('Poll created successfully!');
+                closeModal('createPollModal');
+                await loadPolls();
+            } catch (error) {
+                showMessage('Error creating poll: ' + error.message, 'error');
+            }
+        }
+
+        function displayRecommendationsForVoting(recommendations) {
+            const container = document.getElementById('recommendationsList');
+            
+            if (recommendations.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-thumbs-up"></i>
+                        <h3>No recommendations to vote on</h3>
+                        <p>Recommendations will appear here for group voting.</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            container.innerHTML = recommendations.map(rec => `
+                <div class="card">
+                    <div class="card-header">
+                        <h3>${rec.title}</h3>
+                        <span class="badge">${rec.type}</span>
+                    </div>
+                    <div class="card-body">
+                        <p>${rec.comment || 'No description provided'}</p>
+                        <div class="voting-buttons" style="margin-top: 1rem;">
+                            <button class="btn btn-success btn-sm" onclick="voteOnRecommendation(${rec.id}, 'approve')">
+                                <i class="fas fa-thumbs-up"></i> Approve
+                            </button>
+                            <button class="btn btn-secondary btn-sm" onclick="voteOnRecommendation(${rec.id}, 'neutral')">
+                                <i class="fas fa-minus"></i> Neutral
+                            </button>
+                            <button class="btn btn-danger btn-sm" onclick="voteOnRecommendation(${rec.id}, 'reject')">
+                                <i class="fas fa-thumbs-down"></i> Reject
+                            </button>
+                            <button class="btn btn-primary btn-sm" onclick="showRecommendationComments(${rec.id})">
+                                <i class="fas fa-comments"></i> Comments
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        async function voteOnRecommendation(recommendationId, vote) {
+            const comment = prompt('Add a comment (optional):');
+            
+            try {
+                await apiCall(`/api/recommendations/${recommendationId}/vote`, {
+                    method: 'POST',
+                    body: { vote, comment }
+                });
+                
+                showMessage('Vote recorded on recommendation!');
+                await loadPolls();
+            } catch (error) {
+                showMessage('Error voting on recommendation: ' + error.message, 'error');
+            }
+        }
+
+        // NEW FUNCTIONS FOR ENHANCED CHAT
+        async function loadGroupsForChat() {
+            const select = document.getElementById('chatGroupSelect');
+            select.innerHTML = '<option value="">Choose a group...</option>';
+            
+            currentGroups.forEach(group => {
+                const option = document.createElement('option');
+                option.value = group.id;
+                option.textContent = group.name;
+                select.appendChild(option);
+            });
+        }
+
+        async function loadEnhancedChat() {
+            const groupId = document.getElementById('chatGroupSelect').value;
+            if (!groupId) {
+                document.getElementById('enhancedChatContainer').style.display = 'none';
+                document.getElementById('emptyChatState').style.display = 'block';
+                return;
+            }
+
+            selectedGroupId = groupId;
+            document.getElementById('enhancedChatContainer').style.display = 'block';
+            document.getElementById('emptyChatState').style.display = 'none';
+
+            try {
+                const response = await apiCall(`/api/groups/${groupId}/enhanced-chat`);
+                displayEnhancedMessages(response.messages || []);
+            } catch (error) {
+                showMessage('Error loading chat: ' + error.message, 'error');
+            }
+        }
+
+        function displayEnhancedMessages(messages) {
+            const container = document.getElementById('chatMessages');
+            
+            if (messages.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-comments"></i>
+                        <h3>No messages yet</h3>
+                        <p>Start the conversation!</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            container.innerHTML = messages.map(msg => `
+                <div class="message-item" style="margin-bottom: 1rem; padding: 1rem; border-radius: var(--border-radius); ${msg.user_id === currentUser.id ? 'background: var(--primary-color); color: white; margin-left: 2rem;' : 'background: var(--bg-secondary); margin-right: 2rem;'}">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                        <strong>${msg.user_name}</strong>
+                        <small>${new Date(msg.timestamp).toLocaleString()}</small>
+                    </div>
+                    <div>${msg.message}</div>
+                    ${msg.is_edited ? '<small style="font-style: italic; opacity: 0.7;">(edited)</small>' : ''}
+                    ${msg.message_type === 'recommendation_comment' ? '<span style="background: var(--accent-color); color: white; padding: 0.25rem 0.5rem; border-radius: 1rem; font-size: 0.8rem; margin-left: 0.5rem;">Comment</span>' : ''}
+                </div>
+            `).join('');
+            
+            // Scroll to bottom
+            container.scrollTop = container.scrollHeight;
+        }
+
+        async function sendEnhancedMessage() {
+            const input = document.getElementById('newChatMessage');
+            const message = input.value.trim();
+            
+            if (!message || !selectedGroupId) return;
+            
+            try {
+                await apiCall(`/api/groups/${selectedGroupId}/enhanced-chat`, {
+                    method: 'POST',
+                    body: { 
+                        message,
+                        message_type: 'text'
+                    }
+                });
+                
+                input.value = '';
+                await loadEnhancedChat();
+            } catch (error) {
+                showMessage('Error sending message: ' + error.message, 'error');
+            }
+        }
+
+        function handleChatKeyPress(event) {
+            if (event.key === 'Enter') {
+                sendEnhancedMessage();
+            }
+        }
+
+        async function searchMessages() {
+            const query = document.getElementById('chatSearchInput').value.trim();
+            if (!query || !selectedGroupId) return;
+            
+            try {
+                const response = await apiCall(`/api/groups/${selectedGroupId}/search-messages?q=${encodeURIComponent(query)}`);
+                displayEnhancedMessages(response.results || []);
+            } catch (error) {
+                showMessage('Error searching messages: ' + error.message, 'error');
+            }
+        }
+
+        // NEW FUNCTIONS FOR TRIP FINALIZATION
+        async function loadTripsForFinalization() {
+            const select = document.getElementById('finalizationTripSelect');
+            select.innerHTML = '<option value="">Choose a trip...</option>';
+            
+            currentTrips.forEach(trip => {
+                const option = document.createElement('option');
+                option.value = trip.id;
+                option.textContent = trip.name;
+                select.appendChild(option);
+            });
+        }
+
+        async function loadFinalizationPreview() {
+            const tripId = document.getElementById('finalizationTripSelect').value;
+            if (!tripId) {
+                document.getElementById('finalizationContainer').innerHTML = '';
+                document.getElementById('emptyFinalizationState').style.display = 'block';
+                return;
+            }
+
+            selectedTripId = tripId;
+            document.getElementById('emptyFinalizationState').style.display = 'none';
+
+            try {
+                // Check if already finalized
+                try {
+                    const finalizationResponse = await apiCall(`/api/trips/${tripId}/finalization`);
+                    displayFinalizationSummary(finalizationResponse.finalization);
+                    return;
+                } catch (error) {
+                    // Not finalized yet, show preview
+                }
+
+                const response = await apiCall(`/api/trips/${tripId}/preview-finalization`);
+                displayFinalizationPreview(response.preview);
+            } catch (error) {
+                showMessage('Error loading finalization data: ' + error.message, 'error');
+            }
+        }
+
+        function displayFinalizationPreview(preview) {
+            document.getElementById('previewConfirmedItems').textContent = preview.confirmed_itinerary_items;
+            document.getElementById('previewApprovedRecs').textContent = preview.approved_recommendations;
+            document.getElementById('previewTotalExpenses').textContent = `$${preview.total_expenses.toFixed(2)}`;
+            
+            const finalizeButton = document.getElementById('finalizeButton');
+            if (preview.is_ready_to_finalize) {
+                finalizeButton.disabled = false;
+                finalizeButton.style.opacity = '1';
+            } else {
+                finalizeButton.disabled = true;
+                finalizeButton.style.opacity = '0.5';
+            }
+            
+            document.getElementById('finalizationPreview').style.display = 'block';
+            document.getElementById('finalizationSummary').style.display = 'none';
+        }
+
+        function displayFinalizationSummary(finalization) {
+            document.getElementById('finalizationSummaryContent').innerHTML = `
+                <div style="white-space: pre-line; background: var(--bg-secondary); padding: 2rem; border-radius: var(--border-radius); margin-bottom: 2rem;">
+                    ${finalization.summary}
+                </div>
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-header">
+                            <div>
+                                <div class="stat-number">${finalization.final_itinerary.length}</div>
+                                <div class="stat-label">Final Itinerary Items</div>
+                            </div>
+                            <div class="stat-icon success">
+                                <i class="fas fa-calendar-check"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-header">
+                            <div>
+                                <div class="stat-number">${finalization.approved_recommendations.length}</div>
+                                <div class="stat-label">Approved Recommendations</div>
+                            </div>
+                            <div class="stat-icon primary">
+                                <i class="fas fa-star"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-header">
+                            <div>
+                                <div class="stat-number">$${finalization.final_budget.toFixed(2)}</div>
+                                <div class="stat-label">Final Budget</div>
+                            </div>
+                            <div class="stat-icon warning">
+                                <i class="fas fa-wallet"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div style="text-align: center; margin-top: 2rem;">
+                    <p style="color: var(--success-color); font-size: 1.2rem; font-weight: 600;">
+                        <i class="fas fa-trophy"></i> 
+                        Trip finalized on ${new Date(finalization.timestamp).toLocaleDateString()}
+                    </p>
+                    <p style="color: var(--text-secondary); font-style: italic;">
+                        Your memories are now preserved in eternity!
+                    </p>
+                </div>
+            `;
+            
+            document.getElementById('finalizationPreview').style.display = 'none';
+            document.getElementById('finalizationSummary').style.display = 'block';
+        }
+
+        async function finalizeTrip() {
+            if (!selectedTripId) return;
+            
+            if (!confirm('Are you sure you want to finalize this trip? This action cannot be undone and will lock all plans.')) {
+                return;
+            }
+            
+            try {
+                const response = await apiCall(`/api/trips/${selectedTripId}/finalize`, {
+                    method: 'POST',
+                    body: {}
+                });
+                
+                showMessage('Trip finalized successfully - Welcome to Eternity!', 'success');
+                displayFinalizationSummary(response.finalization);
+            } catch (error) {
+                showMessage('Error finalizing trip: ' + error.message, 'error');
+            }
+        }
+
+        // Modal functions for new features
+        function openAddItineraryModal() {
+            openModal('addItineraryModal');
+        }
+
+        function openCreatePollModal() {
+            openModal('createPollModal');
+        }
     </script>
 
     <!-- Create Group Modal -->
@@ -2274,5 +3262,111 @@
         </div>
     </div>
 
+    <!-- NEW MODALS FOR NEW FEATURES -->
+
+    <!-- Add Itinerary Item Modal -->
+    <div id="addItineraryModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Add Itinerary Item</h2>
+                <span class="close" onclick="closeModal('addItineraryModal')">&times;</span>
+            </div>
+            <form id="addItineraryForm" onsubmit="event.preventDefault(); addItineraryItem();">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="itineraryType">Type *</label>
+                        <select id="itineraryType" name="type" required>
+                            <option value="hotel">Hotel</option>
+                            <option value="flight">Flight</option>
+                            <option value="activity">Activity</option>
+                            <option value="restaurant">Restaurant</option>
+                            <option value="transport">Transport</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="itineraryTitle">Title *</label>
+                        <input type="text" id="itineraryTitle" name="title" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="itineraryDate">Date *</label>
+                        <input type="date" id="itineraryDate" name="date" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="itineraryTime">Time</label>
+                        <input type="time" id="itineraryTime" name="time">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="itineraryLocation">Location</label>
+                    <input type="text" id="itineraryLocation" name="location" placeholder="e.g., Downtown Hotel, Airport Terminal 1">
+                </div>
+                <div class="form-group">
+                    <label for="itineraryDescription">Description</label>
+                    <textarea id="itineraryDescription" name="description" rows="3" placeholder="Additional details..."></textarea>
+                </div>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="itineraryCost">Cost ($)</label>
+                        <input type="number" id="itineraryCost" name="cost" step="0.01" min="0">
+                    </div>
+                    <div class="form-group">
+                        <label for="itineraryBookingRef">Booking Reference</label>
+                        <input type="text" id="itineraryBookingRef" name="booking_reference" placeholder="Confirmation number">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" id="itineraryConfirmed" name="confirmed"> 
+                        Mark as confirmed
+                    </label>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal('addItineraryModal')">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Add Item</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Create Poll Modal -->
+    <div id="createPollModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Create Poll</h2>
+                <span class="close" onclick="closeModal('createPollModal')">&times;</span>
+            </div>
+            <form id="createPollForm" onsubmit="event.preventDefault(); createPoll();">
+                <div class="form-group">
+                    <label for="pollQuestion">Question *</label>
+                    <input type="text" id="pollQuestion" name="question" required placeholder="What would you like to ask the group?">
+                </div>
+                <div class="form-group">
+                    <label>Poll Options *</label>
+                    <input type="text" name="option1" placeholder="Option 1" required style="margin-bottom: 0.5rem;">
+                    <input type="text" name="option2" placeholder="Option 2" required style="margin-bottom: 0.5rem;">
+                    <input type="text" name="option3" placeholder="Option 3 (optional)" style="margin-bottom: 0.5rem;">
+                    <input type="text" name="option4" placeholder="Option 4 (optional)" style="margin-bottom: 0.5rem;">
+                    <input type="text" name="option5" placeholder="Option 5 (optional)">
+                </div>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>
+                            <input type="checkbox" name="multiple_choice"> 
+                            Allow multiple selections
+                        </label>
+                    </div>
+                    <div class="form-group">
+                        <label for="pollExpiry">Expires in hours</label>
+                        <input type="number" id="pollExpiry" name="expires_in_hours" min="1" max="168" placeholder="24">
+                    </div>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal('createPollModal')">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Create Poll</button>
+                </div>
+            </form>
+        </div>
+    </div>
 </body>
 </html>
