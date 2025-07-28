@@ -104,6 +104,10 @@ CORS(app, origins=[
     "https://*.netlify.app"  # Allow any Netlify subdomain
 ])
 
+# Load environment variables
+from dotenv import load_dotenv
+load_dotenv()
+
 # Configurations
 # Use environment variable for database URL in production, fallback to SQLite for development
 app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'sqlite:///tripbox.db')
@@ -113,6 +117,12 @@ if app.config['SQLALCHEMY_DATABASE_URI'].startswith('postgres://'):
 
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['JWT_SECRET_KEY'] = os.environ.get('JWT_SECRET_KEY', 'your_secret_key_here')
+
+# API Keys
+app.config['GOOGLE_PLACES_API_KEY'] = os.environ.get('GOOGLE_PLACES_API_KEY')
+app.config['GOOGLE_MAPS_API_KEY'] = os.environ.get('GOOGLE_MAPS_API_KEY')
+app.config['OPENWEATHER_API_KEY'] = os.environ.get('OPENWEATHER_API_KEY')
+app.config['OPENAI_API_KEY'] = os.environ.get('OPENAI_API_KEY')
 
 # Initialize extensions
 db.init_app(app)
@@ -131,11 +141,11 @@ app.register_blueprint(checklist_bp)
 app.register_blueprint(budget_bp)
 app.register_blueprint(finalize_bp)
 app.register_blueprint(location_bp)  #  NEW
-# Temporarily disabled new blueprints for deployment fix
-# app.register_blueprint(ai_recommendations_bp)  # AI Recommendations
-# app.register_blueprint(live_location_bp)  # Live Location Tracking
-# app.register_blueprint(pdf_generator_bp)  # PDF Generation
-# app.register_blueprint(real_time_chat_bp)  # Enhanced Chat
+# Advanced features enabled
+app.register_blueprint(ai_recommendations_bp)  # AI Recommendations
+app.register_blueprint(live_location_bp)  # Live Location Tracking
+app.register_blueprint(pdf_generator_bp)  # PDF Generation
+app.register_blueprint(real_time_chat_bp)  # Enhanced Chat
 
 # Create tables if not present
 with app.app_context():

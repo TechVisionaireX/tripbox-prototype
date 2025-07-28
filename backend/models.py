@@ -88,33 +88,32 @@ class LocationCheckin(db.Model):
     message = db.Column(db.String(255))
     timestamp = db.Column(db.DateTime, default=datetime.utcnow)
 
-# Temporarily commented out new models to fix deployment
-# Will add them back once basic deployment is working
+# Advanced models for enhanced features
 
-# class LiveLocation(db.Model):
-#     id = db.Column(db.Integer, primary_key=True)
-#     group_id = db.Column(db.Integer, nullable=False)
-#     user_id = db.Column(db.Integer, nullable=False)
-#     latitude = db.Column(db.Float, nullable=False)
-#     longitude = db.Column(db.Float, nullable=False)
-#     accuracy = db.Column(db.Float)
-#     speed = db.Column(db.Float)
-#     heading = db.Column(db.Float)
-#     altitude = db.Column(db.Float)
-#     timestamp = db.Column(db.DateTime, default=datetime.utcnow)
-#     is_active = db.Column(db.Boolean, default=True)
-#     battery_level = db.Column(db.Integer)
-#     location_name = db.Column(db.String(255))
+class LiveLocation(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    group_id = db.Column(db.Integer, nullable=False)
+    user_id = db.Column(db.Integer, nullable=False)
+    latitude = db.Column(db.Float, nullable=False)
+    longitude = db.Column(db.Float, nullable=False)
+    accuracy = db.Column(db.Float)
+    speed = db.Column(db.Float)
+    heading = db.Column(db.Float)
+    altitude = db.Column(db.Float)
+    timestamp = db.Column(db.DateTime, default=datetime.utcnow)
+    is_active = db.Column(db.Boolean, default=True)
+    battery_level = db.Column(db.Integer)
+    location_name = db.Column(db.String(255))
 
-# class EnhancedChatMessage(db.Model):
-#     id = db.Column(db.Integer, primary_key=True)
-#     group_id = db.Column(db.Integer, db.ForeignKey('group.id'), nullable=False)
-#     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-#     message = db.Column(db.Text, nullable=False)
-#     message_type = db.Column(db.String(50), default='text')  # text, image, location, file
-#     reply_to_message_id = db.Column(db.Integer)  # Remove self-referencing foreign key for now
-#     is_edited = db.Column(db.Boolean, default=False)
-#     edited_at = db.Column(db.DateTime)
-#     read_by = db.Column(db.Text)  # JSON array of user IDs who read the message
-#     timestamp = db.Column(db.DateTime, server_default=db.func.now())
-#     metadata = db.Column(db.Text)  # JSON for additional data
+class EnhancedChatMessage(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    group_id = db.Column(db.Integer, db.ForeignKey('group.id'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    message = db.Column(db.Text, nullable=False)
+    message_type = db.Column(db.String(50), default='text')  # text, image, location, file
+    reply_to_message_id = db.Column(db.Integer)  # Remove self-referencing foreign key for now
+    is_edited = db.Column(db.Boolean, default=False)
+    edited_at = db.Column(db.DateTime)
+    read_by = db.Column(db.Text)  # JSON array of user IDs who read the message
+    timestamp = db.Column(db.DateTime, server_default=db.func.now())
+    metadata = db.Column(db.Text)  # JSON for additional data

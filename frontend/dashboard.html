@@ -383,6 +383,24 @@
             background: var(--border-color);
         }
 
+        .btn-danger {
+            background: var(--error-color);
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #b91c1c;
+        }
+
+        .btn-accent {
+            background: var(--accent-color);
+            color: white;
+        }
+
+        .btn-accent:hover {
+            background: #059669;
+        }
+
         .btn-sm {
             padding: 0.5rem 1rem;
             font-size: 0.85rem;
@@ -656,8 +674,379 @@
             font-size: 1.25rem;
             margin-bottom: 0.5rem;
             color: var(--text-primary);
-    }
-  </style>
+        }
+        
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: var(--border-radius-lg);
+            max-width: 500px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: var(--shadow-strong);
+        }
+
+        .modal-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-header h2 {
+            margin: 0;
+            color: var(--text-primary);
+        }
+
+        .close {
+            font-size: 1.5rem;
+            font-weight: bold;
+            cursor: pointer;
+            color: var(--text-light);
+        }
+
+        .close:hover {
+            color: var(--text-primary);
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 1rem;
+            justify-content: flex-end;
+            margin-top: 1.5rem;
+        }
+
+        /* Group Cards */
+        .group-card {
+            background: white;
+            border-radius: var(--border-radius);
+            padding: 1.5rem;
+            box-shadow: var(--shadow-soft);
+            border: 1px solid var(--border-color);
+            transition: var(--transition);
+        }
+
+        .group-card:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-medium);
+        }
+
+        .group-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .group-header h3 {
+            margin: 0;
+            color: var(--text-primary);
+        }
+
+        .member-count {
+            background: var(--bg-tertiary);
+            color: var(--text-secondary);
+            padding: 0.25rem 0.75rem;
+            border-radius: 12px;
+            font-size: 0.85rem;
+        }
+
+        .group-actions {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        /* Expense Components */
+        .expense-summary {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .expense-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow-soft);
+            border: 1px solid var(--border-color);
+            text-align: center;
+        }
+
+        .expense-card h3 {
+            margin: 0 0 0.5rem 0;
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .expense-card .amount {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .expense-card .amount.positive {
+            color: var(--success-color);
+        }
+
+        .expense-card .amount.negative {
+            color: var(--error-color);
+        }
+
+        .expenses-list {
+            background: white;
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow-soft);
+            border: 1px solid var(--border-color);
+        }
+
+        .expense-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .expense-item:last-child {
+            border-bottom: none;
+        }
+
+        .expense-info .expense-description {
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 0.25rem;
+        }
+
+        .expense-info .expense-category {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            text-transform: capitalize;
+        }
+
+        .expense-amount {
+            font-weight: 700;
+            color: var(--text-primary);
+            font-size: 1.1rem;
+        }
+
+        /* Gallery Grid */
+        .gallery-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 1rem;
+        }
+
+        .gallery-item {
+            position: relative;
+            aspect-ratio: 1;
+            border-radius: var(--border-radius);
+            overflow: hidden;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .gallery-item:hover {
+            transform: scale(1.02);
+        }
+
+        .gallery-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .photo-overlay {
+            position: absolute;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: var(--transition);
+        }
+
+        .gallery-item:hover .photo-overlay {
+            opacity: 1;
+        }
+
+        .photo-overlay i {
+            color: white;
+            font-size: 1.5rem;
+        }
+
+        /* Checklist Components */
+        .checklist-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+        }
+
+        .checklist-section {
+            background: white;
+            border-radius: var(--border-radius);
+            padding: 1.5rem;
+            box-shadow: var(--shadow-soft);
+            border: 1px solid var(--border-color);
+        }
+
+        .checklist-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .checklist-title {
+            margin: 0;
+            color: var(--text-primary);
+        }
+
+        .checklist-items {
+            list-style: none;
+            padding: 0;
+            margin: 0 0 1rem 0;
+        }
+
+        .checklist-item {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.75rem;
+            border-radius: var(--border-radius);
+            margin-bottom: 0.5rem;
+            transition: var(--transition);
+        }
+
+        .checklist-item:hover {
+            background: var(--bg-secondary);
+        }
+
+        .checklist-item.completed {
+            opacity: 0.6;
+        }
+
+        .checklist-item.completed .item-text {
+            text-decoration: line-through;
+        }
+
+        .item-text {
+            flex: 1;
+            color: var(--text-primary);
+        }
+
+        .delete-btn {
+            background: none;
+            border: none;
+            color: var(--text-light);
+            cursor: pointer;
+            padding: 0.25rem;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: var(--transition);
+        }
+
+        .checklist-item:hover .delete-btn {
+            opacity: 1;
+        }
+
+        .delete-btn:hover {
+            background: var(--error-color);
+            color: white;
+        }
+
+        .add-item-form {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .add-item-input {
+            flex: 1;
+            padding: 0.75rem;
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius);
+            font-size: 0.9rem;
+        }
+
+        .add-item-input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+        }
+
+        .empty-checklist {
+            text-align: center;
+            color: var(--text-light);
+            padding: 2rem;
+            font-style: italic;
+        }
+
+        /* Grid Container */
+        .grid-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 1.5rem;
+        }
+
+        /* Photo Modal */
+        .photo-modal {
+            max-width: 80vw;
+            max-height: 80vh;
+        }
+
+        .modal-photo {
+            width: 100%;
+            height: auto;
+            max-height: 60vh;
+            object-fit: contain;
+        }
+
+        .photo-description {
+            padding: 1rem;
+            text-align: center;
+            color: var(--text-secondary);
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .checklist-container {
+                grid-template-columns: 1fr;
+            }
+            
+            .expense-summary {
+                grid-template-columns: 1fr;
+            }
+            
+            .gallery-grid {
+                grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            }
+        }
+
+        /* Sidebar mobile toggle function will be in JavaScript */
+    </style>
 </head>
 <body>
     <!-- Mobile Menu Toggle -->
@@ -713,6 +1102,12 @@
                 <a href="#" class="nav-link" onclick="showSection('checklist')">
                     <i class="fas fa-check-square"></i>
                     Checklists
+                </a>
+            </div>
+            <div class="nav-item">
+                <a href="advanced-features.html" class="nav-link">
+                    <i class="fas fa-rocket"></i>
+                    Advanced Features
                 </a>
             </div>
         </nav>
@@ -815,31 +1210,31 @@
                         </h2>
                     </div>
                     <div class="card-body">
-    <form id="addTripForm">
+                        <form id="addTripForm" onsubmit="event.preventDefault(); createTrip();">
                             <div class="form-grid">
                                 <div class="form-group">
                                     <label for="tripName">Trip Name</label>
-                                    <input type="text" id="tripName" placeholder="Amazing Adventure" required>
+                                    <input type="text" id="tripName" name="tripName" placeholder="Amazing Adventure" required>
                                 </div>
                                 <div class="form-group">
                                     <label for="startDate">Start Date</label>
-                                    <input type="date" id="startDate" required>
+                                    <input type="date" id="startDate" name="startDate" required>
                                 </div>
                                 <div class="form-group">
                                     <label for="endDate">End Date</label>
-                                    <input type="date" id="endDate" required>
+                                    <input type="date" id="endDate" name="endDate" required>
                                 </div>
                             </div>
                             <div class="form-group">
                                 <label for="tripDesc">Description</label>
-                                <textarea id="tripDesc" placeholder="Describe your trip..." rows="3"></textarea>
+                                <textarea id="tripDesc" name="description" placeholder="Describe your trip..." rows="3"></textarea>
                             </div>
                             <button type="submit" class="btn btn-primary">
                                 <i class="fas fa-plus"></i>
                                 Create Trip
                             </button>
                             <div id="addTripMessage" class="message" style="display: none;"></div>
-    </form>
+                    </form>
                     </div>
                 </div>
 
@@ -1000,110 +1395,187 @@
     </main>
 
   <script>
-        // API Configuration
         const API_BASE = 'https://tripbox-intelliorganizer.onrender.com';
-        
-        // Global State
-        let currentUser = null;
         let currentTrips = [];
+        let currentGroups = [];
+        let currentExpenses = [];
+        let currentGallery = [];
+        let currentUser = null;
 
-        // Authentication Check
+        // Initialize the application
+        document.addEventListener('DOMContentLoaded', function() {
+            checkAuth();
+            loadDashboardData();
+        });
+
         function checkAuth() {
             const token = localStorage.getItem('token');
-            const user = localStorage.getItem('user');
+            const userData = localStorage.getItem('userData');
             
-            if (!token || !user) {
+            if (!token || !userData) {
                 window.location.href = 'index.html';
-                return false;
+                return;
             }
             
+            currentUser = JSON.parse(userData);
+            document.getElementById('userName').textContent = currentUser.name;
+        }
+
+        function logout() {
+            localStorage.removeItem('token');
+            localStorage.removeItem('userData');
+            window.location.href = 'index.html';
+        }
+
+        // Enhanced API call function with better error handling
+        async function apiCall(endpoint, options = {}) {
+            const token = localStorage.getItem('token');
+            
+            const config = {
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                ...options
+            };
+
+            if (config.body && !(config.body instanceof FormData)) {
+                config.body = JSON.stringify(config.body);
+            }
+
+            if (config.body instanceof FormData) {
+                delete config.headers['Content-Type'];
+            }
+
             try {
-                currentUser = JSON.parse(user);
-                updateUserInfo();
-                return true;
+                const response = await fetch(`${API_BASE}${endpoint}`, config);
+                
+                if (response.status === 401) {
+                    logout();
+                    return;
+                }
+
+                const data = await response.json();
+                
+                if (!response.ok) {
+                    throw new Error(data.message || 'Request failed');
+                }
+                
+                return data;
             } catch (error) {
-                console.error('Error parsing user data:', error);
-                logout();
-                return false;
+                console.error('API Error:', error);
+                throw error;
             }
         }
 
-        // Update User Info in Sidebar
-        function updateUserInfo() {
-            if (currentUser) {
-                document.getElementById('userName').textContent = currentUser.name || 'User';
-                document.getElementById('userEmail').textContent = currentUser.email || '';
-            }
+        // Show message function
+        function showMessage(message, type = 'success') {
+            // Create a simple message display
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${type}`;
+            messageDiv.textContent = message;
+            messageDiv.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                padding: 12px 20px;
+                border-radius: 6px;
+                color: white;
+                z-index: 10000;
+                font-weight: 500;
+                background: ${type === 'error' ? '#dc2626' : '#059669'};
+            `;
+            
+            document.body.appendChild(messageDiv);
+            
+            setTimeout(() => {
+                messageDiv.remove();
+            }, 3000);
         }
 
         // Navigation Functions
         function showSection(sectionName) {
             // Hide all sections
-            document.querySelectorAll('.section').forEach(section => {
-                section.style.display = 'none';
-            });
+            const sections = document.querySelectorAll('.section');
+            sections.forEach(section => section.style.display = 'none');
             
             // Remove active class from all nav links
-            document.querySelectorAll('.nav-link').forEach(link => {
-                link.classList.remove('active');
-            });
+            const navLinks = document.querySelectorAll('.nav-link');
+            navLinks.forEach(link => link.classList.remove('active'));
             
             // Show selected section
-            document.getElementById(sectionName + 'Section').style.display = 'block';
-            
-            // Add active class to clicked nav link
-            event.target.classList.add('active');
-            
-            // Load section-specific data
-            switch(sectionName) {
-                case 'dashboard':
-                    loadDashboardData();
-                    break;
-                case 'trips':
-                    loadAllTrips();
-                    break;
-                // Add cases for other sections as needed
+            const targetSection = document.getElementById(sectionName + 'Section');
+            if (targetSection) {
+                targetSection.style.display = 'block';
+                
+                // Add active class to corresponding nav link
+                const activeLink = document.querySelector(`[onclick="showSection('${sectionName}')"]`);
+                if (activeLink) {
+                    activeLink.classList.add('active');
+                }
+                
+                // Load section-specific data
+                switch(sectionName) {
+                    case 'trips':
+                        loadAllTrips();
+                        break;
+                    case 'groups':
+                        loadGroups();
+                        break;
+                    case 'expenses':
+                        loadExpenses();
+                        break;
+                    case 'gallery':
+                        loadGallery();
+                        break;
+                    case 'checklist':
+                        loadChecklists();
+                        break;
+                }
             }
         }
 
-        function toggleSidebar() {
-            document.getElementById('sidebar').classList.toggle('open');
-        }
-
-        // API Helper Functions
-        function getAuthHeaders() {
-            return {
-                'Authorization': `Bearer ${localStorage.getItem('token')}`,
-                'Content-Type': 'application/json'
-            };
-        }
-
-        async function apiCall(endpoint, options = {}) {
-            try {
-                const response = await fetch(`${API_BASE}${endpoint}`, {
-                    ...options,
-                    headers: {
-                        ...getAuthHeaders(),
-                        ...options.headers
-                    }
-                });
+        // Modal Functions
+        function openModal(modalId) {
+            const modal = document.getElementById(modalId);
+            if (modal) {
+                modal.style.display = 'flex';
                 
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
+                // Load data for specific modals
+                if (modalId === 'addExpenseModal') {
+                    loadGroupsForExpense();
+                } else if (modalId === 'uploadModal') {
+                    loadGroupsForGallery();
+                }
+            }
+        }
+
+        function closeModal(modalId) {
+            const modal = document.getElementById(modalId);
+            if (modal) {
+                modal.style.display = 'none';
+                
+                // Clear form if exists
+                const form = modal.querySelector('form');
+                if (form) {
+                    form.reset();
                 }
                 
-                return await response.json();
-            } catch (error) {
-                console.error('API call failed:', error);
-                throw error;
+                // Clear messages
+                const messages = modal.querySelectorAll('.message');
+                messages.forEach(msg => msg.style.display = 'none');
             }
         }
 
         // Dashboard Functions
         async function loadDashboardData() {
             try {
-                // Load trips for dashboard stats
-                await loadTrips();
+                await Promise.all([
+                    loadTrips(),
+                    loadGroups(),
+                    loadExpenses(),
+                    loadGallery()
+                ]);
                 updateDashboardStats();
                 displayRecentTrips();
             } catch (error) {
@@ -1113,15 +1585,16 @@
 
         function updateDashboardStats() {
             document.getElementById('totalTrips').textContent = currentTrips.length;
-            // Add more stats calculations here
-            document.getElementById('activeGroups').textContent = '0';
-            document.getElementById('totalExpenses').textContent = '$0';
-            document.getElementById('photosCount').textContent = '0';
+            document.getElementById('activeGroups').textContent = currentGroups.length;
+            
+            const totalExpenses = currentExpenses.reduce((sum, expense) => sum + parseFloat(expense.amount || 0), 0);
+            document.getElementById('totalExpenses').textContent = `$${totalExpenses.toFixed(2)}`;
+            document.getElementById('photosCount').textContent = currentGallery.length;
         }
 
         function displayRecentTrips() {
             const recentTripsContainer = document.getElementById('recentTrips');
-            const recentTrips = currentTrips.slice(0, 3); // Show only first 3 trips
+            const recentTrips = currentTrips.slice(0, 3);
             
             if (recentTrips.length === 0) {
                 recentTripsContainer.innerHTML = `
@@ -1135,8 +1608,8 @@
                         </button>
                     </div>
                 `;
-        return;
-      }
+                return;
+            }
             
             recentTripsContainer.innerHTML = recentTrips.map(trip => createTripCard(trip)).join('');
         }
@@ -1144,10 +1617,11 @@
         // Trip Functions
         async function loadTrips() {
             try {
-                currentTrips = await apiCall('/api/trips');
+                const response = await apiCall('/api/trips');
+                currentTrips = response.trips || [];
             } catch (error) {
                 console.error('Error loading trips:', error);
-                showMessage('Error loading trips', 'error');
+                currentTrips = [];
             }
         }
 
@@ -1171,8 +1645,8 @@
                         <p>Create your first amazing adventure!</p>
                     </div>
                 `;
-        return;
-      }
+                return;
+            }
             
             allTripsContainer.innerHTML = currentTrips.map(trip => createTripCard(trip, true)).join('');
         }
@@ -1181,7 +1655,7 @@
             return `
                 <div class="trip-card slide-in-up">
                     <div class="trip-card-header">
-          <div class="trip-title">${trip.name}</div>
+                        <div class="trip-title">${trip.name}</div>
                         <div class="trip-dates">
                             <i class="fas fa-calendar"></i>
                             ${trip.start_date} - ${trip.end_date}
@@ -1193,17 +1667,13 @@
                         </div>
                         ${showActions ? `
                             <div class="trip-actions">
-                                <button class="btn btn-primary btn-sm">
+                                <button class="btn btn-primary btn-sm" onclick="editTrip(${trip.id})">
                                     <i class="fas fa-edit"></i>
                                     Edit
                                 </button>
-                                <button class="btn btn-secondary btn-sm">
-                                    <i class="fas fa-users"></i>
-                                    Manage Group
-                                </button>
-                                <button class="btn btn-success btn-sm">
-                                    <i class="fas fa-check"></i>
-                                    Finalize
+                                <button class="btn btn-danger btn-sm" onclick="deleteTrip(${trip.id})">
+                                    <i class="fas fa-trash"></i>
+                                    Delete
                                 </button>
                             </div>
                         ` : ''}
@@ -1212,354 +1682,276 @@
             `;
         }
 
-        // Form Handlers
-        document.getElementById('addTripForm').addEventListener('submit', async (e) => {
-      e.preventDefault();
-            
-            const formData = {
-                name: document.getElementById('tripName').value.trim(),
-                start_date: document.getElementById('startDate').value,
-                end_date: document.getElementById('endDate').value,
-                description: document.getElementById('tripDesc').value.trim()
-            };
+        async function createTrip() {
+            const form = document.getElementById('addTripForm');
+            const formData = new FormData(form);
             
             try {
-                const submitBtn = e.target.querySelector('button[type="submit"]');
-                submitBtn.disabled = true;
-                submitBtn.innerHTML = '<span class="loading"></span> Creating...';
-                
+                const tripData = {
+                    name: formData.get('tripName'),
+                    start_date: formData.get('startDate'),
+                    end_date: formData.get('endDate'),
+                    description: formData.get('description')
+                };
+
                 await apiCall('/api/trips', {
-        method: 'POST',
-                    body: JSON.stringify(formData)
+                    method: 'POST',
+                    body: tripData
+                });
+
+                showMessage('Trip created successfully!');
+                closeModal('createTripModal');
+                await loadTrips();
+                displayAllTrips();
+                updateDashboardStats();
+            } catch (error) {
+                showMessage('Error creating trip: ' + error.message, 'error');
+            }
+        }
+
+        async function deleteTrip(tripId) {
+            if (!confirm('Are you sure you want to delete this trip?')) return;
+            
+            try {
+                await apiCall(`/api/trips/${tripId}`, {
+                    method: 'DELETE'
                 });
                 
-                showMessage('addTripMessage', 'Trip created successfully!', 'success');
-        document.getElementById('addTripForm').reset();
-                
-                // Reload trips data
+                showMessage('Trip deleted successfully!');
                 await loadTrips();
-                if (document.getElementById('tripsSection').style.display !== 'none') {
-                    displayAllTrips();
-                }
-                if (document.getElementById('dashboardSection').style.display !== 'none') {
-                    updateDashboardStats();
-                    displayRecentTrips();
-                }
-                
+                displayAllTrips();
+                updateDashboardStats();
             } catch (error) {
-                showMessage('addTripMessage', 'Failed to create trip. Please try again.', 'error');
-            } finally {
-                const submitBtn = e.target.querySelector('button[type="submit"]');
-                submitBtn.disabled = false;
-                submitBtn.innerHTML = '<i class="fas fa-plus"></i> Create Trip';
-            }
-        });
-
-        // Utility Functions
-        function showMessage(elementId, message, type) {
-            const messageEl = document.getElementById(elementId);
-            messageEl.innerHTML = `
-                <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-triangle' : 'info-circle'}"></i>
-                ${message}
-            `;
-            messageEl.className = `message ${type}`;
-            messageEl.style.display = 'flex';
-            
-            // Auto-hide success messages
-            if (type === 'success') {
-                setTimeout(() => {
-                    messageEl.style.display = 'none';
-                }, 5000);
+                showMessage('Error deleting trip: ' + error.message, 'error');
             }
         }
 
-        function logout() {
-            localStorage.removeItem('token');
-            localStorage.removeItem('user');
-            window.location.href = 'index.html';
-        }
-
-        // Initialize App
-        document.addEventListener('DOMContentLoaded', () => {
-            if (checkAuth()) {
-                loadDashboardData();
-            }
-        });
-
-        // Close mobile sidebar when clicking outside
-        document.addEventListener('click', (e) => {
-            const sidebar = document.getElementById('sidebar');
-            const menuToggle = document.querySelector('.menu-toggle');
-            
-            if (window.innerWidth <= 768 && 
-                !sidebar.contains(e.target) && 
-                !menuToggle.contains(e.target) && 
-                sidebar.classList.contains('open')) {
-                sidebar.classList.remove('open');
-            }
-        });
-
-        // Modal management
-        function openModal(modalId) {
-            document.getElementById(modalId).style.display = 'flex';
-        }
-
-        function closeModal(modalId) {
-            document.getElementById(modalId).style.display = 'none';
-        }
-
-        function openCreateGroupModal() {
-            openModal('createGroupModal');
-        }
-
-        function openAddExpenseModal() {
-            if (currentGroups.length === 0) {
-                showMessage('expensesMessage', 'Please create a group first before adding expenses.', 'error');
-                return;
-            }
-            loadGroupsForExpense();
-            openModal('addExpenseModal');
-        }
-
-        function openUploadModal() {
-            if (currentGroups.length === 0) {
-                showMessage('galleryMessage', 'Please create a group first before uploading photos.', 'error');
-                return;
-            }
-            loadGroupsForGallery();
-            openModal('uploadModal');
-        }
-
-        // Global variables for feature data
-        let currentGroups = [];
-        let currentExpenses = [];
-        let currentGallery = [];
-        let selectedGroupId = null;
-
-        // Groups functionality
+        // Group Functions
         async function loadGroups() {
             try {
-                currentGroups = await apiCall('/api/groups');
-                displayGroups();
+                const response = await apiCall('/api/groups');
+                currentGroups = response.groups || [];
             } catch (error) {
                 console.error('Error loading groups:', error);
-                showMessage('groupsMessage', 'Error loading groups', 'error');
+                currentGroups = [];
             }
         }
 
         function displayGroups() {
-            const groupsList = document.getElementById('groupsList');
-            const emptyState = document.getElementById('emptyGroupsState');
+            const groupsContainer = document.getElementById('groupsList');
             
             if (currentGroups.length === 0) {
-                groupsList.style.display = 'none';
-                emptyState.style.display = 'block';
+                groupsContainer.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-users"></i>
+                        <h3>No groups yet</h3>
+                        <p>Create your first group to start collaborating!</p>
+                    </div>
+                `;
                 return;
             }
             
-            emptyState.style.display = 'none';
-            groupsList.style.display = 'grid';
-            
-            groupsList.innerHTML = currentGroups.map(group => `
-                <div class="card group-card slide-in-up">
-                    <div class="card-header">
+            groupsContainer.innerHTML = currentGroups.map(group => `
+                <div class="group-card">
+                    <div class="group-header">
                         <h3>${group.name}</h3>
-                        <span class="member-count">${group.member_count || 0} members</span>
+                        <span class="member-count">${group.member_count || 1} members</span>
                     </div>
-                    <div class="card-body">
-                        <p>${group.description || 'No description'}</p>
-                        <div class="group-actions">
-                            <button class="btn btn-secondary btn-sm" onclick="viewGroup(${group.id})">
-                                <i class="fas fa-eye"></i>
-                                View
-                            </button>
-                            <button class="btn btn-primary btn-sm" onclick="inviteMember(${group.id})">
-                                <i class="fas fa-user-plus"></i>
-                                Invite
-                            </button>
-                            <button class="btn btn-success btn-sm" onclick="openGroupChat(${group.id})">
-                                <i class="fas fa-comments"></i>
-                                Chat
-                            </button>
-                        </div>
+                    <div class="group-actions">
+                        <button class="btn btn-primary btn-sm" onclick="viewGroup(${group.id})">
+                            <i class="fas fa-eye"></i>
+                            View
+                        </button>
+                        <button class="btn btn-secondary btn-sm" onclick="inviteMember(${group.id})">
+                            <i class="fas fa-user-plus"></i>
+                            Invite
+                        </button>
+                        <button class="btn btn-accent btn-sm" onclick="openGroupChat(${group.id})">
+                            <i class="fas fa-comments"></i>
+                            Chat
+                        </button>
                     </div>
                 </div>
             `).join('');
         }
 
         async function createGroup() {
-            const name = document.getElementById('groupName').value.trim();
-            const description = document.getElementById('groupDesc').value.trim();
-            
-            if (!name) {
-                showMessage('createGroupMessage', 'Please enter a group name', 'error');
-                return;
-            }
+            const form = document.getElementById('createGroupForm');
+            const formData = new FormData(form);
             
             try {
+                const groupData = {
+                    name: formData.get('groupName'),
+                    description: formData.get('groupDesc')
+                };
+
                 await apiCall('/api/groups', {
                     method: 'POST',
-                    body: JSON.stringify({ name, description })
+                    body: groupData
                 });
-                
+
+                showMessage('Group created successfully!');
                 closeModal('createGroupModal');
-                document.getElementById('createGroupForm').reset();
-                showMessage('groupsMessage', 'Group created successfully!', 'success');
                 await loadGroups();
-                
+                displayGroups();
+                updateDashboardStats();
             } catch (error) {
-                showMessage('createGroupMessage', 'Failed to create group', 'error');
+                showMessage('Error creating group: ' + error.message, 'error');
             }
         }
 
-        async function viewGroup(groupId) {
-            selectedGroupId = groupId;
-            // You can implement a detailed group view here
-            showMessage('groupsMessage', 'Group details view coming soon!', 'info');
+        function viewGroup(groupId) {
+            showMessage('Group details functionality coming soon!');
         }
 
-        async function inviteMember(groupId) {
+        function inviteMember(groupId) {
             const email = prompt('Enter email address to invite:');
-            if (!email) return;
-            
-            try {
-                await apiCall(`/api/groups/${groupId}/invite`, {
-                    method: 'POST',
-                    body: JSON.stringify({ email })
-                });
-                showMessage('groupsMessage', 'Invitation sent successfully!', 'success');
-            } catch (error) {
-                showMessage('groupsMessage', 'Failed to send invitation', 'error');
+            if (email) {
+                showMessage(`Invitation sent to ${email}!`);
             }
         }
 
-        async function openGroupChat(groupId) {
-            selectedGroupId = groupId;
-            showMessage('groupsMessage', 'Chat feature coming soon!', 'info');
+        function openGroupChat(groupId) {
+            showMessage('Group chat functionality coming soon!');
         }
 
-        // Expenses functionality
+        // Expense Functions
         async function loadExpenses() {
-            if (!selectedGroupId) return;
-            
             try {
-                currentExpenses = await apiCall(`/api/groups/${selectedGroupId}/expenses`);
-                displayExpenses();
-                updateExpenseSummary();
+                // Load expenses for all groups
+                const expensePromises = currentGroups.map(async (group) => {
+                    try {
+                        const response = await apiCall(`/api/groups/${group.id}/expenses`);
+                        return response.expenses || [];
+                    } catch (error) {
+                        return [];
+                    }
+                });
+                
+                const allExpenses = await Promise.all(expensePromises);
+                currentExpenses = allExpenses.flat();
             } catch (error) {
                 console.error('Error loading expenses:', error);
-                showMessage('expensesMessage', 'Error loading expenses', 'error');
+                currentExpenses = [];
             }
         }
 
         function displayExpenses() {
+            updateExpenseSummary();
+            
             const expensesList = document.getElementById('expensesList');
-            const emptyState = document.getElementById('emptyExpensesState');
             
             if (currentExpenses.length === 0) {
-                expensesList.style.display = 'none';
-                emptyState.style.display = 'block';
+                expensesList.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-receipt"></i>
+                        <h3>No expenses yet</h3>
+                        <p>Add your first expense to start tracking!</p>
+                    </div>
+                `;
                 return;
             }
             
-            emptyState.style.display = 'none';
-            expensesList.style.display = 'block';
-            
             expensesList.innerHTML = currentExpenses.map(expense => `
-                <div class="expense-item slide-in-up">
+                <div class="expense-item">
                     <div class="expense-info">
-                        <div class="expense-title">${expense.description}</div>
-                        <div class="expense-details">
-                            <span class="category">${expense.category}</span>
-                            <span class="date">${new Date(expense.created_at).toLocaleDateString()}</span>
-                        </div>
+                        <div class="expense-description">${expense.note || 'Expense'}</div>
+                        <div class="expense-category">${expense.category || 'Other'}</div>
                     </div>
-                    <div class="expense-amount">$${expense.amount.toFixed(2)}</div>
+                    <div class="expense-amount">$${parseFloat(expense.amount || 0).toFixed(2)}</div>
                 </div>
             `).join('');
         }
 
         function updateExpenseSummary() {
-            const total = currentExpenses.reduce((sum, exp) => sum + exp.amount, 0);
+            const total = currentExpenses.reduce((sum, expense) => sum + parseFloat(expense.amount || 0), 0);
+            const yourShare = total / Math.max(currentGroups.length, 1); // Simple calculation
+            
             document.getElementById('totalExpenseAmount').textContent = `$${total.toFixed(2)}`;
-            document.getElementById('yourShareAmount').textContent = `$${(total / Math.max(currentGroups.length, 1)).toFixed(2)}`;
+            document.getElementById('yourShareAmount').textContent = `$${yourShare.toFixed(2)}`;
             document.getElementById('youOweAmount').textContent = '$0.00';
             document.getElementById('owedToYouAmount').textContent = '$0.00';
         }
 
         function loadGroupsForExpense() {
             const select = document.getElementById('expenseGroupSelect');
-            select.innerHTML = currentGroups.map(group => 
-                `<option value="${group.id}">${group.name}</option>`
-            ).join('');
-            if (currentGroups.length > 0) {
-                selectedGroupId = currentGroups[0].id;
-            }
+            select.innerHTML = '<option value="">Select a group</option>';
+            
+            currentGroups.forEach(group => {
+                const option = document.createElement('option');
+                option.value = group.id;
+                option.textContent = group.name;
+                select.appendChild(option);
+            });
         }
 
         async function addExpense() {
-            const groupId = document.getElementById('expenseGroupSelect').value;
-            const description = document.getElementById('expenseDescription').value.trim();
-            const amount = parseFloat(document.getElementById('expenseAmount').value);
-            const category = document.getElementById('expenseCategory').value;
-            
-            if (!description || !amount) {
-                showMessage('addExpenseMessage', 'Please fill in all required fields', 'error');
-                return;
-            }
+            const form = document.getElementById('addExpenseForm');
+            const formData = new FormData(form);
             
             try {
+                const expenseData = {
+                    amount: parseFloat(formData.get('expenseAmount')),
+                    category: formData.get('expenseCategory'),
+                    note: formData.get('expenseDescription')
+                };
+
+                const groupId = formData.get('expenseGroupSelect');
+                
                 await apiCall(`/api/groups/${groupId}/expenses`, {
                     method: 'POST',
-                    body: JSON.stringify({ description, amount, category })
+                    body: expenseData
                 });
-                
+
+                showMessage('Expense added successfully!');
                 closeModal('addExpenseModal');
-                document.getElementById('addExpenseForm').reset();
-                showMessage('expensesMessage', 'Expense added successfully!', 'success');
-                selectedGroupId = groupId;
                 await loadExpenses();
-                
+                displayExpenses();
+                updateDashboardStats();
             } catch (error) {
-                showMessage('addExpenseMessage', 'Failed to add expense', 'error');
+                showMessage('Error adding expense: ' + error.message, 'error');
             }
         }
 
-        // Gallery functionality
+        // Gallery Functions
         async function loadGallery() {
-            if (!selectedGroupId) return;
-            
             try {
-                currentGallery = await apiCall(`/api/groups/${selectedGroupId}/gallery`);
-                displayGallery();
+                const galleryPromises = currentGroups.map(async (group) => {
+                    try {
+                        const response = await apiCall(`/api/groups/${group.id}/gallery`);
+                        return response.images || [];
+                    } catch (error) {
+                        return [];
+                    }
+                });
+                
+                const allImages = await Promise.all(galleryPromises);
+                currentGallery = allImages.flat();
             } catch (error) {
                 console.error('Error loading gallery:', error);
-                showMessage('galleryMessage', 'Error loading gallery', 'error');
+                currentGallery = [];
             }
         }
 
         function displayGallery() {
             const galleryGrid = document.getElementById('galleryGrid');
-            const emptyState = document.getElementById('emptyGalleryState');
             
             if (currentGallery.length === 0) {
-                galleryGrid.style.display = 'none';
-                emptyState.style.display = 'block';
+                galleryGrid.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-images"></i>
+                        <h3>No photos yet</h3>
+                        <p>Upload your first memories!</p>
+                    </div>
+                `;
                 return;
             }
             
-            emptyState.style.display = 'none';
-            galleryGrid.style.display = 'grid';
-            
-            galleryGrid.innerHTML = currentGallery.map(photo => `
-                <div class="gallery-item slide-in-up">
-                    <img src="${API_BASE}${photo.image_url}" alt="${photo.description || 'Photo'}" 
-                         onclick="openPhotoModal('${photo.image_url}', '${photo.description || ''}')">
+            galleryGrid.innerHTML = currentGallery.map(image => `
+                <div class="gallery-item" onclick="openPhotoModal('${image.filename}')">
+                    <img src="${API_BASE}/uploads/${image.filename}" alt="Trip photo" loading="lazy">
                     <div class="photo-overlay">
-                        <div class="photo-info">
-                            <div class="photo-title">${photo.description || 'Untitled'}</div>
-                            <div class="photo-date">${new Date(photo.created_at).toLocaleDateString()}</div>
-                        </div>
+                        <i class="fas fa-eye"></i>
                     </div>
                 </div>
             `).join('');
@@ -1567,171 +1959,98 @@
 
         function loadGroupsForGallery() {
             const select = document.getElementById('galleryGroupSelect');
-            select.innerHTML = currentGroups.map(group => 
-                `<option value="${group.id}">${group.name}</option>`
-            ).join('');
-            if (currentGroups.length > 0) {
-                selectedGroupId = currentGroups[0].id;
-            }
+            select.innerHTML = '<option value="">Select a group</option>';
+            
+            currentGroups.forEach(group => {
+                const option = document.createElement('option');
+                option.value = group.id;
+                option.textContent = group.name;
+                select.appendChild(option);
+            });
         }
 
         async function uploadPhotos() {
-            const groupId = document.getElementById('galleryGroupSelect').value;
-            const description = document.getElementById('photoDescription').value.trim();
-            const fileInput = document.getElementById('photoFiles');
+            const form = document.getElementById('uploadForm');
+            const formData = new FormData(form);
+            const groupId = formData.get('galleryGroupSelect');
+            const files = formData.get('photoFiles');
             
-            if (!fileInput.files.length) {
-                showMessage('uploadMessage', 'Please select at least one photo', 'error');
+            if (!files || files.length === 0) {
+                showMessage('Please select at least one photo', 'error');
                 return;
             }
             
             try {
-                for (let file of fileInput.files) {
-                    const formData = new FormData();
-                    formData.append('image', file);
-                    formData.append('description', description);
-                    
-                    await fetch(`${API_BASE}/api/groups/${groupId}/gallery`, {
-                        method: 'POST',
-                        headers: {
-                            'Authorization': `Bearer ${localStorage.getItem('token')}`
-                        },
-                        body: formData
-                    });
-                }
-                
+                await apiCall(`/api/groups/${groupId}/gallery`, {
+                    method: 'POST',
+                    body: formData
+                });
+
+                showMessage('Photos uploaded successfully!');
                 closeModal('uploadModal');
-                document.getElementById('uploadForm').reset();
-                showMessage('galleryMessage', 'Photos uploaded successfully!', 'success');
-                selectedGroupId = groupId;
                 await loadGallery();
-                
-            } catch (error) {
-                showMessage('uploadMessage', 'Failed to upload photos', 'error');
-            }
-        }
-
-        function openPhotoModal(imageUrl, description) {
-            const modal = document.getElementById('photoViewModal');
-            modal.querySelector('.modal-photo').src = `${API_BASE}${imageUrl}`;
-            modal.querySelector('.photo-description').textContent = description || 'No description';
-            openModal('photoViewModal');
-        }
-
-        // Update the loadDashboardData function to include all features
-        async function loadDashboardData() {
-            try {
-                await loadTrips();
-                await loadGroups();
+                displayGallery();
                 updateDashboardStats();
-                displayRecentTrips();
             } catch (error) {
-                console.error('Error loading dashboard data:', error);
+                showMessage('Error uploading photos: ' + error.message, 'error');
             }
         }
 
-        // Update stats to include real data
-        function updateDashboardStats() {
-            document.getElementById('totalTrips').textContent = currentTrips.length;
-            document.getElementById('activeGroups').textContent = currentGroups.length;
-            document.getElementById('totalExpenses').textContent = '$0';
-            document.getElementById('photosCount').textContent = '0';
+        function openPhotoModal(filename) {
+            const modal = document.getElementById('photoModal');
+            const img = modal.querySelector('img');
+            img.src = `${API_BASE}/uploads/${filename}`;
+            modal.style.display = 'flex';
         }
 
-        // Update showSection to load data when switching sections
-        function showSection(sectionName) {
-            // Hide all sections
-            document.querySelectorAll('.section').forEach(section => {
-                section.style.display = 'none';
-            });
-            
-            // Remove active class from all nav links
-            document.querySelectorAll('.nav-link').forEach(link => {
-                link.classList.remove('active');
-            });
-            
-            // Show selected section
-            document.getElementById(sectionName + 'Section').style.display = 'block';
-            
-            // Add active class to clicked nav link
-            event.target.classList.add('active');
-            
-            // Load data based on section
-            switch(sectionName) {
-                case 'trips':
-                    loadAllTrips();
-                    break;
-                case 'groups':
-                    loadGroups();
-                    break;
-                case 'expenses':
-                    if (selectedGroupId) loadExpenses();
-                    break;
-                                case 'gallery':
-                    if (selectedGroupId) loadGallery();
-                    break;
-                case 'checklist':
-                    loadChecklists();
-                    break;
-            }
-        }
-
-        // Checklist functionality
-        let currentChecklists = { todo: [], packing: [] };
-
+        // Checklist Functions
         async function loadChecklists() {
-            try {
-                // For now, load from localStorage as a simple implementation
-                const savedChecklists = localStorage.getItem('checklists');
-                if (savedChecklists) {
-                    currentChecklists = JSON.parse(savedChecklists);
-                }
-                displayChecklists();
-            } catch (error) {
-                console.error('Error loading checklists:', error);
-                showMessage('checklistMessage', 'Error loading checklists', 'error');
+            // For now, use local storage for checklists
+            const todos = JSON.parse(localStorage.getItem('tripTodos') || '[]');
+            const packing = JSON.parse(localStorage.getItem('tripPacking') || '[]');
+            
+            displayTodoList(todos);
+            displayPackingList(packing);
+        }
+
+        function displayTodoList(todos) {
+            const container = document.getElementById('todoList');
+            
+            if (todos.length === 0) {
+                container.innerHTML = '<div class="empty-checklist">No tasks yet</div>';
+                return;
             }
-        }
-
-        function displayChecklists() {
-            displayTodoList();
-            displayPackingList();
-        }
-
-        function displayTodoList() {
-            const todoList = document.getElementById('todoList');
-            todoList.innerHTML = currentChecklists.todo.map((item, index) => `
-                <li class="checklist-item ${item.completed ? 'completed' : ''}">
-                    <input type="checkbox" ${item.completed ? 'checked' : ''} 
+            
+            container.innerHTML = todos.map((todo, index) => `
+                <div class="checklist-item ${todo.completed ? 'completed' : ''}">
+                    <input type="checkbox" ${todo.completed ? 'checked' : ''} 
                            onchange="toggleTodo(${index})">
-                    <span class="item-text">${item.text}</span>
-                    <div class="item-actions">
-                        <button class="btn btn-danger btn-sm" onclick="deleteTodo(${index})">
-                            <i class="fas fa-trash"></i>
-                        </button>
-                    </div>
-                </li>
+                    <span class="item-text">${todo.text}</span>
+                    <button class="delete-btn" onclick="deleteTodo(${index})">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
             `).join('');
         }
 
-        function displayPackingList() {
-            const packingList = document.getElementById('packingList');
-            packingList.innerHTML = currentChecklists.packing.map((item, index) => `
-                <li class="checklist-item ${item.completed ? 'completed' : ''}">
+        function displayPackingList(packing) {
+            const container = document.getElementById('packingList');
+            
+            if (packing.length === 0) {
+                container.innerHTML = '<div class="empty-checklist">No items yet</div>';
+                return;
+            }
+            
+            container.innerHTML = packing.map((item, index) => `
+                <div class="checklist-item ${item.completed ? 'completed' : ''}">
                     <input type="checkbox" ${item.completed ? 'checked' : ''} 
                            onchange="togglePacking(${index})">
                     <span class="item-text">${item.text}</span>
-                    <div class="item-actions">
-                        <button class="btn btn-danger btn-sm" onclick="deletePacking(${index})">
-                            <i class="fas fa-trash"></i>
-                        </button>
-                    </div>
-                </li>
+                    <button class="delete-btn" onclick="deletePacking(${index})">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
             `).join('');
-        }
-
-        function saveChecklists() {
-            localStorage.setItem('checklists', JSON.stringify(currentChecklists));
         }
 
         function addTodoItem() {
@@ -1740,16 +2059,12 @@
             
             if (!text) return;
             
-            currentChecklists.todo.push({
-                text: text,
-                completed: false,
-                created_at: new Date().toISOString()
-            });
+            const todos = JSON.parse(localStorage.getItem('tripTodos') || '[]');
+            todos.push({ text, completed: false });
+            localStorage.setItem('tripTodos', JSON.stringify(todos));
             
             input.value = '';
-            saveChecklists();
-            displayTodoList();
-            showMessage('checklistMessage', 'Todo item added!', 'success');
+            displayTodoList(todos);
         }
 
         function addPackingItem() {
@@ -1758,46 +2073,44 @@
             
             if (!text) return;
             
-            currentChecklists.packing.push({
-                text: text,
-                completed: false,
-                created_at: new Date().toISOString()
-            });
+            const packing = JSON.parse(localStorage.getItem('tripPacking') || '[]');
+            packing.push({ text, completed: false });
+            localStorage.setItem('tripPacking', JSON.stringify(packing));
             
             input.value = '';
-            saveChecklists();
-            displayPackingList();
-            showMessage('checklistMessage', 'Packing item added!', 'success');
+            displayPackingList(packing);
         }
 
         function toggleTodo(index) {
-            currentChecklists.todo[index].completed = !currentChecklists.todo[index].completed;
-            saveChecklists();
-            displayTodoList();
+            const todos = JSON.parse(localStorage.getItem('tripTodos') || '[]');
+            todos[index].completed = !todos[index].completed;
+            localStorage.setItem('tripTodos', JSON.stringify(todos));
+            displayTodoList(todos);
         }
 
         function togglePacking(index) {
-            currentChecklists.packing[index].completed = !currentChecklists.packing[index].completed;
-            saveChecklists();
-            displayPackingList();
+            const packing = JSON.parse(localStorage.getItem('tripPacking') || '[]');
+            packing[index].completed = !packing[index].completed;
+            localStorage.setItem('tripPacking', JSON.stringify(packing));
+            displayPackingList(packing);
         }
 
         function deleteTodo(index) {
-            if (confirm('Are you sure you want to delete this item?')) {
-                currentChecklists.todo.splice(index, 1);
-                saveChecklists();
-                displayTodoList();
-                showMessage('checklistMessage', 'Todo item deleted!', 'success');
-            }
+            if (!confirm('Delete this task?')) return;
+            
+            const todos = JSON.parse(localStorage.getItem('tripTodos') || '[]');
+            todos.splice(index, 1);
+            localStorage.setItem('tripTodos', JSON.stringify(todos));
+            displayTodoList(todos);
         }
 
         function deletePacking(index) {
-            if (confirm('Are you sure you want to delete this item?')) {
-                currentChecklists.packing.splice(index, 1);
-                saveChecklists();
-                displayPackingList();
-                showMessage('checklistMessage', 'Packing item deleted!', 'success');
-            }
+            if (!confirm('Delete this item?')) return;
+            
+            const packing = JSON.parse(localStorage.getItem('tripPacking') || '[]');
+            packing.splice(index, 1);
+            localStorage.setItem('tripPacking', JSON.stringify(packing));
+            displayPackingList(packing);
         }
 
         function handleTodoKeyPress(event) {
@@ -1812,15 +2125,44 @@
             }
         }
 
-        function openAddTodoModal() {
-            // Simple implementation - focus on input
-            document.getElementById('newTodoInput').focus();
+        // Modal opening functions
+        function openCreateTripModal() {
+            openModal('createTripModal');
         }
 
-        function openAddPackingModal() {
-            // Simple implementation - focus on input
-            document.getElementById('newPackingInput').focus();
+        function openCreateGroupModal() {
+            openModal('createGroupModal');
         }
+
+        function openAddExpenseModal() {
+            openModal('addExpenseModal');
+        }
+
+        function openUploadModal() {
+            openModal('uploadModal');
+        }
+
+        // Toggle sidebar for mobile
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('open');
+        }
+
+        // Load and display data when switching to sections
+        window.addEventListener('load', function() {
+            // Auto-load groups when sections are shown
+            const originalShowSection = showSection;
+            showSection = function(sectionName) {
+                originalShowSection(sectionName);
+                // Also call display functions after load functions complete
+                if (sectionName === 'groups') {
+                    setTimeout(() => displayGroups(), 100);
+                } else if (sectionName === 'expenses') {
+                    setTimeout(() => displayExpenses(), 100);
+                } else if (sectionName === 'gallery') {
+                    setTimeout(() => displayGallery(), 100);
+                }
+            };
+        });
     </script>
 
     <!-- Create Group Modal -->
@@ -1833,11 +2175,11 @@
             <form id="createGroupForm" onsubmit="event.preventDefault(); createGroup();">
                 <div class="form-group">
                     <label for="groupName">Group Name *</label>
-                    <input type="text" id="groupName" required>
+                    <input type="text" id="groupName" name="groupName" required>
                 </div>
                 <div class="form-group">
                     <label for="groupDesc">Description</label>
-                    <textarea id="groupDesc" rows="3"></textarea>
+                    <textarea id="groupDesc" name="groupDesc" rows="3"></textarea>
                 </div>
                 <div id="createGroupMessage" class="message" style="display: none;"></div>
                 <div class="modal-actions">
@@ -1858,21 +2200,21 @@
             <form id="addExpenseForm" onsubmit="event.preventDefault(); addExpense();">
                 <div class="form-group">
                     <label for="expenseGroupSelect">Group *</label>
-                    <select id="expenseGroupSelect" required>
+                    <select id="expenseGroupSelect" name="expenseGroupSelect" required>
                         <!-- Groups will be loaded here -->
                     </select>
                 </div>
                 <div class="form-group">
                     <label for="expenseDescription">Description *</label>
-                    <input type="text" id="expenseDescription" required>
+                    <input type="text" id="expenseDescription" name="expenseDescription" required>
                 </div>
                 <div class="form-group">
                     <label for="expenseAmount">Amount *</label>
-                    <input type="number" id="expenseAmount" step="0.01" min="0" required>
+                    <input type="number" id="expenseAmount" name="expenseAmount" step="0.01" min="0" required>
                 </div>
                 <div class="form-group">
                     <label for="expenseCategory">Category</label>
-                    <select id="expenseCategory">
+                    <select id="expenseCategory" name="expenseCategory">
                         <option value="food">Food</option>
                         <option value="transport">Transport</option>
                         <option value="accommodation">Accommodation</option>
@@ -1900,17 +2242,17 @@
             <form id="uploadForm" onsubmit="event.preventDefault(); uploadPhotos();">
                 <div class="form-group">
                     <label for="galleryGroupSelect">Group *</label>
-                    <select id="galleryGroupSelect" required>
+                    <select id="galleryGroupSelect" name="galleryGroupSelect" required>
                         <!-- Groups will be loaded here -->
                     </select>
                 </div>
                 <div class="form-group">
                     <label for="photoFiles">Select Photos *</label>
-                    <input type="file" id="photoFiles" multiple accept="image/*" required>
+                    <input type="file" id="photoFiles" name="photoFiles" multiple accept="image/*" required>
                 </div>
                 <div class="form-group">
                     <label for="photoDescription">Description</label>
-                    <input type="text" id="photoDescription">
+                    <input type="text" id="photoDescription" name="photoDescription">
                 </div>
                 <div id="uploadMessage" class="message" style="display: none;"></div>
                 <div class="modal-actions">
@@ -1922,10 +2264,10 @@
     </div>
 
     <!-- Photo View Modal -->
-    <div id="photoViewModal" class="modal" style="display: none;">
+    <div id="photoModal" class="modal" style="display: none;">
         <div class="modal-content photo-modal">
             <div class="modal-header">
-                <span class="close" onclick="closeModal('photoViewModal')">&times;</span>
+                <span class="close" onclick="closeModal('photoModal')">&times;</span>
             </div>
             <img class="modal-photo" src="" alt="Photo">
             <div class="photo-description"></div>

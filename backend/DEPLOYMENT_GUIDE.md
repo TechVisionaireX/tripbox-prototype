@@ -21,6 +21,10 @@
    - Add these environment variables:
      - `JWT_SECRET_KEY`: Generate a secure random string (e.g., use https://randomkeygen.com/)
      - `DATABASE_URL`: Will be automatically set if using Render PostgreSQL
+     - `GOOGLE_PLACES_API_KEY`: Get from Google Cloud Console
+     - `GOOGLE_MAPS_API_KEY`: Get from Google Cloud Console
+     - `OPENWEATHER_API_KEY`: Get from OpenWeather
+     - `OPENAI_API_KEY`: (Optional) Get from OpenAI
 
 3. **Database Setup**:
    - If not already done, create a PostgreSQL database on Render

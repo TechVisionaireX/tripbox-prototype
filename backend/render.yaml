@@ -15,4 +15,12 @@ services:
           name: tripbox-db
           property: connectionString
       - key: JWT_SECRET_KEY
-        generateValue: true 
+        generateValue: true
+      - key: GOOGLE_PLACES_API_KEY
+        sync: false
+      - key: GOOGLE_MAPS_API_KEY
+        sync: false
+      - key: OPENWEATHER_API_KEY
+        sync: false
+      - key: OPENAI_API_KEY
+        sync: false 
