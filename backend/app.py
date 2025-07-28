@@ -1,7 +1,7 @@
 from flask import Flask, jsonify
 from flask_cors import CORS
 from flask_jwt_extended import JWTManager
-from models import db
+from models import db, User
 from auth import auth_bp, bcrypt
 import os
 
@@ -92,30 +92,19 @@ try:
 except Exception as e:
     print("FAILED to import enhanced_chat_bp:", e)
 
-# Re-enable all advanced features
+# Advanced features will be enabled after initial deployment
 try:
     from ai_recommendations import ai_recommendations_bp
-    print("Imported ai_recommendations_bp successfully!")
-except Exception as e:
-    print("FAILED to import ai_recommendations_bp:", e)
-
-try:
     from live_location import live_location_bp
-    print("Imported live_location_bp successfully!")
-except Exception as e:
-    print("FAILED to import live_location_bp:", e)
-
-try:
     from pdf_generator import pdf_generator_bp
-    print("Imported pdf_generator_bp successfully!")
-except Exception as e:
-    print("FAILED to import pdf_generator_bp:", e)
-
-try:
     from real_time_chat import real_time_chat_bp
+    print("Imported ai_recommendations_bp successfully!")
+    print("Imported live_location_bp successfully!")
+    print("Imported pdf_generator_bp successfully!")
     print("Imported real_time_chat_bp successfully!")
 except Exception as e:
-    print("FAILED to import real_time_chat_bp:", e)
+    print(f"Warning: Some advanced features could not be enabled: {e}")
+    # Continue without advanced features
 
 # Initialize app
 app = Flask(__name__)
