@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>TripBox Dashboard</title>
+  <style>
+    body {
+      background: linear-gradient(135deg, #e9f1ff 0%, #f3f6fb 100%);
+      min-height: 100vh;
+      margin: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+    .container {
+      max-width: 700px;
+      margin: 2rem auto;
+      background: #fff;
+      padding: 2rem 2.5rem 2.5rem 2.5rem;
+      border-radius: 18px;
+      box-shadow: 0 6px 32px rgba(80,100,220,0.13);
+    }
+    h1 {
+      color: #2d437e;
+      margin-bottom: 2rem;
+      text-align: center;
+      font-size: 2.1rem;
+      font-weight: 600;
+    }
+    #trips-list {
+      list-style: none;
+      padding: 0;
+      margin: 1rem 0 2.2rem 0;
+    }
+    .trip-card {
+      background: #f4f7fc;
+      border-radius: 10px;
+      margin-bottom: 1.1rem;
+      padding: 1.1rem 1.5rem;
+      box-shadow: 0 2px 8px rgba(85,120,180,0.09);
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+    }
+    .trip-card .trip-title {
+      color: #204378;
+      font-size: 1.2rem;
+      font-weight: 600;
+    }
+    .trip-card .trip-dates {
+      color: #5e6986;
+      font-size: 1rem;
+    }
+    .trip-card .trip-desc {
+      color: #6d758c;
+      font-size: 0.98rem;
+      margin-bottom: 0.3rem;
+    }
+    form {
+      background: #f6fafd;
+      border-radius: 10px;
+      padding: 1.5rem 1.5rem 1rem 1.5rem;
+      box-shadow: 0 2px 8px rgba(85,120,180,0.07);
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
+    input, textarea {
+      font-size: 1rem;
+      padding: 0.5rem 0.8rem;
+      border-radius: 7px;
+      border: 1px solid #b2c5e3;
+      background: #f9fbfe;
+      outline: none;
+      transition: border 0.2s;
+    }
+    input:focus, textarea:focus {
+      border: 1.5px solid #2d437e;
+      background: #f2f7fd;
+    }
+    button {
+      background: #2e4a91;
+      color: #fff;
+      border: none;
+      border-radius: 7px;
+      font-size: 1.06rem;
+      font-weight: 500;
+      padding: 0.7rem 0;
+      cursor: pointer;
+      margin-top: 0.4rem;
+      transition: background 0.18s;
+    }
+    button:hover {
+      background: #203463;
+    }
+    .msg {
+      text-align: center;
+      color: #257045;
+      font-weight: 500;
+      margin-top: 0.7rem;
+      margin-bottom: 0.3rem;
+    }
+    @media (max-width: 620px) {
+      .container { padding: 1rem 0.3rem; }
+      form { padding: 1rem 0.5rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>My Trips</h1>
+    <form id="addTripForm">
+      <input type="text" id="tripName" placeholder="Trip Name" required />
+      <input type="date" id="startDate" required />
+      <input type="date" id="endDate" required />
+      <textarea id="tripDesc" placeholder="Description" rows="2"></textarea>
+      <button type="submit">Add Trip</button>
+      <div class="msg" id="addTripMsg"></div>
+    </form>
+    <ul id="trips-list"></ul>
+  </div>
+  <script>
+    // ---- Helper: get token from login.html ----
+    function getToken() {
+      return localStorage.getItem('token');
+    }
+    // ---- Fetch & Render all trips ----
+    async function loadTrips() {
+      const token = getToken();
+      if (!token) {
+        document.getElementById('trips-list').innerHTML = '<li style="color:red;">You are not logged in!</li>';
+        return;
+      }
+      const res = await fetch('https://tripbox-intelliorganizer.onrender.com/api/trips', {
+        headers: { 'Authorization': 'Bearer ' + token }
+      });
+      if (!res.ok) {
+        document.getElementById('trips-list').innerHTML = '<li style="color:red;">Error loading trips</li>';
+        return;
+      }
+      const trips = await res.json();
+      const list = document.getElementById('trips-list');
+      list.innerHTML = '';
+      if (trips.length === 0) {
+        list.innerHTML = '<li style="color:#8a93aa;">No trips yet. Add your first trip above!</li>';
+      }
+      trips.forEach(trip => {
+        const li = document.createElement('li');
+        li.className = 'trip-card';
+        li.innerHTML = `
+          <div class="trip-title">${trip.name}</div>
+          <div class="trip-dates">${trip.start_date} – ${trip.end_date}</div>
+          <div class="trip-desc">${trip.description || ''}</div>
+        `;
+        list.appendChild(li);
+      });
+    }
+
+    // ---- Handle Add Trip ----
+    document.getElementById('addTripForm').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      const name = document.getElementById('tripName').value.trim();
+      const start_date = document.getElementById('startDate').value;
+      const end_date = document.getElementById('endDate').value;
+      const description = document.getElementById('tripDesc').value.trim();
+      const token = getToken();
+      document.getElementById('addTripMsg').textContent = "";
+      if (!token) {
+        document.getElementById('addTripMsg').textContent = "You must be logged in!";
+        return;
+      }
+      const res = await fetch('https://tripbox-intelliorganizer.onrender.com/api/trips', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + token
+        },
+        body: JSON.stringify({ name, start_date, end_date, description })
+      });
+      const data = await res.json();
+      if (res.ok) {
+        document.getElementById('addTripMsg').style.color = "#257045";
+        document.getElementById('addTripMsg').textContent = "Trip added!";
+        loadTrips();
+        document.getElementById('addTripForm').reset();
+      } else {
+        document.getElementById('addTripMsg').style.color = "#d9534f";
+        document.getElementById('addTripMsg').textContent = data.error || "Failed to add trip!";
+      }
+    });
+
+    // ---- Load all trips on page load ----
+    window.onload = loadTrips;
+  </script>
+</body>
+</html>
