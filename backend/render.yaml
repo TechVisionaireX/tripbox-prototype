@@ -7,8 +7,9 @@ services:
   - type: web
     name: tripbox-backend
     env: python
-    buildCommand: "cd backend && chmod +x build.sh && ./build.sh"
-    startCommand: "cd backend && gunicorn app:app --timeout 120 --bind 0.0.0.0:$PORT"
+    runtime: python3
+    buildCommand: "cd backend && pip install -r requirements.txt && chmod +x build.sh && ./build.sh"
+    startCommand: "cd backend && gunicorn app:app --timeout 120 --bind 0.0.0.0:$PORT --workers 2"
     disk:
       name: uploads
       mountPath: /opt/render/project/src/backend/uploads
@@ -22,6 +23,10 @@ services:
           property: connectionString
       - key: JWT_SECRET_KEY
         generateValue: true
+      - key: FLASK_ENV
+        value: "production"
+      - key: FLASK_DEBUG
+        value: "0"
       - key: GOOGLE_PLACES_API_KEY
         sync: false
       - key: GOOGLE_MAPS_API_KEY

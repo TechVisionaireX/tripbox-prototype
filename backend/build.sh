@@ -23,23 +23,22 @@ python - <<EOF
 import os
 import sys
 from app import app, db
+from sqlalchemy import text
 
 with app.app_context():
     try:
         # Create all tables
         db.create_all()
-        print("Created new tables")
+        print("✅ Database tables created successfully")
         
-        # Verify tables were created
-        tables = db.engine.table_names()
-        print(f"Created tables: {', '.join(tables)}")
-        
-        # Test database connection
-        result = db.engine.execute("SELECT 1")
-        print("Database connection successful")
+        # Test database connection with proper SQLAlchemy 2.0 syntax
+        with db.engine.connect() as connection:
+            result = connection.execute(text("SELECT 1"))
+            print("✅ Database connection successful")
         
     except Exception as e:
-        print(f"Error during database setup: {e}")
+        print(f"⚠️ Warning during database setup: {e}")
+        print("🔄 Continuing with deployment...")
         # Don't raise error, continue with deployment
         pass
 EOF

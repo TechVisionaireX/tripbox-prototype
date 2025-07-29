@@ -150,7 +150,8 @@ def serve_frontend_files(filename):
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
     print("🚀 TripBox-IntelliOrganizer Backend Starting...")
-    print(f"📍 Running on: http://localhost:{port}")
+    print(f"📍 Running on: http://0.0.0.0:{port}")
     print(f"🔗 Database: {app.config['SQLALCHEMY_DATABASE_URI']}")
     print("📧 Test Login: test@test.com / test123")
+    print("🌐 Frontend served from backend at root URL")
     app.run(host="0.0.0.0", port=port, debug=False)
