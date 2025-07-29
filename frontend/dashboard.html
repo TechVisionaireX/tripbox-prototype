@@ -1186,7 +1186,8 @@
                 });
                 
                 if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
+                    const errorData = await response.json().catch(() => ({}));
+                    throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
                 }
                 
                 return await response.json();
@@ -1454,7 +1455,15 @@
                     
                 } catch (error) {
                     console.error('Error adding member:', error);
-                    showMessage('addMemberMessage', error.message || 'Failed to add member', 'error');
+                    let errorMessage = 'Failed to add member';
+                    if (error.message.includes('404')) {
+                        errorMessage = 'Server connection failed. Please ensure the backend is running.';
+                    } else if (error.message.includes('User with this email not found')) {
+                        errorMessage = 'No user found with that email. They need to register first.';
+                    } else if (error.message.includes('already a member')) {
+                        errorMessage = 'This user is already a member of the trip.';
+                    }
+                    showMessage('addMemberMessage', errorMessage, 'error');
                 } finally {
                     submitBtn.disabled = false;
                     submitBtn.innerHTML = '<i class="fas fa-plus"></i> Add Member';
