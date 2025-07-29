@@ -1,3 +1,8 @@
+databases:
+  - name: tripbox-db
+    databaseName: tripbox
+    user: tripbox
+
 services:
   - type: web
     name: tripbox-prototype
@@ -5,6 +10,9 @@ services:
     buildCommand: |
       cd backend
       python --version
-      pip install flask
-      echo "✅ Emergency build completed"
-    startCommand: "cd backend && python emergency_minimal.py" 
+      pip install flask flask-cors
+      echo "✅ Build completed"
+    startCommand: "cd backend && python super_minimal.py"
+    envVars:
+      - key: FLASK_ENV
+        value: "production" 
