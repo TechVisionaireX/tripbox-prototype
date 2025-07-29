@@ -1,7 +1,7 @@
 services:
   - type: web
-    name: tripbox-static
+    name: tripbox-final
     env: static
-    buildCommand: echo "Static site - no build needed"
-    startCommand: echo "Static site deployed"
+    buildCommand: echo "Static site deployment"
+    startCommand: echo "Static site ready"
     staticPublishPath: ./frontend 
