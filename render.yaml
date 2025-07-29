@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: tripbox-intelliorganizer
+    name: tripbox-working
     env: python
     buildCommand: |
       pip install --upgrade pip
