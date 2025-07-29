@@ -1091,10 +1091,7 @@
                 </a>
             </div>
             <div class="nav-item">
-                <a href="#" class="nav-link" onclick="showSection('groups')">
-                    <i class="fas fa-users"></i>
-                    Groups
-                </a>
+
             </div>
             <div class="nav-item">
                 <a href="#" class="nav-link" onclick="showSection('expenses')">
@@ -1178,8 +1175,8 @@
                     <div class="stat-card">
                         <div class="stat-header">
                             <div>
-                                <div class="stat-number" id="activeGroups">-</div>
-                                <div class="stat-label">Active Groups</div>
+                                                <div class="stat-number" id="activeGroups">-</div>
+                <div class="stat-label">Active Trips</div>
                             </div>
                             <div class="stat-icon success">
                                 <i class="fas fa-users"></i>
@@ -1288,27 +1285,7 @@
             </div>
         </section>
 
-        <!-- Groups Section -->
-        <section id="groupsSection" class="section" style="display: none;">
-            <div class="header">
-                <h1>Groups</h1>
-                <p>Collaborate with your travel companions</p>
-                <button class="btn btn-primary" onclick="openCreateGroupModal()">
-                    <i class="fas fa-plus"></i>
-                    Create Group
-                </button>
-            </div>
-            <div class="content">
-                <div id="groupsList" class="grid-container">
-                    <!-- Groups will be loaded here -->
-                </div>
-                <div id="emptyGroupsState" class="empty-state" style="display: none;">
-                    <i class="fas fa-users"></i>
-                    <h3>No groups yet</h3>
-                    <p>Create your first group to start collaborating on trip planning.</p>
-                </div>
-            </div>
-        </section>
+
 
         <!-- Expenses Section -->
         <section id="expensesSection" class="section" style="display: none;">
@@ -1440,8 +1417,8 @@
             <div class="content">
                 <div class="form-section">
                     <div class="form-group">
-                        <label for="itineraryGroupSelect">Select Group</label>
-                        <select id="itineraryGroupSelect" onchange="loadItinerary()">
+                        <label for="itineraryTripSelect">Select Trip</label>
+                        <select id="itineraryTripSelect" onchange="loadItinerary()">
                             <option value="">Choose a group...</option>
                         </select>
                     </div>
@@ -1510,9 +1487,9 @@
             <div class="content">
                 <div class="form-section">
                     <div class="form-group">
-                        <label for="pollsGroupSelect">Select Group</label>
-                        <select id="pollsGroupSelect" onchange="loadPolls()">
-                            <option value="">Choose a group...</option>
+                        <label for="pollsTripSelect">Select Trip</label>
+                        <select id="pollsTripSelect" onchange="loadPolls()">
+                            <option value="">Choose a trip...</option>
                         </select>
                     </div>
                 </div>
@@ -1550,9 +1527,9 @@
             <div class="content">
                 <div class="form-section">
                     <div class="form-group">
-                        <label for="chatGroupSelect">Select Group</label>
-                        <select id="chatGroupSelect" onchange="loadEnhancedChat()">
-                            <option value="">Choose a group...</option>
+                        <label for="chatTripSelect">Select Trip</label>
+                        <select id="chatTripSelect" onchange="loadEnhancedChat()">
+                            <option value="">Choose a trip...</option>
                         </select>
                     </div>
                 </div>
@@ -1683,13 +1660,12 @@
   <script>
         const API_BASE = 'http://127.0.0.1:5000';
         let currentTrips = [];
-        let currentGroups = [];
+
         let currentExpenses = [];
         let currentGallery = [];
         let currentUser = null;
         let currentItinerary = [];
         let currentPolls = [];
-        let selectedGroupId = null;
         let selectedTripId = null;
 
         // Initialize the application
@@ -1845,9 +1821,7 @@
                     case 'trips':
                         loadAllTrips();
                         break;
-                    case 'groups':
-                        loadGroups();
-                        break;
+                    
                     case 'expenses':
                         loadExpenses();
                         break;
@@ -1881,9 +1855,9 @@
                 
                 // Load data for specific modals
                 if (modalId === 'addExpenseModal') {
-                    loadGroupsForExpense();
+                    loadTripsForExpense();
                 } else if (modalId === 'uploadModal') {
-                    loadGroupsForGallery();
+                    loadTripsForGallery();
                 }
             }
         }
@@ -1915,11 +1889,6 @@
                     currentTrips = [];
                 });
                 
-                await loadGroups().catch(error => {
-                    console.error('Error loading groups:', error);
-                    currentGroups = [];
-                });
-                
                 await loadExpenses().catch(error => {
                     console.error('Error loading expenses:', error);
                     currentExpenses = [];
@@ -1940,7 +1909,7 @@
 
         function updateDashboardStats() {
             document.getElementById('totalTrips').textContent = currentTrips.length;
-            document.getElementById('activeGroups').textContent = currentGroups.length;
+            document.getElementById('activeGroups').textContent = currentTrips.length; // Changed to show trips instead of groups
             
             const totalExpenses = currentExpenses.reduce((sum, expense) => sum + parseFloat(expense.amount || 0), 0);
             document.getElementById('totalExpenses').textContent = `$${totalExpenses.toFixed(2)}`;
@@ -1978,6 +1947,40 @@
                 console.error('Error loading trips:', error);
                 currentTrips = [];
             }
+        }
+
+        function displayTrips() {
+            const tripsContainer = document.getElementById('recentTripsList');
+            
+            if (currentTrips.length === 0) {
+                tripsContainer.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-plane"></i>
+                        <h3>No trips yet</h3>
+                        <p>Create your first trip to start planning!</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            tripsContainer.innerHTML = currentTrips.slice(0, 3).map(trip => `
+                <div class="trip-card">
+                    <div class="trip-header">
+                        <h3>${trip.name}</h3>
+                        <span class="trip-date">${trip.start_date} - ${trip.end_date}</span>
+                    </div>
+                    <div class="trip-actions">
+                        <button class="btn btn-primary btn-sm" onclick="viewTrip(${trip.id})">
+                            <i class="fas fa-eye"></i>
+                            View
+                        </button>
+                        <button class="btn btn-secondary btn-sm" onclick="editTrip(${trip.id})">
+                            <i class="fas fa-edit"></i>
+                            Edit
+                        </button>
+                    </div>
+                </div>
+            `).join('');
         }
 
         async function loadAllTrips() {
@@ -2081,108 +2084,13 @@
             }
         }
 
-        // Group Functions
-        async function loadGroups() {
-            try {
-                const response = await apiCall('/api/groups');
-                currentGroups = response.groups || [];
-            } catch (error) {
-                console.error('Error loading groups:', error);
-                currentGroups = [];
-            }
-        }
-
-        function displayGroups() {
-            const groupsContainer = document.getElementById('groupsList');
-            
-            if (currentGroups.length === 0) {
-                groupsContainer.innerHTML = `
-                    <div class="empty-state">
-                        <i class="fas fa-users"></i>
-                        <h3>No groups yet</h3>
-                        <p>Create your first group to start collaborating!</p>
-                    </div>
-                `;
-                return;
-            }
-            
-            groupsContainer.innerHTML = currentGroups.map(group => `
-                <div class="group-card">
-                    <div class="group-header">
-                        <h3>${group.name}</h3>
-                        <span class="member-count">${group.member_count || 1} members</span>
-                    </div>
-                    <div class="group-actions">
-                        <button class="btn btn-primary btn-sm" onclick="viewGroup(${group.id})">
-                            <i class="fas fa-eye"></i>
-                            View
-                        </button>
-                        <button class="btn btn-secondary btn-sm" onclick="inviteMember(${group.id})">
-                            <i class="fas fa-user-plus"></i>
-                            Invite
-                        </button>
-                        <button class="btn btn-accent btn-sm" onclick="openGroupChat(${group.id})">
-                            <i class="fas fa-comments"></i>
-                            Chat
-                        </button>
-                    </div>
-                </div>
-            `).join('');
-        }
-
-        async function createGroup() {
-            const form = document.getElementById('createGroupForm');
-            const formData = new FormData(form);
-            
-            console.log('Creating group with form data:', Object.fromEntries(formData));
-            
-            try {
-                const groupData = {
-                    name: formData.get('groupName'),
-                    description: formData.get('groupDesc')
-                };
-
-                console.log('Sending group data:', groupData);
-
-                await apiCall('/api/groups', {
-                    method: 'POST',
-                    body: groupData
-                });
-
-                console.log('Group created successfully');
-                showMessage('Group created successfully!');
-                closeModal('createGroupModal');
-                await loadGroups();
-                displayGroups();
-                updateDashboardStats();
-            } catch (error) {
-                console.error('Error creating group:', error);
-                showMessage('Error creating group: ' + error.message, 'error');
-            }
-        }
-
-        function viewGroup(groupId) {
-            showMessage('Group details functionality coming soon!');
-        }
-
-        function inviteMember(groupId) {
-            const email = prompt('Enter email address to invite:');
-            if (email) {
-                showMessage(`Invitation sent to ${email}!`);
-            }
-        }
-
-        function openGroupChat(groupId) {
-            showMessage('Group chat functionality coming soon!');
-        }
-
         // Expense Functions
         async function loadExpenses() {
             try {
-                // Load expenses for all groups
-                const expensePromises = currentGroups.map(async (group) => {
+                // Load expenses for all trips
+                const expensePromises = currentTrips.map(async (trip) => {
                     try {
-                        const response = await apiCall(`/api/groups/${group.id}/expenses`);
+                        const response = await apiCall(`/api/trips/${trip.id}/expenses`);
                         return response.expenses || [];
                     } catch (error) {
                         return [];
@@ -2226,7 +2134,7 @@
 
         function updateExpenseSummary() {
             const total = currentExpenses.reduce((sum, expense) => sum + parseFloat(expense.amount || 0), 0);
-            const yourShare = total / Math.max(currentGroups.length, 1); // Simple calculation
+            const yourShare = total / Math.max(currentTrips.length, 1); // Simple calculation
             
             document.getElementById('totalExpenseAmount').textContent = `$${total.toFixed(2)}`;
             document.getElementById('yourShareAmount').textContent = `$${yourShare.toFixed(2)}`;
@@ -2234,14 +2142,14 @@
             document.getElementById('owedToYouAmount').textContent = '$0.00';
         }
 
-        function loadGroupsForExpense() {
-            const select = document.getElementById('expenseGroupSelect');
-            select.innerHTML = '<option value="">Select a group</option>';
+        function loadTripsForExpense() {
+            const select = document.getElementById('expenseTripSelect');
+            select.innerHTML = '<option value="">Select a trip</option>';
             
-            currentGroups.forEach(group => {
+            currentTrips.forEach(trip => {
                 const option = document.createElement('option');
-                option.value = group.id;
-                option.textContent = group.name;
+                option.value = trip.id;
+                option.textContent = trip.name;
                 select.appendChild(option);
             });
         }
@@ -2257,9 +2165,9 @@
                     note: formData.get('expenseDescription')
                 };
 
-                const groupId = formData.get('expenseGroupSelect');
+                const tripId = formData.get('expenseTripSelect');
                 
-                await apiCall(`/api/groups/${groupId}/expenses`, {
+                await apiCall(`/api/trips/${tripId}/expenses`, {
                     method: 'POST',
                     body: expenseData
                 });
@@ -2277,9 +2185,9 @@
         // Gallery Functions
         async function loadGallery() {
             try {
-                const galleryPromises = currentGroups.map(async (group) => {
+                const galleryPromises = currentTrips.map(async (trip) => {
                     try {
-                        const response = await apiCall(`/api/groups/${group.id}/gallery`);
+                        const response = await apiCall(`/api/trips/${trip.id}/gallery`);
                         return response.images || [];
                     } catch (error) {
                         return [];
@@ -2318,14 +2226,14 @@
             `).join('');
         }
 
-        function loadGroupsForGallery() {
-            const select = document.getElementById('galleryGroupSelect');
-            select.innerHTML = '<option value="">Select a group</option>';
+        function loadTripsForGallery() {
+            const select = document.getElementById('galleryTripSelect');
+            select.innerHTML = '<option value="">Select a trip</option>';
             
-            currentGroups.forEach(group => {
+            currentTrips.forEach(trip => {
                 const option = document.createElement('option');
-                option.value = group.id;
-                option.textContent = group.name;
+                option.value = trip.id;
+                option.textContent = trip.name;
                 select.appendChild(option);
             });
         }
@@ -2333,7 +2241,7 @@
         async function uploadPhotos() {
             const form = document.getElementById('uploadForm');
             const formData = new FormData(form);
-            const groupId = formData.get('galleryGroupSelect');
+            const tripId = formData.get('galleryTripSelect');
             const files = formData.get('photoFiles');
             
             if (!files || files.length === 0) {
@@ -2342,7 +2250,7 @@
             }
             
             try {
-                await apiCall(`/api/groups/${groupId}/gallery`, {
+                await apiCall(`/api/trips/${tripId}/gallery`, {
                     method: 'POST',
                     body: formData
                 });
@@ -2497,9 +2405,7 @@
             openModal('createTripModal');
         }
 
-        function openCreateGroupModal() {
-            openModal('createGroupModal');
-        }
+
 
         function openAddExpenseModal() {
             openModal('addExpenseModal');
@@ -2521,18 +2427,16 @@
             showSection = function(sectionName) {
                 originalShowSection(sectionName);
                 // Also call display functions after load functions complete
-                if (sectionName === 'groups') {
-                    setTimeout(() => displayGroups(), 100);
-                } else if (sectionName === 'expenses') {
+                if (sectionName === 'expenses') {
                     setTimeout(() => displayExpenses(), 100);
                 } else if (sectionName === 'gallery') {
                     setTimeout(() => displayGallery(), 100);
                 } else if (sectionName === 'itinerary') {
                     setTimeout(() => loadGroupsForItinerary(), 100);
                 } else if (sectionName === 'polls') {
-                    setTimeout(() => loadGroupsForPolls(), 100);
+                    setTimeout(() => loadTripsForPolls(), 100);
                 } else if (sectionName === 'enhanced-chat') {
-                    setTimeout(() => loadGroupsForChat(), 100);
+                    setTimeout(() => loadTripsForChat(), 100);
                 } else if (sectionName === 'finalization') {
                     setTimeout(() => loadTripsForFinalization(), 100);
                 }
@@ -2540,31 +2444,31 @@
         });
 
         // NEW FUNCTIONS FOR ITINERARY MANAGEMENT
-        async function loadGroupsForItinerary() {
-            const select = document.getElementById('itineraryGroupSelect');
-            select.innerHTML = '<option value="">Choose a group...</option>';
+        async function loadTripsForItinerary() {
+            const select = document.getElementById('itineraryTripSelect');
+            select.innerHTML = '<option value="">Choose a trip...</option>';
             
-            currentGroups.forEach(group => {
+            currentTrips.forEach(trip => {
                 const option = document.createElement('option');
-                option.value = group.id;
-                option.textContent = group.name;
+                option.value = trip.id;
+                option.textContent = trip.name;
                 select.appendChild(option);
             });
         }
 
         async function loadItinerary() {
-            const groupId = document.getElementById('itineraryGroupSelect').value;
-            if (!groupId) {
+            const tripId = document.getElementById('itineraryTripSelect').value;
+            if (!tripId) {
                 document.getElementById('itineraryContainer').innerHTML = '';
                 document.getElementById('emptyItineraryState').style.display = 'block';
                 return;
             }
 
-            selectedGroupId = groupId;
+            selectedTripId = tripId;
             document.getElementById('emptyItineraryState').style.display = 'none';
 
             try {
-                const response = await apiCall(`/api/groups/${groupId}/itinerary`);
+                const response = await apiCall(`/api/trips/${tripId}/itinerary`);
                 currentItinerary = response.itinerary || [];
                 displayItinerary();
             } catch (error) {
@@ -2659,7 +2563,7 @@
                     confirmed: formData.get('confirmed') === 'on'
                 };
 
-                await apiCall(`/api/groups/${selectedGroupId}/itinerary`, {
+                await apiCall(`/api/trips/${selectedTripId}/itinerary`, {
                     method: 'POST',
                     body: itemData
                 });
@@ -2705,33 +2609,33 @@
         }
 
         // NEW FUNCTIONS FOR POLLS AND VOTING
-        async function loadGroupsForPolls() {
-            const select = document.getElementById('pollsGroupSelect');
-            select.innerHTML = '<option value="">Choose a group...</option>';
+        async function loadTripsForPolls() {
+            const select = document.getElementById('pollsTripSelect');
+            select.innerHTML = '<option value="">Choose a trip...</option>';
             
-            currentGroups.forEach(group => {
+            currentTrips.forEach(trip => {
                 const option = document.createElement('option');
-                option.value = group.id;
-                option.textContent = group.name;
+                option.value = trip.id;
+                option.textContent = trip.name;
                 select.appendChild(option);
             });
         }
 
         async function loadPolls() {
-            const groupId = document.getElementById('pollsGroupSelect').value;
-            if (!groupId) {
+            const tripId = document.getElementById('pollsTripSelect').value;
+            if (!tripId) {
                 document.getElementById('pollsContainer').innerHTML = '';
                 document.getElementById('emptyPollsState').style.display = 'block';
                 return;
             }
 
-            selectedGroupId = groupId;
+            selectedTripId = tripId;
             document.getElementById('emptyPollsState').style.display = 'none';
 
             try {
                 const [pollsResponse, recommendationsResponse] = await Promise.all([
-                    apiCall(`/api/groups/${groupId}/polls`),
-                    apiCall(`/api/groups/${groupId}/recommendations`)
+                                    apiCall(`/api/trips/${tripId}/polls`),
+                apiCall(`/api/trips/${tripId}/recommendations`)
                 ]);
                 
                 currentPolls = pollsResponse.polls || [];
@@ -2843,7 +2747,7 @@
             }
             
             try {
-                await apiCall(`/api/groups/${selectedGroupId}/polls`, {
+                await apiCall(`/api/trips/${selectedTripId}/polls`, {
                     method: 'POST',
                     body: {
                         question: formData.get('question'),
@@ -2919,32 +2823,32 @@
         }
 
         // NEW FUNCTIONS FOR ENHANCED CHAT
-        async function loadGroupsForChat() {
-            const select = document.getElementById('chatGroupSelect');
-            select.innerHTML = '<option value="">Choose a group...</option>';
+        async function loadTripsForChat() {
+            const select = document.getElementById('chatTripSelect');
+            select.innerHTML = '<option value="">Choose a trip...</option>';
             
-            currentGroups.forEach(group => {
+            currentTrips.forEach(trip => {
                 const option = document.createElement('option');
-                option.value = group.id;
-                option.textContent = group.name;
+                option.value = trip.id;
+                option.textContent = trip.name;
                 select.appendChild(option);
             });
         }
 
         async function loadEnhancedChat() {
-            const groupId = document.getElementById('chatGroupSelect').value;
-            if (!groupId) {
+            const tripId = document.getElementById('chatTripSelect').value;
+            if (!tripId) {
                 document.getElementById('enhancedChatContainer').style.display = 'none';
                 document.getElementById('emptyChatState').style.display = 'block';
                 return;
             }
 
-            selectedGroupId = groupId;
+            selectedTripId = tripId;
             document.getElementById('enhancedChatContainer').style.display = 'block';
             document.getElementById('emptyChatState').style.display = 'none';
 
             try {
-                const response = await apiCall(`/api/groups/${groupId}/enhanced-chat`);
+                const response = await apiCall(`/api/trips/${tripId}/enhanced-chat`);
                 displayEnhancedMessages(response.messages || []);
             } catch (error) {
                 showMessage('Error loading chat: ' + error.message, 'error');
@@ -2985,10 +2889,10 @@
             const input = document.getElementById('newChatMessage');
             const message = input.value.trim();
             
-            if (!message || !selectedGroupId) return;
+            if (!message || !selectedTripId) return;
             
             try {
-                await apiCall(`/api/groups/${selectedGroupId}/enhanced-chat`, {
+                await apiCall(`/api/trips/${selectedTripId}/enhanced-chat`, {
                     method: 'POST',
                     body: { 
                         message,
@@ -3011,10 +2915,10 @@
 
         async function searchMessages() {
             const query = document.getElementById('chatSearchInput').value.trim();
-            if (!query || !selectedGroupId) return;
+            if (!query || !selectedTripId) return;
             
             try {
-                const response = await apiCall(`/api/groups/${selectedGroupId}/search-messages?q=${encodeURIComponent(query)}`);
+                const response = await apiCall(`/api/trips/${selectedTripId}/search-messages?q=${encodeURIComponent(query)}`);
                 displayEnhancedMessages(response.results || []);
             } catch (error) {
                 showMessage('Error searching messages: ' + error.message, 'error');
@@ -3165,30 +3069,7 @@
         }
     </script>
 
-    <!-- Create Group Modal -->
-    <div id="createGroupModal" class="modal" style="display: none;">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2>Create New Group</h2>
-                <span class="close" onclick="closeModal('createGroupModal')">&times;</span>
-            </div>
-            <form id="createGroupForm" onsubmit="event.preventDefault(); createGroup();">
-                <div class="form-group">
-                    <label for="groupName">Group Name *</label>
-                    <input type="text" id="groupName" name="groupName" required>
-                </div>
-                <div class="form-group">
-                    <label for="groupDesc">Description</label>
-                    <textarea id="groupDesc" name="groupDesc" rows="3"></textarea>
-                </div>
-                <div id="createGroupMessage" class="message" style="display: none;"></div>
-                <div class="modal-actions">
-                    <button type="button" class="btn btn-secondary" onclick="closeModal('createGroupModal')">Cancel</button>
-                    <button type="submit" class="btn btn-primary">Create Group</button>
-                </div>
-            </form>
-        </div>
-    </div>
+
 
     <!-- Add Expense Modal -->
     <div id="addExpenseModal" class="modal" style="display: none;">
@@ -3199,9 +3080,9 @@
             </div>
             <form id="addExpenseForm" onsubmit="event.preventDefault(); addExpense();">
                 <div class="form-group">
-                    <label for="expenseGroupSelect">Group *</label>
-                    <select id="expenseGroupSelect" name="expenseGroupSelect" required>
-                        <!-- Groups will be loaded here -->
+                    <label for="expenseTripSelect">Trip *</label>
+                    <select id="expenseTripSelect" name="expenseTripSelect" required>
+                        <!-- Trips will be loaded here -->
                     </select>
                 </div>
                 <div class="form-group">
@@ -3241,9 +3122,9 @@
             </div>
             <form id="uploadForm" onsubmit="event.preventDefault(); uploadPhotos();">
                 <div class="form-group">
-                    <label for="galleryGroupSelect">Group *</label>
-                    <select id="galleryGroupSelect" name="galleryGroupSelect" required>
-                        <!-- Groups will be loaded here -->
+                    <label for="galleryTripSelect">Trip *</label>
+                    <select id="galleryTripSelect" name="galleryTripSelect" required>
+                        <!-- Trips will be loaded here -->
                     </select>
                 </div>
                 <div class="form-group">

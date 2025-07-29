@@ -12,11 +12,11 @@ try:
 except Exception as e:
     print("FAILED to import trips_bp:", e)
 
-try:
-    from groups import groups_bp
-    print("Imported groups_bp successfully!")
-except Exception as e:
-    print("FAILED to import groups_bp:", e)
+# try:
+#     from groups import groups_bp
+#     print("Imported groups_bp successfully!")
+# except Exception as e:
+#     print("FAILED to import groups_bp:", e)
 
 try:
     from chat import chat_bp
@@ -147,7 +147,7 @@ jwt = JWTManager(app)
 # Register all blueprints
 app.register_blueprint(auth_bp)
 app.register_blueprint(trips_bp)
-app.register_blueprint(groups_bp)
+# app.register_blueprint(groups_bp) # Removed groups blueprint registration
 app.register_blueprint(chat_bp)
 app.register_blueprint(recommend_bp)
 app.register_blueprint(expense_bp)
