@@ -119,19 +119,6 @@ db.init_app(app)
 bcrypt.init_app(app)
 jwt = JWTManager(app)
 
-# JWT Error Handlers
-@jwt.expired_token_loader
-def expired_token_callback(jwt_header, jwt_payload):
-    return jsonify({'error': 'Token has expired', 'message': 'Please login again'}), 401
-
-@jwt.invalid_token_loader
-def invalid_token_callback(error):
-    return jsonify({'error': 'Invalid token', 'message': 'Please login again'}), 401
-
-@jwt.unauthorized_loader
-def missing_token_callback(error):
-    return jsonify({'error': 'Authorization required', 'message': 'Please login to access this resource'}), 401
-
 # Register all blueprints
 app.register_blueprint(auth_bp)
 app.register_blueprint(trips_bp)

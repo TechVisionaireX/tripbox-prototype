@@ -1,6 +1,6 @@
 from flask import Blueprint, request, jsonify
 from flask_bcrypt import Bcrypt
-from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity
+from flask_jwt_extended import create_access_token
 from models import db, User
 import datetime
 
@@ -32,16 +32,3 @@ def login():
         return jsonify({'token': access_token, 'user': {'email': user.email, 'name': user.name}})
     else:
         return jsonify({'error': 'Invalid credentials'}), 401
-
-@auth_bp.route('/api/validate-token', methods=['GET'])
-@jwt_required()
-def validate_token():
-    try:
-        user_id = get_jwt_identity()
-        user = User.query.get(int(user_id))
-        if user:
-            return jsonify({'valid': True, 'user': {'email': user.email, 'name': user.name}})
-        else:
-            return jsonify({'valid': False, 'error': 'User not found'}), 404
-    except Exception as e:
-        return jsonify({'valid': False, 'error': 'Invalid token'}), 401
