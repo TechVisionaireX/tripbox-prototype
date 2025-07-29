@@ -19,13 +19,17 @@ def create_trip():
     )
     db.session.add(trip)
     db.session.commit()
-    return jsonify({'message': 'Trip created!', 'trip': {
-        'id': trip.id,
-        'name': trip.name,
-        'start_date': trip.start_date,
-        'end_date': trip.end_date,
-        'description': trip.description
-    }})
+    return jsonify({
+        'success': True,
+        'message': 'Trip created!', 
+        'trip': {
+            'id': trip.id,
+            'name': trip.name,
+            'start_date': trip.start_date,
+            'end_date': trip.end_date,
+            'description': trip.description
+        }
+    })
 
 @trips_bp.route('/api/trips', methods=['GET'])
 @jwt_required()
@@ -39,7 +43,10 @@ def get_trips():
         'end_date': t.end_date,
         'description': t.description
     } for t in trips]
-    return jsonify(trips_list)
+    return jsonify({
+        'success': True,
+        'trips': trips_list
+    })
 
 @trips_bp.route('/api/trips/<int:trip_id>', methods=['PUT'])
 @jwt_required()

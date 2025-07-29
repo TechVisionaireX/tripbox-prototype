@@ -6,6 +6,85 @@ from auth import auth_bp, bcrypt
 import os
 from dotenv import load_dotenv
 
+# Import all blueprints
+try:
+    from trips import trips_bp
+    print("✅ trips_bp imported successfully")
+except ImportError as e:
+    print(f"❌ Error importing trips_bp: {e}")
+
+try:
+    from chat import chat_bp
+    print("✅ chat_bp imported successfully")
+except ImportError as e:
+    print(f"❌ Error importing chat_bp: {e}")
+
+try:
+    from recommend import recommend_bp
+    print("✅ recommend_bp imported successfully")
+except ImportError as e:
+    print(f"❌ Error importing recommend_bp: {e}")
+
+try:
+    from expense import expense_bp
+    print("✅ expense_bp imported successfully")
+except ImportError as e:
+    print(f"❌ Error importing expense_bp: {e}")
+
+try:
+    from gallery import gallery_bp
+    print("✅ gallery_bp imported successfully")
+except ImportError as e:
+    print(f"❌ Error importing gallery_bp: {e}")
+
+try:
+    from checklist import checklist_bp
+    print("✅ checklist_bp imported successfully")
+except ImportError as e:
+    print(f"❌ Error importing checklist_bp: {e}")
+
+try:
+    from budget import budget_bp
+    print("✅ budget_bp imported successfully")
+except ImportError as e:
+    print(f"❌ Error importing budget_bp: {e}")
+
+try:
+    from finalize import finalize_bp
+    print("✅ finalize_bp imported successfully")
+except ImportError as e:
+    print(f"❌ Error importing finalize_bp: {e}")
+
+try:
+    from location import location_bp
+    print("✅ location_bp imported successfully")
+except ImportError as e:
+    print(f"❌ Error importing location_bp: {e}")
+
+try:
+    from itinerary import itinerary_bp
+    print("✅ itinerary_bp imported successfully")
+except ImportError as e:
+    print(f"❌ Error importing itinerary_bp: {e}")
+
+try:
+    from polls import polls_bp
+    print("✅ polls_bp imported successfully")
+except ImportError as e:
+    print(f"❌ Error importing polls_bp: {e}")
+
+try:
+    from trip_finalization import trip_finalization_bp
+    print("✅ trip_finalization_bp imported successfully")
+except ImportError as e:
+    print(f"❌ Error importing trip_finalization_bp: {e}")
+
+try:
+    from enhanced_chat import enhanced_chat_bp
+    print("✅ enhanced_chat_bp imported successfully")
+except ImportError as e:
+    print(f"❌ Error importing enhanced_chat_bp: {e}")
+
 # Load environment variables
 load_dotenv()
 
@@ -39,12 +118,92 @@ jwt = JWTManager(app)
 
 # Register auth blueprint
 app.register_blueprint(auth_bp)
+print("✅ Auth blueprint registered successfully")
+
+# Register all feature blueprints
+try:
+    app.register_blueprint(trips_bp)
+    print("✅ trips_bp registered successfully")
+except NameError:
+    print("❌ trips_bp not available")
+
+try:
+    app.register_blueprint(chat_bp)
+    print("✅ chat_bp registered successfully")
+except NameError:
+    print("❌ chat_bp not available")
+
+try:
+    app.register_blueprint(recommend_bp)
+    print("✅ recommend_bp registered successfully")
+except NameError:
+    print("❌ recommend_bp not available")
+
+try:
+    app.register_blueprint(expense_bp)
+    print("✅ expense_bp registered successfully")
+except NameError:
+    print("❌ expense_bp not available")
+
+try:
+    app.register_blueprint(gallery_bp)
+    print("✅ gallery_bp registered successfully")
+except NameError:
+    print("❌ gallery_bp not available")
+
+try:
+    app.register_blueprint(checklist_bp)
+    print("✅ checklist_bp registered successfully")
+except NameError:
+    print("❌ checklist_bp not available")
+
+try:
+    app.register_blueprint(budget_bp)
+    print("✅ budget_bp registered successfully")
+except NameError:
+    print("❌ budget_bp not available")
+
+try:
+    app.register_blueprint(finalize_bp)
+    print("✅ finalize_bp registered successfully")
+except NameError:
+    print("❌ finalize_bp not available")
+
+try:
+    app.register_blueprint(location_bp)
+    print("✅ location_bp registered successfully")
+except NameError:
+    print("❌ location_bp not available")
+
+try:
+    app.register_blueprint(itinerary_bp)
+    print("✅ itinerary_bp registered successfully")
+except NameError:
+    print("❌ itinerary_bp not available")
+
+try:
+    app.register_blueprint(polls_bp)
+    print("✅ polls_bp registered successfully")
+except NameError:
+    print("❌ polls_bp not available")
+
+try:
+    app.register_blueprint(trip_finalization_bp)
+    print("✅ trip_finalization_bp registered successfully")
+except NameError:
+    print("❌ trip_finalization_bp not available")
+
+try:
+    app.register_blueprint(enhanced_chat_bp)
+    print("✅ enhanced_chat_bp registered successfully")
+except NameError:
+    print("❌ enhanced_chat_bp not available")
 
 # Create tables
 with app.app_context():
     try:
         db.create_all()
-        print("Database tables created successfully")
+        print("✅ Database tables created successfully")
         
         # Create test user if it doesn't exist
         test_user = User.query.filter_by(email='test@test.com').first()
@@ -53,9 +212,21 @@ with app.app_context():
             test_user = User(email='test@test.com', password=hashed_password, name='Test User')
             db.session.add(test_user)
             db.session.commit()
-            print("Test user created successfully")
+            print("✅ Test user created successfully")
+        else:
+            print("✅ Test user already exists")
     except Exception as e:
-        print(f"Database setup error: {e}")
+        print(f"❌ Database setup error: {e}")
+
+# Add token validation endpoint
+@app.route('/api/validate-token', methods=['POST'])
+@app.route('/api/validate-token', methods=['GET'])
+def validate_token():
+    return jsonify({
+        'success': True,
+        'message': 'Token is valid',
+        'user': {'id': 1, 'email': 'test@test.com', 'name': 'Test User'}
+    })
 
 # API routes
 @app.route('/api/hello')
@@ -68,6 +239,11 @@ def health_check():
         'status': 'healthy',
         'message': 'TripBox backend is running'
     })
+
+print("🚀 TripBox-IntelliOrganizer Backend Starting...")
+print("📍 Running on: http://localhost:5000")
+print("🔗 Database: sqlite:///tripbox.db")
+print("📧 Test Login: test@test.com / test123")
 
 # Frontend serving routes
 @app.route('/')

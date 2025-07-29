@@ -44,6 +44,7 @@ def add_trip_expense(trip_id):
     db.session.commit()
 
     return jsonify({
+        'success': True,
         'message': 'Expense added successfully',
         'expense': {
             'id': expense.id,
@@ -68,7 +69,7 @@ def get_trip_expenses(trip_id):
     # Get or create a group for this trip
     group = Group.query.filter_by(trip_id=trip_id).first()
     if not group:
-        return jsonify([])  # No expenses yet
+        return jsonify({'success': True, 'expenses': []})  # No expenses yet
 
     expenses = Expense.query.filter_by(group_id=group.id).order_by(Expense.timestamp.desc()).all()
     result = [{
@@ -80,7 +81,7 @@ def get_trip_expenses(trip_id):
         'timestamp': e.timestamp.isoformat()
     } for e in expenses]
 
-    return jsonify({'expenses': result})
+    return jsonify({'success': True, 'expenses': result})
 
 # Original group-based endpoints
 # ✅ POST: Add a new expense
