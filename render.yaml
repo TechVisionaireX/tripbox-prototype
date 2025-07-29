@@ -5,7 +5,7 @@ databases:
 
 services:
   - type: web
-    name: tripbox-prototype
+    name: tripbox-intelliorganizer
     env: python
     buildCommand: |
       pip install -r requirements.txt
