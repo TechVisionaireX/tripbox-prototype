@@ -2110,7 +2110,7 @@
                 const expensePromises = currentTrips.map(async (trip) => {
                     try {
                         const response = await apiCall(`/api/trips/${trip.id}/expenses`);
-                        return response.expenses || [];
+                        return response.expenses || response || [];
                     } catch (error) {
                         return [];
                     }
@@ -2451,7 +2451,7 @@
                 } else if (sectionName === 'gallery') {
                     setTimeout(() => displayGallery(), 100);
                 } else if (sectionName === 'itinerary') {
-                    setTimeout(() => loadGroupsForItinerary(), 100);
+                    setTimeout(() => loadTripsForItinerary(), 100);
                 } else if (sectionName === 'polls') {
                     setTimeout(() => loadTripsForPolls(), 100);
                 } else if (sectionName === 'enhanced-chat') {

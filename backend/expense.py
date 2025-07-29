@@ -80,7 +80,7 @@ def get_trip_expenses(trip_id):
         'timestamp': e.timestamp.isoformat()
     } for e in expenses]
 
-    return jsonify(result)
+    return jsonify({'expenses': result})
 
 # Original group-based endpoints
 # ✅ POST: Add a new expense
