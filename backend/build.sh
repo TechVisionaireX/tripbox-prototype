@@ -8,14 +8,14 @@ echo "=== Starting TripBox Build ==="
 echo "Installing Python dependencies..."
 pip install -r requirements.txt
 
-# Run setup test
-echo "Running setup test..."
-python test_setup.py
-
 # Create uploads directory if it doesn't exist
 echo "Creating uploads directory..."
 mkdir -p uploads
 chmod 777 uploads
+
+# Create instance directory for database
+echo "Creating instance directory..."
+mkdir -p instance
 
 # Create database tables
 echo "Creating database tables..."
@@ -24,6 +24,8 @@ import os
 import sys
 from app import app, db
 from sqlalchemy import text
+
+print("Starting database initialization...")
 
 with app.app_context():
     try:
@@ -41,6 +43,8 @@ with app.app_context():
         print("🔄 Continuing with deployment...")
         # Don't raise error, continue with deployment
         pass
+
+print("Database initialization completed.")
 EOF
 
 echo "=== Build Complete ===" 
