@@ -1658,42 +1658,22 @@
     </main>
 
   <script>
-        // API Configuration - Using mock API for now
+        // API Configuration
         const API_BASE = (() => {
-            // For now, use mock responses since backend is having issues
-            return 'mock://api';
-        })();
-        
-        // Mock API functions
-        const mockAPI = {
-            getUserInfo: async () => {
-                return new Promise((resolve) => {
-                    setTimeout(() => {
-                        resolve({
-                            success: true,
-                            user: { 
-                                name: 'Test User', 
-                                email: 'test@test.com',
-                                id: 'mock_user_123'
-                            }
-                        });
-                    }, 500);
-                });
-            },
-            getTrips: async () => {
-                return new Promise((resolve) => {
-                    setTimeout(() => {
-                        resolve({
-                            success: true,
-                            trips: [
-                                { id: 1, name: 'Paris Vacation', status: 'Planning' },
-                                { id: 2, name: 'Beach Trip', status: 'Active' }
-                            ]
-                        });
-                    }, 800);
-                });
+            // Check if we're in production (Render deployment)
+            if (window.location.hostname.includes('render.com') || 
+                window.location.hostname.includes('tripbox-intelliorganizer.onrender.com')) {
+                return 'https://tripbox-intelliorganizer.onrender.com';
             }
-        };
+            // Check if we're on localhost or 127.0.0.1
+            if (window.location.hostname === 'localhost' || 
+                window.location.hostname === '127.0.0.1' ||
+                window.location.protocol === 'file:') {
+                return 'http://127.0.0.1:5000';
+            }
+            // Default to production
+            return 'https://tripbox-intelliorganizer.onrender.com';
+        })();
         
         console.log('API_BASE configured as:', API_BASE);
         console.log('Current location:', window.location.href);

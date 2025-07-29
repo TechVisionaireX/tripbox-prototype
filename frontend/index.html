@@ -730,37 +730,22 @@
     </section>
 
   <script>
-        // API Configuration - Using mock API for now
+        // API Configuration
         const API_BASE = (() => {
-            // For now, use mock responses since backend is having issues
-            return 'mock://api';
-        })();
-        
-        // Mock API functions
-        const mockAPI = {
-            login: async (email, password) => {
-                return new Promise((resolve) => {
-                    setTimeout(() => {
-                        resolve({
-                            success: true,
-                            message: 'Login successful (mock)',
-                            token: 'mock_token_123',
-                            user: { email, name: 'Test User' }
-                        });
-                    }, 1000);
-                });
-            },
-            hello: async () => {
-                return new Promise((resolve) => {
-                    setTimeout(() => {
-                        resolve({
-                            message: 'TripBox is running (mock API)',
-                            version: '1.0.0'
-                        });
-                    }, 500);
-                });
+            // Check if we're in production (Render deployment)
+            if (window.location.hostname.includes('render.com') || 
+                window.location.hostname.includes('tripbox-intelliorganizer.onrender.com')) {
+                return 'https://tripbox-intelliorganizer.onrender.com';
             }
-        };
+            // Check if we're on localhost or 127.0.0.1
+            if (window.location.hostname === 'localhost' || 
+                window.location.hostname === '127.0.0.1' ||
+                window.location.protocol === 'file:') {
+                return 'http://127.0.0.1:5000';
+            }
+            // Default to production
+            return 'https://tripbox-intelliorganizer.onrender.com';
+        })();
         
         console.log('API_BASE configured as:', API_BASE);
         console.log('Current location:', window.location.href);
@@ -814,45 +799,51 @@
             
             setLoading('loginForm', true);
             
-            try {
-                console.log('Attempting login for:', email);
-                const response = await mockAPI.login(email, password);
-                
-                console.log('Login response status:', response.success);
-                
-                const data = response;
-                console.log('Login response data:', data);
-                
-                if (response.success) {
-                    console.log('Login successful:', data);
+                            try {
+                    console.log('Attempting login for:', email);
+                    const response = await fetch(`${API_BASE}/api/login`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ email, password })
+                    });
                     
-                    // Store token and user data
-                    localStorage.setItem('token', data.token);
-                    localStorage.setItem('user', JSON.stringify(data.user));
+                    console.log('Login response status:', response.status);
                     
-                    // Verify token is stored
-                    const storedToken = localStorage.getItem('token');
-                    const storedUser = localStorage.getItem('user');
-                    console.log('Stored token:', storedToken ? 'Present' : 'Missing');
-                    console.log('Stored user:', storedUser ? 'Present' : 'Missing');
+                    const data = await response.json();
+                    console.log('Login response data:', data);
                     
-                    showMessage('loginMessage', 'Login successful! Redirecting...', 'success');
-                    
-                    // Add a small delay to ensure localStorage is updated
-                    setTimeout(() => {
-                        console.log('Redirecting to dashboard...');
-                        window.location.href = 'dashboard.html';
-                    }, 1000);
-                } else {
-                    console.log('Login failed:', data);
-                    showMessage('loginMessage', data.message || 'Login failed', 'error');
+                    if (response.ok) {
+                        console.log('Login successful:', data);
+                        
+                        // Store token and user data
+                        localStorage.setItem('token', data.token);
+                        localStorage.setItem('user', JSON.stringify(data.user));
+                        
+                        // Verify token is stored
+                        const storedToken = localStorage.getItem('token');
+                        const storedUser = localStorage.getItem('user');
+                        console.log('Stored token:', storedToken ? 'Present' : 'Missing');
+                        console.log('Stored user:', storedUser ? 'Present' : 'Missing');
+                        
+                        showMessage('loginMessage', 'Login successful! Redirecting...', 'success');
+                        
+                        // Add a small delay to ensure localStorage is updated
+                        setTimeout(() => {
+                            console.log('Redirecting to dashboard...');
+                            window.location.href = 'dashboard.html';
+                        }, 1000);
+                    } else {
+                        console.log('Login failed:', data);
+                        showMessage('loginMessage', data.error || 'Login failed', 'error');
+                    }
+                } catch (error) {
+                    console.error('Login error:', error);
+                    showMessage('loginMessage', 'Network error. Please try again.', 'error');
+                } finally {
+                    setLoading('loginForm', false);
                 }
-            } catch (error) {
-                console.error('Login error:', error);
-                showMessage('loginMessage', 'Network error. Please try again.', 'error');
-            } finally {
-                setLoading('loginForm', false);
-            }
         });
 
         // Register Form Handler
@@ -866,12 +857,17 @@
             setLoading('registerForm', true);
             
             try {
-                // Mock registration is not implemented in the new mockAPI,
-                // so this will always return a success message.
-                // In a real scenario, you'd call a backend registration endpoint.
-                const response = { success: true, message: 'Registration successful (mock)' };
+                const response = await fetch(`${API_BASE}/api/register`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ name, email, password })
+                });
                 
-                if (response.success) {
+                const data = await response.json();
+                
+                if (response.ok) {
                     showMessage('registerMessage', 'Account created successfully! Please login.', 'success');
                     setTimeout(() => {
                         showLogin();
@@ -879,7 +875,7 @@
                         document.getElementById('registerMessage').style.display = 'none';
                     }, 2000);
                 } else {
-                    showMessage('registerMessage', response.message || 'Registration failed', 'error');
+                    showMessage('registerMessage', data.error || 'Registration failed', 'error');
                 }
             } catch (error) {
                 showMessage('registerMessage', 'Network error. Please try again.', 'error');
@@ -915,7 +911,7 @@
         });
 
         // Test backend connection
-        fetch(`${API_BASE}/hello`)
+        fetch(`${API_BASE}/api/hello`)
       .then(response => response.json())
       .then(data => {
                 console.log('Backend connected:', data.message);
@@ -928,21 +924,23 @@
         async function createTestUser() {
             setLoading('loginForm', true);
             try {
-                // Mock user creation is not implemented in the new mockAPI,
-                // so this will always return a success message.
-                // In a real scenario, you'd call a backend user creation endpoint.
-                const response = { success: true, message: 'Test user created (mock)', email: 'test@example.com', password: 'test123' };
-                
-                if (response.success) {
+                const response = await fetch(`${API_BASE}/api/create-test-user`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                const data = await response.json();
+                if (response.ok) {
                     showMessage('loginMessage', 'Test user created! Auto-filling form...', 'success');
-                    document.getElementById('loginEmail').value = response.email;
-                    document.getElementById('loginPassword').value = response.password;
+                    document.getElementById('loginEmail').value = data.email;
+                    document.getElementById('loginPassword').value = data.password;
                     // Auto-submit the form after a short delay
                     setTimeout(() => {
                         document.getElementById('loginForm').dispatchEvent(new Event('submit'));
                     }, 1000);
                 } else {
-                    showMessage('loginMessage', response.message || 'Failed to create test user', 'error');
+                    showMessage('loginMessage', data.error || 'Failed to create test user', 'error');
                 }
             } catch (error) {
                 showMessage('loginMessage', 'Network error. Please try again.', 'error');
