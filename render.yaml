@@ -1,0 +1,9 @@
+services:
+  - type: web
+    name: tripbox-simple
+    env: python
+    buildCommand: "pip install -r simple_requirements.txt"
+    startCommand: "python simple_app.py"
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.11.0" 

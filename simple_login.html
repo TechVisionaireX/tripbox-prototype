@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TripBox - Simple Login</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 400px; margin: 100px auto; padding: 20px; background: #f0f0f0; }
+        .container { background: white; padding: 30px; border-radius: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+        h1 { text-align: center; color: #333; margin-bottom: 30px; }
+        .form-group { margin-bottom: 20px; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; }
+        input { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px; box-sizing: border-box; }
+        button { width: 100%; padding: 12px; background: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 16px; }
+        button:hover { background: #0056b3; }
+        .message { margin-top: 15px; padding: 10px; border-radius: 5px; text-align: center; }
+        .success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .status { background: #e2e3ff; padding: 10px; border-radius: 5px; margin-bottom: 20px; text-align: center; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 TripBox Login</h1>
+        
+        <div class="status" id="status">
+            Backend Status: <span id="backendStatus">Checking...</span>
+        </div>
+
+        <form id="loginForm">
+            <div class="form-group">
+                <label for="email">Email:</label>
+                <input type="email" id="email" value="test@test.com" required>
+            </div>
+            <div class="form-group">
+                <label for="password">Password:</label>
+                <input type="password" id="password" value="test123" required>
+            </div>
+            <button type="submit">Login</button>
+        </form>
+
+        <div id="message"></div>
+    </div>
+
+    <script>
+        const API_URL = 'http://localhost:5000';
+
+        // Check backend status
+        async function checkStatus() {
+            try {
+                const response = await fetch(`${API_URL}/health`);
+                const data = await response.json();
+                document.getElementById('backendStatus').innerHTML = `✅ ${data.message}`;
+                document.getElementById('status').style.background = '#d4edda';
+            } catch (error) {
+                document.getElementById('backendStatus').innerHTML = `❌ Not Connected - ${error.message}`;
+                document.getElementById('status').style.background = '#f8d7da';
+            }
+        }
+
+        // Login function
+        async function login(email, password) {
+            try {
+                const response = await fetch(`${API_URL}/api/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password })
+                });
+
+                const data = await response.json();
+                
+                if (response.ok) {
+                    showMessage(`✅ ${data.message}! Redirecting...`, 'success');
+                    localStorage.setItem('token', data.token);
+                    localStorage.setItem('user', JSON.stringify(data.user));
+                    setTimeout(() => {
+                        alert('Login Successful! You can now build your dashboard page.');
+                    }, 1000);
+                } else {
+                    showMessage(`❌ ${data.error}`, 'error');
+                }
+            } catch (error) {
+                showMessage(`❌ Network Error: ${error.message}`, 'error');
+            }
+        }
+
+        function showMessage(message, type) {
+            const messageDiv = document.getElementById('message');
+            messageDiv.innerHTML = message;
+            messageDiv.className = `message ${type}`;
+        }
+
+        // Event listener
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            await login(email, password);
+        });
+
+        // Check status on load
+        checkStatus();
+    </script>
+</body>
+</html> 
