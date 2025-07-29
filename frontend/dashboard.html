@@ -942,7 +942,7 @@
         let currentTrips = [];
 
         // Authentication Check
-        function checkAuth() {
+        async function checkAuth() {
             const token = localStorage.getItem('token');
             const user = localStorage.getItem('user');
             
@@ -953,8 +953,32 @@
             
             try {
                 currentUser = JSON.parse(user);
-                updateUserInfo();
-                return true;
+                
+                // Validate token with server
+                try {
+                    const response = await fetch(`${API_BASE}/api/validate-token`, {
+                        method: 'GET',
+                        headers: getAuthHeaders()
+                    });
+                    
+                    if (response.status === 401) {
+                        throw new Error('Token invalid');
+                    }
+                    
+                    const data = await response.json();
+                    if (data.valid) {
+                        updateUserInfo();
+                        return true;
+                    } else {
+                        throw new Error('Token validation failed');
+                    }
+                } catch (error) {
+                    console.log('Token validation failed, redirecting to login...');
+                    localStorage.removeItem('token');
+                    localStorage.removeItem('user');
+                    window.location.href = 'index.html';
+                    return false;
+                }
             } catch (error) {
                 console.error('Error parsing user data:', error);
                 logout();
@@ -1021,6 +1045,19 @@
                         ...options.headers
                     }
                 });
+                
+                // Handle authentication errors
+                if (response.status === 401) {
+                    const errorData = await response.json();
+                    console.log('Authentication failed:', errorData.message || 'Token validation failed');
+                    
+                    // Clear invalid token and redirect to login
+                    localStorage.removeItem('token');
+                    localStorage.removeItem('user');
+                    alert('Token validation failed. Please login again.');
+                    window.location.href = 'index.html';
+                    return;
+                }
                 
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
@@ -1214,8 +1251,9 @@
         }
 
         // Initialize App
-        document.addEventListener('DOMContentLoaded', () => {
-            if (checkAuth()) {
+        document.addEventListener('DOMContentLoaded', async () => {
+            const isAuthenticated = await checkAuth();
+            if (isAuthenticated) {
                 loadDashboardData();
             }
         });
