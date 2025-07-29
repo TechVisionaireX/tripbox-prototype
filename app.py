@@ -1,27 +1,17 @@
 from flask import Flask, jsonify, request, send_from_directory, send_file
 from flask_cors import CORS
 from flask_jwt_extended import JWTManager
-import sys
+from flask_sqlalchemy import SQLAlchemy
+from flask_bcrypt import Bcrypt
 import os
-
-# Add backend directory to Python path
-backend_path = os.path.join(os.path.dirname(__file__), 'backend')
-if backend_path not in sys.path:
-    sys.path.insert(0, backend_path)
-
-# Import from backend modules
-try:
-    from models import db, User
-    from auth import auth_bp, bcrypt
-except ImportError:
-    # Fallback for Render deployment
-    from backend.models import db, User
-    from backend.auth import auth_bp, bcrypt
-
 from dotenv import load_dotenv
 
 # Load environment variables
 load_dotenv()
+
+# Initialize extensions first
+db = SQLAlchemy()
+bcrypt = Bcrypt()
 
 # Create Flask app
 app = Flask(__name__)
@@ -36,9 +26,11 @@ CORS(app, origins=[
     "file://"  # Allow file:// protocol for local HTML files
 ], supports_credentials=True, allow_headers=["Content-Type", "Authorization"])
 
+# Ensure instance directory exists
+os.makedirs('instance', exist_ok=True)
+
 # Configurations
-database_url = os.environ.get('DATABASE_URL', 'sqlite:///tripbox.db')
-# Fix for Render's postgres:// URL (needs to be postgresql://)
+database_url = os.environ.get('DATABASE_URL', 'sqlite:///instance/tripbox.db')
 if database_url.startswith('postgres://'):
     database_url = database_url.replace('postgres://', 'postgresql://', 1)
 
@@ -46,20 +38,17 @@ app.config['SQLALCHEMY_DATABASE_URI'] = database_url
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['JWT_SECRET_KEY'] = os.environ.get('JWT_SECRET_KEY', 'your_secret_key_here')
 
-# Initialize extensions
+# Initialize extensions with app
 db.init_app(app)
 bcrypt.init_app(app)
 jwt = JWTManager(app)
 
-# Register core blueprints only
-try:
-    app.register_blueprint(auth_bp)
-    print("✅ Auth blueprint registered successfully")
-except Exception as e:
-    print(f"❌ Failed to register auth blueprint: {e}")
+# Import models after db initialization
+from models import User
 
-# Import and register other blueprints with error handling
-blueprints_to_try = [
+# Import and register blueprints
+blueprints = [
+    ('auth', 'auth_bp'),
     ('trips', 'trips_bp'),
     ('chat', 'chat_bp'),
     ('recommend', 'recommend_bp'),
@@ -75,15 +64,9 @@ blueprints_to_try = [
     ('enhanced_chat', 'enhanced_chat_bp')
 ]
 
-for module_name, blueprint_name in blueprints_to_try:
+for module_name, blueprint_name in blueprints:
     try:
-        # Try direct import first (when backend is in path)
-        try:
-            module = __import__(module_name, fromlist=[blueprint_name])
-        except ImportError:
-            # Fallback to backend.module import
-            module = __import__(f'backend.{module_name}', fromlist=[blueprint_name])
-        
+        module = __import__(module_name, fromlist=[blueprint_name])
         blueprint = getattr(module, blueprint_name)
         app.register_blueprint(blueprint)
         print(f"✅ {blueprint_name} registered successfully")
@@ -120,12 +103,10 @@ def hello():
 @app.route('/api/create-test-user', methods=['POST'])
 def create_test_user():
     try:
-        # Check if test user already exists
         test_user = User.query.filter_by(email='test@test.com').first()
         if test_user:
             return jsonify({'message': 'Test user already exists', 'email': 'test@test.com', 'password': 'test123'})
         
-        # Create test user
         hashed_password = bcrypt.generate_password_hash('test123').decode('utf-8')
         test_user = User(email='test@test.com', password=hashed_password, name='Test User')
         db.session.add(test_user)

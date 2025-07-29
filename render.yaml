@@ -7,14 +7,18 @@ services:
   - type: web
     name: tripbox-intelliorganizer
     env: python
-    buildCommand: "pip install -r requirements.txt"
-    startCommand: "gunicorn app:app --bind 0.0.0.0:$PORT"
+    buildCommand: |
+      pip install -r requirements.txt
+      mkdir -p instance
+    startCommand: "gunicorn app:application --bind 0.0.0.0:$PORT --workers 2 --timeout 120"
     envVars:
       - key: PYTHON_VERSION
         value: "3.11.0"
       - key: FLASK_ENV
         value: "production"
       - key: DATABASE_URL
-        value: "sqlite:///tripbox.db"
+        value: "sqlite:///instance/tripbox.db"
       - key: JWT_SECRET_KEY
-        generateValue: true 
+        generateValue: true
+      - key: FLASK_APP
+        value: "app.py" 
