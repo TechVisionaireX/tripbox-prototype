@@ -9,17 +9,11 @@ services:
     env: python
     buildCommand: |
       cd backend
-      chmod +x build.sh
-      ./build.sh
-    startCommand: "cd backend && gunicorn app:application --bind 0.0.0.0:$PORT --workers 1 --timeout 120 --log-level info"
+      pip install flask flask-cors gunicorn
+      echo "✅ Minimal build completed"
+    startCommand: "cd backend && gunicorn super_minimal:application --bind 0.0.0.0:$PORT --workers 1 --timeout 120 --log-level info"
     envVars:
       - key: PYTHON_VERSION
         value: "3.10"
       - key: FLASK_ENV
-        value: "production"
-      - key: DATABASE_URL
-        value: "sqlite:///instance/tripbox.db"
-      - key: JWT_SECRET_KEY
-        generateValue: true
-      - key: FLASK_APP
-        value: "app.py" 
+        value: "production" 
