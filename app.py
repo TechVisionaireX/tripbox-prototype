@@ -1,16 +1,17 @@
 from flask import Flask, jsonify, request, send_from_directory, send_file
 from flask_cors import CORS
 from flask_jwt_extended import JWTManager
-# NOTE: Remove local SQLAlchemy and Bcrypt instances – we will use the shared ones
+from flask_sqlalchemy import SQLAlchemy
+from flask_bcrypt import Bcrypt
 import os
 from dotenv import load_dotenv
 
 # Load environment variables
 load_dotenv()
 
-# Import the shared database and bcrypt instances defined in the dedicated modules
-from models import db  # shared SQLAlchemy instance
-from auth import auth_bp as _auth_bp_import_helper, bcrypt  # shared Bcrypt instance
+# Initialize extensions first
+db = SQLAlchemy()
+bcrypt = Bcrypt()
 
 # Create Flask app
 app = Flask(__name__)
@@ -39,12 +40,12 @@ app.config['SQLALCHEMY_DATABASE_URI'] = database_url
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['JWT_SECRET_KEY'] = os.environ.get('JWT_SECRET_KEY', 'your_secret_key_here')
 
-# Initialize extensions with app (shared instances)
+# Initialize extensions with app
 db.init_app(app)
 bcrypt.init_app(app)
 jwt = JWTManager(app)
 
-# Import User model AFTER db has been linked to the app
+# Import models after db initialization
 from models import User
 
 # Import and register blueprints
@@ -74,7 +75,7 @@ for module_name, blueprint_name in blueprints:
     except Exception as e:
         print(f"⚠️ Failed to register {blueprint_name}: {e}")
 
-# Utility to create DB tables and a test user (called once at startup)
+# Create tables if not present (only if running directly, not with gunicorn)
 def init_db():
     with app.app_context():
         try:
@@ -102,8 +103,7 @@ init_db()
 # API test route
 @app.route('/api/hello')
 def hello():
-    # Standard hello endpoint used by tests and health checks
-    return jsonify(message="Hello from backend!")
+    return jsonify(message="TripBox-IntelliOrganizer backend is running!")
 
 @app.route('/api/create-test-user', methods=['POST'])
 def create_test_user():
