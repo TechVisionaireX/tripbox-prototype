@@ -1,0 +1,2375 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TripBox - All-in-One Trip Organizer</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.socket.io/4.5.0/socket.io.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #333;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        /* Authentication Screens */
+        .auth-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .auth-card {
+            background: white;
+            padding: 40px;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+        }
+
+        .auth-card h1 {
+            color: #667eea;
+            margin-bottom: 30px;
+            font-size: 2.5rem;
+            font-weight: 700;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+            text-align: left;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+            color: #555;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e1e5e9;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 500;
+            transition: transform 0.2s, box-shadow 0.2s;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-secondary {
+            background: transparent;
+            color: #667eea;
+            border: 2px solid #667eea;
+        }
+
+        .btn-secondary:hover {
+            background: #667eea;
+            color: white;
+        }
+
+        /* Main App Layout */
+        .app-header {
+            background: rgba(255,255,255,0.95);
+            backdrop-filter: blur(10px);
+            padding: 15px 0;
+            box-shadow: 0 2px 20px rgba(0,0,0,0.1);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .header-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 20px;
+        }
+
+        .logo {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: #667eea;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .main-content {
+            min-height: calc(100vh - 80px);
+            background: rgba(255,255,255,0.95);
+            margin: 20px auto;
+            max-width: 1200px;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+        }
+
+        /* Navigation Tabs */
+        .nav-tabs {
+            display: flex;
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 5px;
+            margin-bottom: 30px;
+            overflow-x: auto;
+        }
+
+        .nav-tab {
+            flex: 1;
+            text-align: center;
+            padding: 12px 20px;
+            background: transparent;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s;
+            white-space: nowrap;
+        }
+
+        .nav-tab.active {
+            background: #667eea;
+            color: white;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .nav-tab:hover:not(.active) {
+            background: #e9ecef;
+        }
+
+        /* Tab Content */
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* Trips Overview */
+        .trips-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .trip-card {
+            background: white;
+            border: 2px solid #e1e5e9;
+            border-radius: 12px;
+            padding: 20px;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+
+        .trip-card:hover {
+            border-color: #667eea;
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+
+        .trip-card.active {
+            border-color: #667eea;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        /* Chat Interface */
+        .chat-container {
+            display: flex;
+            flex-direction: column;
+            height: 500px;
+            border: 2px solid #e1e5e9;
+            border-radius: 12px;
+            overflow: hidden;
+        }
+
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            background: #f8f9fa;
+        }
+
+        .message {
+            margin-bottom: 15px;
+            padding: 12px 16px;
+            border-radius: 12px;
+            max-width: 70%;
+            word-wrap: break-word;
+        }
+
+        .message.own {
+            background: #667eea;
+            color: white;
+            margin-left: auto;
+            border-bottom-right-radius: 4px;
+        }
+
+        .message.other {
+            background: white;
+            border: 1px solid #e1e5e9;
+            border-bottom-left-radius: 4px;
+        }
+
+        .message-sender {
+            font-size: 12px;
+            font-weight: 500;
+            margin-bottom: 4px;
+            opacity: 0.8;
+        }
+
+        .chat-input {
+            display: flex;
+            padding: 15px;
+            background: white;
+            border-top: 1px solid #e1e5e9;
+        }
+
+        .chat-input input {
+            flex: 1;
+            padding: 12px;
+            border: 1px solid #e1e5e9;
+            border-radius: 8px;
+            margin-right: 10px;
+        }
+
+        /* Expenses */
+        .expense-summary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .expense-item {
+            background: white;
+            border: 1px solid #e1e5e9;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .expense-details {
+            flex: 1;
+        }
+
+        .expense-amount {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #667eea;
+        }
+
+        /* Checklist */
+        .checklist-item {
+            display: flex;
+            align-items: center;
+            background: white;
+            border: 1px solid #e1e5e9;
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 10px;
+            transition: all 0.3s;
+        }
+
+        .checklist-item.completed {
+            background: #f8f9fa;
+            opacity: 0.7;
+        }
+
+        .checklist-item input[type="checkbox"] {
+            margin-right: 15px;
+            transform: scale(1.2);
+        }
+
+        /* Map Container */
+        .map-container {
+            height: 400px;
+            background: #f8f9fa;
+            border-radius: 12px;
+            border: 2px solid #e1e5e9;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+
+        /* Recommendations */
+        .recommendations-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+        }
+
+        .recommendation-card {
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            transition: transform 0.3s;
+        }
+
+        .recommendation-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .recommendation-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px;
+            text-align: center;
+        }
+
+        .recommendation-content {
+            padding: 20px;
+        }
+
+        .recommendation-item {
+            padding: 15px;
+            border-bottom: 1px solid #e1e5e9;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .recommendation-item:last-child {
+            border-bottom: none;
+        }
+
+        /* Modals */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 2000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            width: 90%;
+            max-width: 500px;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: #999;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .container {
+                padding: 10px;
+            }
+
+            .main-content {
+                margin: 10px;
+                padding: 20px;
+            }
+
+            .header-content {
+                padding: 0 10px;
+            }
+
+            .nav-tabs {
+                flex-wrap: wrap;
+            }
+
+            .trips-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .chat-container {
+                height: 400px;
+            }
+
+            .message {
+                max-width: 85%;
+            }
+        }
+
+        /* Loading and Success States */
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #667eea;
+        }
+
+        .success-message {
+            background: #d4edda;
+            color: #155724;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .error-message {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        /* Hide elements initially */
+        .hidden {
+            display: none !important;
+        }
+
+        /* Status indicators */
+        .status-indicator {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+
+        .status-online {
+            background: #28a745;
+        }
+
+        .status-away {
+            background: #ffc107;
+        }
+
+        .status-offline {
+            background: #6c757d;
+        }
+
+        /* Polls styling */
+        .poll-option {
+            margin-bottom: 10px;
+            padding: 12px;
+            border: 1px solid #e1e5e9;
+            border-radius: 8px;
+            transition: all 0.3s;
+        }
+
+        .poll-option:hover {
+            border-color: #667eea;
+            background: #f8f9ff;
+        }
+
+        .poll-progress-bar {
+            background: #f8f9fa;
+            height: 8px;
+            border-radius: 4px;
+            margin-top: 8px;
+            overflow: hidden;
+        }
+
+        .poll-progress-fill {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            height: 100%;
+            border-radius: 4px;
+            transition: width 0.5s ease;
+        }
+
+        /* Food recommendations styling */
+        .food-category-buttons {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .food-category-buttons .btn {
+            flex: 1;
+            min-width: 120px;
+        }
+
+        .cuisine-tag {
+            background: #667eea;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            text-transform: uppercase;
+            display: inline-block;
+            margin-top: 10px;
+        }
+
+        .price-range {
+            color: #28a745;
+            font-weight: bold;
+            font-size: 18px;
+        }
+
+        /* Itinerary styling */
+        .itinerary-overview {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 25px;
+            border-radius: 12px;
+            margin-bottom: 30px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .stat-item {
+            text-align: center;
+            padding: 15px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 8px;
+        }
+
+        .progress-ring {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: conic-gradient(#28a745 0deg, #e9ecef 0deg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 10px;
+        }
+
+        .daily-breakdown {
+            margin-top: 30px;
+        }
+
+        .day-card {
+            background: white;
+            border: 1px solid #e1e5e9;
+            border-radius: 12px;
+            margin-bottom: 15px;
+            overflow: hidden;
+        }
+
+        .day-header {
+            background: #f8f9fa;
+            padding: 15px;
+            border-bottom: 1px solid #e1e5e9;
+        }
+
+        .day-content {
+            padding: 15px;
+        }
+
+        /* Enhanced form styling */
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .poll-options-container {
+            max-height: 200px;
+            overflow-y: auto;
+            border: 1px solid #e1e5e9;
+            border-radius: 8px;
+            padding: 10px;
+        }
+
+        .poll-option-input {
+            margin-bottom: 8px;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            width: 100%;
+        }
+
+        /* Responsive improvements */
+        @media (max-width: 768px) {
+            .nav-tabs {
+                overflow-x: auto;
+                white-space: nowrap;
+            }
+
+            .nav-tab {
+                flex: none;
+                min-width: 120px;
+            }
+
+            .recommendations-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+
+            .food-category-buttons {
+                justify-content: center;
+            }
+
+            .food-category-buttons .btn {
+                flex: none;
+                min-width: 100px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Authentication Screen -->
+    <div id="auth-screen" class="auth-container">
+        <div class="auth-card">
+            <h1><i class="fas fa-suitcase-rolling"></i> TripBox</h1>
+            <p style="margin-bottom: 30px; color: #666;">All-in-One Trip Organizer</p>
+            
+            <div id="login-form">
+                <div class="form-group">
+                    <label>Username</label>
+                    <input type="text" id="login-username" placeholder="Enter your username">
+                </div>
+                <div class="form-group">
+                    <label>Password</label>
+                    <input type="password" id="login-password" placeholder="Enter your password">
+                </div>
+                <button class="btn" onclick="login()" style="width: 100%; margin-bottom: 15px;">
+                    <i class="fas fa-sign-in-alt"></i> Sign In
+                </button>
+                <button class="btn btn-secondary" onclick="showRegister()" style="width: 100%;">
+                    <i class="fas fa-user-plus"></i> Create Account
+                </button>
+            </div>
+
+            <div id="register-form" class="hidden">
+                <div class="form-group">
+                    <label>Username</label>
+                    <input type="text" id="register-username" placeholder="Choose a username">
+                </div>
+                <div class="form-group">
+                    <label>Email</label>
+                    <input type="email" id="register-email" placeholder="Enter your email">
+                </div>
+                <div class="form-group">
+                    <label>Password</label>
+                    <input type="password" id="register-password" placeholder="Choose a password">
+                </div>
+                <button class="btn" onclick="register()" style="width: 100%; margin-bottom: 15px;">
+                    <i class="fas fa-user-plus"></i> Create Account
+                </button>
+                <button class="btn btn-secondary" onclick="showLogin()" style="width: 100%;">
+                    <i class="fas fa-sign-in-alt"></i> Sign In Instead
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Application -->
+    <div id="main-app" class="hidden">
+        <header class="app-header">
+            <div class="header-content">
+                <div class="logo">
+                    <i class="fas fa-suitcase-rolling"></i> TripBox
+                </div>
+                <div class="user-info">
+                    <span>Welcome, <span id="user-name"></span></span>
+                    <button class="btn btn-secondary" onclick="logout()">
+                        <i class="fas fa-sign-out-alt"></i> Logout
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <div class="main-content">
+            <!-- Navigation Tabs -->
+            <div class="nav-tabs">
+                <button class="nav-tab active" onclick="showTab('overview')">
+                    <i class="fas fa-home"></i> Overview
+                </button>
+                <button class="nav-tab" onclick="showTab('chat')">
+                    <i class="fas fa-comments"></i> Chat
+                </button>
+                <button class="nav-tab" onclick="showTab('expenses')">
+                    <i class="fas fa-receipt"></i> Expenses
+                </button>
+                <button class="nav-tab" onclick="showTab('checklist')">
+                    <i class="fas fa-check-square"></i> Checklist
+                </button>
+                <button class="nav-tab" onclick="showTab('polls')">
+                    <i class="fas fa-vote-yea"></i> Polls
+                </button>
+                <button class="nav-tab" onclick="showTab('map')">
+                    <i class="fas fa-map-marker-alt"></i> Location
+                </button>
+                <button class="nav-tab" onclick="showTab('food')">
+                    <i class="fas fa-utensils"></i> Food
+                </button>
+                <button class="nav-tab" onclick="showTab('recommendations')">
+                    <i class="fas fa-star"></i> Hotels & Flights
+                </button>
+                <button class="nav-tab" onclick="showTab('itinerary')">
+                    <i class="fas fa-calendar-alt"></i> Itinerary
+                </button>
+            </div>
+
+            <!-- Overview Tab -->
+            <div id="overview-tab" class="tab-content active">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                    <h2>My Trips</h2>
+                    <div>
+                        <button class="btn" onclick="showCreateTripModal()">
+                            <i class="fas fa-plus"></i> Create Trip
+                        </button>
+                        <button class="btn btn-secondary" onclick="showJoinTripModal()">
+                            <i class="fas fa-users"></i> Join Trip
+                        </button>
+                    </div>
+                </div>
+                <div id="trips-container" class="trips-grid">
+                    <!-- Trips will be loaded here -->
+                </div>
+            </div>
+
+            <!-- Chat Tab -->
+            <div id="chat-tab" class="tab-content">
+                <h2>Trip Chat</h2>
+                <div id="chat-container" class="chat-container">
+                    <div id="chat-messages" class="chat-messages">
+                        <div class="loading">Select a trip to start chatting</div>
+                    </div>
+                    <div class="chat-input">
+                        <input type="text" id="chat-input" placeholder="Type your message..." onkeypress="handleChatKeyPress(event)">
+                        <button class="btn" onclick="sendMessage()">
+                            <i class="fas fa-paper-plane"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Expenses Tab -->
+            <div id="expenses-tab" class="tab-content">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                    <h2>Expenses</h2>
+                    <button class="btn" onclick="showAddExpenseModal()">
+                        <i class="fas fa-plus"></i> Add Expense
+                    </button>
+                </div>
+                <div id="expense-summary" class="expense-summary">
+                    <h3>Total Trip Expenses</h3>
+                    <div style="font-size: 2rem; margin: 10px 0;">$0.00</div>
+                    <p>Your share: $0.00</p>
+                </div>
+                <div id="expenses-container">
+                    <!-- Expenses will be loaded here -->
+                </div>
+            </div>
+
+            <!-- Checklist Tab -->
+            <div id="checklist-tab" class="tab-content">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                    <h2>Trip Checklist</h2>
+                    <button class="btn" onclick="showAddChecklistModal()">
+                        <i class="fas fa-plus"></i> Add Item
+                    </button>
+                </div>
+                <div id="checklist-container">
+                    <!-- Checklist items will be loaded here -->
+                </div>
+            </div>
+
+            <!-- Map Tab -->
+            <div id="map-tab" class="tab-content">
+                <h2>Location Sharing</h2>
+                <div class="map-container">
+                    <div style="text-align: center;">
+                        <i class="fas fa-map-marked-alt" style="font-size: 4rem; color: #667eea; margin-bottom: 20px;"></i>
+                        <h3>Live Location Sharing</h3>
+                        <p>Track your group members in real-time</p>
+                        <button class="btn" onclick="shareLocation()" style="margin-top: 15px;">
+                            <i class="fas fa-location-arrow"></i> Share My Location
+                        </button>
+                    </div>
+                </div>
+                <div id="locations-list">
+                    <!-- Member locations will be shown here -->
+                </div>
+            </div>
+
+            <!-- Recommendations Tab -->
+            <div id="recommendations-tab" class="tab-content">
+                <h2>Hotels & Flights</h2>
+                <div class="recommendations-grid">
+                    <div class="recommendation-card">
+                        <div class="recommendation-header">
+                            <h3><i class="fas fa-bed"></i> Hotels</h3>
+                        </div>
+                        <div id="hotels-recommendations" class="recommendation-content">
+                            <!-- Hotel recommendations will be loaded here -->
+                        </div>
+                    </div>
+                    <div class="recommendation-card">
+                        <div class="recommendation-header">
+                            <h3><i class="fas fa-plane"></i> Flights</h3>
+                        </div>
+                        <div id="flights-recommendations" class="recommendation-content">
+                            <!-- Flight recommendations will be loaded here -->
+                        </div>
+                    </div>
+                    <div class="recommendation-card">
+                        <div class="recommendation-header">
+                            <h3><i class="fas fa-camera"></i> Activities</h3>
+                        </div>
+                        <div id="activities-recommendations" class="recommendation-content">
+                            <!-- Activity recommendations will be loaded here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Polls Tab -->
+            <div id="polls-tab" class="tab-content">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                    <h2>Polls & Voting</h2>
+                    <button class="btn" onclick="showCreatePollModal()">
+                        <i class="fas fa-plus"></i> Create Poll
+                    </button>
+                </div>
+                <div id="polls-container">
+                    <!-- Polls will be loaded here -->
+                </div>
+            </div>
+
+            <!-- Food Tab -->
+            <div id="food-tab" class="tab-content">
+                <h2>Food Recommendations</h2>
+                <div style="margin-bottom: 20px;">
+                    <button class="btn btn-secondary" onclick="loadFoodRecommendations('all')" style="margin-right: 10px;">All</button>
+                    <button class="btn btn-secondary" onclick="loadFoodRecommendations('breakfast')" style="margin-right: 10px;">Breakfast</button>
+                    <button class="btn btn-secondary" onclick="loadFoodRecommendations('lunch')" style="margin-right: 10px;">Lunch</button>
+                    <button class="btn btn-secondary" onclick="loadFoodRecommendations('dinner')" style="margin-right: 10px;">Dinner</button>
+                </div>
+                <div id="food-recommendations" class="recommendations-grid">
+                    <!-- Food recommendations will be loaded here -->
+                </div>
+            </div>
+
+            <!-- Itinerary Tab -->
+            <div id="itinerary-tab" class="tab-content">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                    <h2>Trip Itinerary & Summary</h2>
+                    <button class="btn" onclick="exportTripSummary()">
+                        <i class="fas fa-download"></i> Export Summary
+                    </button>
+                </div>
+                <div id="itinerary-content">
+                    <!-- Itinerary will be loaded here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modals -->
+    <!-- Create Trip Modal -->
+    <div id="create-trip-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Create New Trip</h3>
+                <button class="modal-close" onclick="closeModal('create-trip-modal')">&times;</button>
+            </div>
+            <div class="form-group">
+                <label>Trip Name</label>
+                <input type="text" id="trip-name" placeholder="Enter trip name">
+            </div>
+            <div class="form-group">
+                <label>Description</label>
+                <input type="text" id="trip-description" placeholder="Brief description">
+            </div>
+            <div class="form-group">
+                <label>Destination</label>
+                <input type="text" id="trip-destination" placeholder="Where are you going?">
+            </div>
+            <div class="form-group">
+                <label>Start Date</label>
+                <input type="date" id="trip-start-date">
+            </div>
+            <div class="form-group">
+                <label>End Date</label>
+                <input type="date" id="trip-end-date">
+            </div>
+            <button class="btn" onclick="createTrip()" style="width: 100%;">
+                <i class="fas fa-plus"></i> Create Trip
+            </button>
+        </div>
+    </div>
+
+    <!-- Join Trip Modal -->
+    <div id="join-trip-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Join Trip</h3>
+                <button class="modal-close" onclick="closeModal('join-trip-modal')">&times;</button>
+            </div>
+            <div class="form-group">
+                <label>Invite Code</label>
+                <input type="text" id="invite-code" placeholder="Enter invite code">
+            </div>
+            <button class="btn" onclick="joinTrip()" style="width: 100%;">
+                <i class="fas fa-users"></i> Join Trip
+            </button>
+        </div>
+    </div>
+
+    <!-- Add Expense Modal -->
+    <div id="add-expense-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Add Expense</h3>
+                <button class="modal-close" onclick="closeModal('add-expense-modal')">&times;</button>
+            </div>
+            <div class="form-group">
+                <label>Description</label>
+                <input type="text" id="expense-description" placeholder="What was this expense for?">
+            </div>
+            <div class="form-group">
+                <label>Amount</label>
+                <input type="number" id="expense-amount" placeholder="0.00" step="0.01" onchange="updateSplitAmounts()">
+            </div>
+            <div class="form-group">
+                <label>
+                    <input type="checkbox" id="custom-split-checkbox" onchange="toggleCustomSplit()">
+                    Custom split (otherwise splits equally)
+                </label>
+            </div>
+            <div id="custom-split-container" class="hidden">
+                <h4>Split Details</h4>
+                <div id="split-members-container">
+                    <!-- Split inputs will be dynamically added here -->
+                </div>
+                <div id="split-total-warning" class="error-message hidden">
+                    Total splits don't match expense amount!
+                </div>
+            </div>
+            <button class="btn" onclick="addExpense()" style="width: 100%;">
+                <i class="fas fa-plus"></i> Add Expense
+            </button>
+        </div>
+    </div>
+
+    <!-- Add Checklist Item Modal -->
+    <div id="add-checklist-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Add Checklist Item</h3>
+                <button class="modal-close" onclick="closeModal('add-checklist-modal')">&times;</button>
+            </div>
+            <div class="form-group">
+                <label>Item</label>
+                <input type="text" id="checklist-text" placeholder="What needs to be done?">
+            </div>
+            <button class="btn" onclick="addChecklistItem()" style="width: 100%;">
+                <i class="fas fa-plus"></i> Add Item
+            </button>
+        </div>
+    </div>
+
+    <!-- Create Poll Modal -->
+    <div id="create-poll-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Create Poll</h3>
+                <button class="modal-close" onclick="closeModal('create-poll-modal')">&times;</button>
+            </div>
+            <div class="form-group">
+                <label>Question</label>
+                <input type="text" id="poll-question" placeholder="What do you want to ask?">
+            </div>
+            <div class="form-group">
+                <label>Options</label>
+                <div id="poll-options-container">
+                    <input type="text" class="poll-option" placeholder="Option 1">
+                    <input type="text" class="poll-option" placeholder="Option 2">
+                </div>
+                <button type="button" onclick="addPollOption()" style="margin-top: 10px; padding: 5px 15px; background: #f8f9fa; border: 1px solid #ddd; border-radius: 4px;">
+                    <i class="fas fa-plus"></i> Add Option
+                </button>
+            </div>
+            <div class="form-group">
+                <label>End Date (Optional)</label>
+                <input type="datetime-local" id="poll-end-date">
+            </div>
+            <button class="btn" onclick="createPoll()" style="width: 100%;">
+                <i class="fas fa-plus"></i> Create Poll
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // Global variables
+        let currentUser = null;
+        let currentTrip = null;
+        let socket = null;
+        let authToken = null;
+
+        // API Configuration
+        const API_BASE = 'https://tripbox-intelliorganizer.onrender.com';
+        
+        // Initialize the application
+        document.addEventListener('DOMContentLoaded', function() {
+            checkAuthStatus();
+        });
+
+        // Authentication functions
+        function checkAuthStatus() {
+            const token = localStorage.getItem('tripbox_token');
+            const user = localStorage.getItem('tripbox_user');
+            
+            if (token && user) {
+                authToken = token;
+                currentUser = JSON.parse(user);
+                showMainApp();
+            } else {
+                showAuthScreen();
+            }
+        }
+
+        function showAuthScreen() {
+            document.getElementById('auth-screen').classList.remove('hidden');
+            document.getElementById('main-app').classList.add('hidden');
+        }
+
+        function showMainApp() {
+            document.getElementById('auth-screen').classList.add('hidden');
+            document.getElementById('main-app').classList.remove('hidden');
+            document.getElementById('user-name').textContent = currentUser.username;
+            initializeApp();
+        }
+
+        function showLogin() {
+            document.getElementById('login-form').classList.remove('hidden');
+            document.getElementById('register-form').classList.add('hidden');
+        }
+
+        function showRegister() {
+            document.getElementById('login-form').classList.add('hidden');
+            document.getElementById('register-form').classList.remove('hidden');
+        }
+
+        async function login() {
+            const username = document.getElementById('login-username').value;
+            const password = document.getElementById('login-password').value;
+
+            if (!username || !password) {
+                showMessage('Please fill in all fields', 'error');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE}/api/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ username, password })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    authToken = data.access_token;
+                    currentUser = data.user;
+                    localStorage.setItem('tripbox_token', authToken);
+                    localStorage.setItem('tripbox_user', JSON.stringify(currentUser));
+                    showMainApp();
+                } else {
+                    showMessage(data.message || 'Login failed', 'error');
+                }
+            } catch (error) {
+                showMessage('Connection error. Please try again.', 'error');
+            }
+        }
+
+        async function register() {
+            const username = document.getElementById('register-username').value;
+            const email = document.getElementById('register-email').value;
+            const password = document.getElementById('register-password').value;
+
+            if (!username || !email || !password) {
+                showMessage('Please fill in all fields', 'error');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE}/api/register`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ username, email, password })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    authToken = data.access_token;
+                    currentUser = data.user;
+                    localStorage.setItem('tripbox_token', authToken);
+                    localStorage.setItem('tripbox_user', JSON.stringify(currentUser));
+                    showMainApp();
+                } else {
+                    showMessage(data.message || 'Registration failed', 'error');
+                }
+            } catch (error) {
+                showMessage('Connection error. Please try again.', 'error');
+            }
+        }
+
+        function logout() {
+            localStorage.removeItem('tripbox_token');
+            localStorage.removeItem('tripbox_user');
+            authToken = null;
+            currentUser = null;
+            currentTrip = null;
+            if (socket) {
+                socket.disconnect();
+                socket = null;
+            }
+            showAuthScreen();
+        }
+
+        // Initialize main application
+        function initializeApp() {
+            initializeSocket();
+            loadTrips();
+            loadRecommendations();
+        }
+
+        function initializeSocket() {
+            socket = io(API_BASE);
+            
+            socket.on('connect', function() {
+                console.log('Connected to server');
+            });
+
+            socket.on('new_message', function(message) {
+                displayMessage(message);
+            });
+        }
+
+        // Tab management
+        function showTab(tabName) {
+            // Hide all tabs
+            const tabs = document.querySelectorAll('.tab-content');
+            tabs.forEach(tab => tab.classList.remove('active'));
+
+            // Remove active class from all nav tabs
+            const navTabs = document.querySelectorAll('.nav-tab');
+            navTabs.forEach(tab => tab.classList.remove('active'));
+
+            // Show selected tab
+            document.getElementById(`${tabName}-tab`).classList.add('active');
+            event.target.classList.add('active');
+
+            // Load tab-specific data
+            switch(tabName) {
+                case 'chat':
+                    if (currentTrip) loadMessages();
+                    break;
+                case 'expenses':
+                    if (currentTrip) loadExpenses();
+                    break;
+                case 'checklist':
+                    if (currentTrip) loadChecklist();
+                    break;
+                case 'polls':
+                    if (currentTrip) loadPolls();
+                    break;
+                case 'map':
+                    if (currentTrip) loadLocations();
+                    break;
+                case 'food':
+                    loadFoodRecommendations('all');
+                    break;
+                case 'recommendations':
+                    loadRecommendations();
+                    break;
+                case 'itinerary':
+                    if (currentTrip) loadItinerary();
+                    break;
+            }
+        }
+
+        // Trip management
+        async function loadTrips() {
+            try {
+                const response = await fetch(`${API_BASE}/api/trips`, {
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`
+                    }
+                });
+
+                const trips = await response.json();
+                displayTrips(trips);
+            } catch (error) {
+                showMessage('Failed to load trips', 'error');
+            }
+        }
+
+        function displayTrips(trips) {
+            const container = document.getElementById('trips-container');
+            
+            if (trips.length === 0) {
+                container.innerHTML = `
+                    <div style="text-align: center; grid-column: 1 / -1; padding: 40px;">
+                        <i class="fas fa-suitcase-rolling" style="font-size: 4rem; color: #667eea; margin-bottom: 20px;"></i>
+                        <h3>No trips yet</h3>
+                        <p>Create your first trip or join one with an invite code!</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = trips.map(trip => `
+                <div class="trip-card ${currentTrip && currentTrip.id === trip.id ? 'active' : ''}" onclick="selectTrip(${trip.id})">
+                    <h3>${trip.name}</h3>
+                    <p><i class="fas fa-map-marker-alt"></i> ${trip.destination || 'No destination set'}</p>
+                    <p><i class="fas fa-users"></i> ${trip.member_count} members</p>
+                    ${trip.start_date ? `<p><i class="fas fa-calendar"></i> ${new Date(trip.start_date).toLocaleDateString()}</p>` : ''}
+                    <p><strong>Invite Code:</strong> ${trip.invite_code}</p>
+                    ${trip.role === 'admin' ? '<span style="background: #28a745; color: white; padding: 4px 8px; border-radius: 4px; font-size: 12px;">Admin</span>' : ''}
+                </div>
+            `).join('');
+        }
+
+        function selectTrip(tripId) {
+            const trips = document.querySelectorAll('.trip-card');
+            trips.forEach(card => card.classList.remove('active'));
+            
+            event.target.closest('.trip-card').classList.add('active');
+            
+            // Find the trip data
+            currentTrip = { id: tripId };
+            
+            // Join socket room for this trip
+            if (socket) {
+                socket.emit('join_trip', { trip_id: tripId });
+            }
+            
+            showMessage(`Selected trip. You can now use chat, expenses, and other features.`, 'success');
+        }
+
+        async function createTrip() {
+            const name = document.getElementById('trip-name').value;
+            const description = document.getElementById('trip-description').value;
+            const destination = document.getElementById('trip-destination').value;
+            const startDate = document.getElementById('trip-start-date').value;
+            const endDate = document.getElementById('trip-end-date').value;
+
+            if (!name) {
+                showMessage('Trip name is required', 'error');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE}/api/trips`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${authToken}`
+                    },
+                    body: JSON.stringify({
+                        name,
+                        description,
+                        destination,
+                        start_date: startDate,
+                        end_date: endDate
+                    })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    closeModal('create-trip-modal');
+                    showMessage(`Trip created! Invite code: ${data.invite_code}`, 'success');
+                    loadTrips();
+                    // Clear form
+                    document.getElementById('trip-name').value = '';
+                    document.getElementById('trip-description').value = '';
+                    document.getElementById('trip-destination').value = '';
+                    document.getElementById('trip-start-date').value = '';
+                    document.getElementById('trip-end-date').value = '';
+                } else {
+                    showMessage(data.message || 'Failed to create trip', 'error');
+                }
+            } catch (error) {
+                showMessage('Connection error. Please try again.', 'error');
+            }
+        }
+
+        async function joinTrip() {
+            const inviteCode = document.getElementById('invite-code').value;
+
+            if (!inviteCode) {
+                showMessage('Please enter an invite code', 'error');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE}/api/trips/join`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${authToken}`
+                    },
+                    body: JSON.stringify({ invite_code: inviteCode })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    closeModal('join-trip-modal');
+                    showMessage(data.message, 'success');
+                    loadTrips();
+                    document.getElementById('invite-code').value = '';
+                } else {
+                    showMessage(data.message || 'Failed to join trip', 'error');
+                }
+            } catch (error) {
+                showMessage('Connection error. Please try again.', 'error');
+            }
+        }
+
+        // Chat functionality
+        async function loadMessages() {
+            if (!currentTrip) {
+                document.getElementById('chat-messages').innerHTML = '<div class="loading">Select a trip to start chatting</div>';
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE}/api/trips/${currentTrip.id}/messages`, {
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`
+                    }
+                });
+
+                const messages = await response.json();
+                const container = document.getElementById('chat-messages');
+                
+                container.innerHTML = messages.map(msg => `
+                    <div class="message ${msg.username === currentUser.username ? 'own' : 'other'}">
+                        ${msg.username !== currentUser.username ? `<div class="message-sender">${msg.username}</div>` : ''}
+                        <div>${msg.content}</div>
+                        <div style="font-size: 11px; opacity: 0.7; margin-top: 5px;">
+                            ${new Date(msg.timestamp).toLocaleTimeString()}
+                        </div>
+                    </div>
+                `).join('');
+                
+                container.scrollTop = container.scrollHeight;
+            } catch (error) {
+                showMessage('Failed to load messages', 'error');
+            }
+        }
+
+        function handleChatKeyPress(event) {
+            if (event.key === 'Enter') {
+                sendMessage();
+            }
+        }
+
+        async function sendMessage() {
+            const input = document.getElementById('chat-input');
+            const content = input.value.trim();
+
+            if (!content || !currentTrip) return;
+
+            try {
+                await fetch(`${API_BASE}/api/trips/${currentTrip.id}/messages`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${authToken}`
+                    },
+                    body: JSON.stringify({ content })
+                });
+
+                input.value = '';
+            } catch (error) {
+                showMessage('Failed to send message', 'error');
+            }
+        }
+
+        function displayMessage(message) {
+            const container = document.getElementById('chat-messages');
+            const messageEl = document.createElement('div');
+            messageEl.className = `message ${message.username === currentUser.username ? 'own' : 'other'}`;
+            messageEl.innerHTML = `
+                ${message.username !== currentUser.username ? `<div class="message-sender">${message.username}</div>` : ''}
+                <div>${message.content}</div>
+                <div style="font-size: 11px; opacity: 0.7; margin-top: 5px;">
+                    ${new Date(message.timestamp).toLocaleTimeString()}
+                </div>
+            `;
+            container.appendChild(messageEl);
+            container.scrollTop = container.scrollHeight;
+        }
+
+        // Expenses functionality
+        async function loadExpenses() {
+            if (!currentTrip) return;
+
+            try {
+                const response = await fetch(`${API_BASE}/api/trips/${currentTrip.id}/expenses`, {
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`
+                    }
+                });
+
+                const expenses = await response.json();
+                displayExpenses(expenses);
+            } catch (error) {
+                showMessage('Failed to load expenses', 'error');
+            }
+        }
+
+        function displayExpenses(expenses) {
+            const container = document.getElementById('expenses-container');
+            
+            if (expenses.length === 0) {
+                container.innerHTML = `
+                    <div style="text-align: center; padding: 40px;">
+                        <i class="fas fa-receipt" style="font-size: 3rem; color: #667eea; margin-bottom: 15px;"></i>
+                        <h3>No expenses yet</h3>
+                        <p>Add your first expense to start tracking!</p>
+                    </div>
+                `;
+                return;
+            }
+
+            // Calculate totals
+            let totalAmount = 0;
+            let userOwes = 0;
+
+            expenses.forEach(expense => {
+                totalAmount += expense.amount;
+                const userSplit = expense.splits.find(split => split.username === currentUser.username);
+                if (userSplit && !userSplit.paid) {
+                    userOwes += userSplit.amount;
+                }
+            });
+
+            // Update summary
+            document.querySelector('#expense-summary h3').nextElementSibling.textContent = `$${totalAmount.toFixed(2)}`;
+            document.querySelector('#expense-summary p').textContent = `Your share: $${userOwes.toFixed(2)}`;
+
+            container.innerHTML = expenses.map(expense => `
+                <div class="expense-item">
+                    <div class="expense-details">
+                        <h4>${expense.description}</h4>
+                        <p>Paid by ${expense.paid_by} on ${new Date(expense.created_at).toLocaleDateString()}</p>
+                        <div style="margin-top: 10px;">
+                            ${expense.splits.map(split => `
+                                <span style="margin-right: 15px; font-size: 14px;">
+                                    ${split.username}: $${split.amount.toFixed(2)} 
+                                    ${split.paid ? '✅' : '❌'}
+                                </span>
+                            `).join('')}
+                        </div>
+                    </div>
+                    <div class="expense-amount">$${expense.amount.toFixed(2)}</div>
+                </div>
+            `).join('');
+        }
+
+        async function addExpense() {
+            const description = document.getElementById('expense-description').value;
+            const amount = parseFloat(document.getElementById('expense-amount').value);
+            const customSplitCheckbox = document.getElementById('custom-split-checkbox');
+
+            if (!description || !amount || !currentTrip) {
+                showMessage('Please fill in all fields', 'error');
+                return;
+            }
+
+            let customSplits = null;
+            
+            if (customSplitCheckbox.checked) {
+                if (!validateSplitTotal()) {
+                    showMessage('Please fix the split amounts before adding the expense', 'error');
+                    return;
+                }
+                
+                const splitInputs = document.querySelectorAll('.split-amount-input');
+                customSplits = Array.from(splitInputs).map(input => ({
+                    user_id: parseInt(input.dataset.userId),
+                    amount: parseFloat(input.value)
+                }));
+            }
+
+            try {
+                const requestBody = {
+                    description,
+                    amount
+                };
+
+                if (customSplits) {
+                    requestBody.custom_splits = customSplits;
+                }
+
+                const response = await fetch(`${API_BASE}/api/trips/${currentTrip.id}/expenses`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${authToken}`
+                    },
+                    body: JSON.stringify(requestBody)
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    closeModal('add-expense-modal');
+                    showMessage('Expense added successfully', 'success');
+                    loadExpenses();
+                    // Clear form
+                    document.getElementById('expense-description').value = '';
+                    document.getElementById('expense-amount').value = '';
+                    document.getElementById('custom-split-checkbox').checked = false;
+                    document.getElementById('custom-split-container').classList.add('hidden');
+                } else {
+                    showMessage(data.message || 'Failed to add expense', 'error');
+                }
+            } catch (error) {
+                showMessage('Connection error. Please try again.', 'error');
+            }
+        }
+
+        // Checklist functionality
+        async function loadChecklist() {
+            if (!currentTrip) return;
+
+            try {
+                const response = await fetch(`${API_BASE}/api/trips/${currentTrip.id}/checklist`, {
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`
+                    }
+                });
+
+                const items = await response.json();
+                displayChecklist(items);
+            } catch (error) {
+                showMessage('Failed to load checklist', 'error');
+            }
+        }
+
+        function displayChecklist(items) {
+            const container = document.getElementById('checklist-container');
+            
+            if (items.length === 0) {
+                container.innerHTML = `
+                    <div style="text-align: center; padding: 40px;">
+                        <i class="fas fa-check-square" style="font-size: 3rem; color: #667eea; margin-bottom: 15px;"></i>
+                        <h3>No checklist items yet</h3>
+                        <p>Add items to keep track of what needs to be done!</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = items.map(item => `
+                <div class="checklist-item ${item.completed ? 'completed' : ''}">
+                    <input type="checkbox" ${item.completed ? 'checked' : ''} 
+                           onchange="toggleChecklistItem(${item.id})">
+                    <div style="flex: 1;">
+                        <div style="${item.completed ? 'text-decoration: line-through;' : ''}">${item.text}</div>
+                        <small style="color: #666;">Added by ${item.created_by}</small>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        async function addChecklistItem() {
+            const text = document.getElementById('checklist-text').value;
+
+            if (!text || !currentTrip) {
+                showMessage('Please enter an item', 'error');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE}/api/trips/${currentTrip.id}/checklist`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${authToken}`
+                    },
+                    body: JSON.stringify({ text })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    closeModal('add-checklist-modal');
+                    showMessage('Item added successfully', 'success');
+                    loadChecklist();
+                    document.getElementById('checklist-text').value = '';
+                } else {
+                    showMessage(data.message || 'Failed to add item', 'error');
+                }
+            } catch (error) {
+                showMessage('Connection error. Please try again.', 'error');
+            }
+        }
+
+        async function toggleChecklistItem(itemId) {
+            try {
+                await fetch(`${API_BASE}/api/checklist/${itemId}/toggle`, {
+                    method: 'PUT',
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`
+                    }
+                });
+
+                loadChecklist();
+            } catch (error) {
+                showMessage('Failed to update item', 'error');
+            }
+        }
+
+        // Location functionality
+        function shareLocation() {
+            if (!currentTrip) {
+                showMessage('Please select a trip first', 'error');
+                return;
+            }
+
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(async (position) => {
+                    try {
+                        await fetch(`${API_BASE}/api/trips/${currentTrip.id}/location`, {
+                            method: 'PUT',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Authorization': `Bearer ${authToken}`
+                            },
+                            body: JSON.stringify({
+                                lat: position.coords.latitude,
+                                lng: position.coords.longitude
+                            })
+                        });
+
+                        showMessage('Location shared successfully', 'success');
+                        loadLocations();
+                    } catch (error) {
+                        showMessage('Failed to share location', 'error');
+                    }
+                });
+            } else {
+                showMessage('Geolocation not supported', 'error');
+            }
+        }
+
+        async function loadLocations() {
+            if (!currentTrip) return;
+
+            try {
+                const response = await fetch(`${API_BASE}/api/trips/${currentTrip.id}/locations`, {
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`
+                    }
+                });
+
+                const locations = await response.json();
+                displayLocations(locations);
+            } catch (error) {
+                showMessage('Failed to load locations', 'error');
+            }
+        }
+
+        function displayLocations(locations) {
+            const container = document.getElementById('locations-list');
+            
+            if (locations.length === 0) {
+                container.innerHTML = `
+                    <div style="text-align: center; padding: 20px;">
+                        <p>No locations shared yet</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = `
+                <h3 style="margin-top: 20px;">Member Locations</h3>
+                ${locations.map(loc => `
+                    <div style="background: white; padding: 15px; border-radius: 8px; margin-bottom: 10px; border: 1px solid #e1e5e9;">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <span><i class="fas fa-user"></i> ${loc.username}</span>
+                            <span style="font-size: 12px; color: #666;">${new Date(loc.timestamp).toLocaleString()}</span>
+                        </div>
+                        <div style="margin-top: 5px; font-size: 14px; color: #666;">
+                            Lat: ${loc.lat.toFixed(6)}, Lng: ${loc.lng.toFixed(6)}
+                        </div>
+                    </div>
+                `).join('')}
+            `;
+        }
+
+        // Recommendations functionality
+        async function loadRecommendations() {
+            const types = ['hotels', 'flights', 'activities'];
+            
+            for (const type of types) {
+                try {
+                    const response = await fetch(`${API_BASE}/api/recommendations?type=${type}`, {
+                        headers: {
+                            'Authorization': `Bearer ${authToken}`
+                        }
+                    });
+
+                    const recommendations = await response.json();
+                    displayRecommendations(type, recommendations);
+                } catch (error) {
+                    console.error(`Failed to load ${type} recommendations`);
+                }
+            }
+        }
+
+        function displayRecommendations(type, recommendations) {
+            const container = document.getElementById(`${type}-recommendations`);
+            
+            if (recommendations.length === 0) {
+                container.innerHTML = '<p>No recommendations available</p>';
+                return;
+            }
+
+            container.innerHTML = recommendations.map(rec => {
+                if (type === 'hotels') {
+                    return `
+                        <div class="recommendation-item">
+                            <div>
+                                <strong>${rec.name}</strong><br>
+                                <small>⭐ ${rec.rating} | ${rec.price}</small>
+                            </div>
+                        </div>
+                    `;
+                } else if (type === 'flights') {
+                    return `
+                        <div class="recommendation-item">
+                            <div>
+                                <strong>${rec.airline}</strong><br>
+                                <small>${rec.departure} | ${rec.duration}</small>
+                            </div>
+                            <div>${rec.price}</div>
+                        </div>
+                    `;
+                } else {
+                    return `
+                        <div class="recommendation-item">
+                            <div>
+                                <strong>${rec.name}</strong><br>
+                                <small>⭐ ${rec.rating} | ${rec.duration}</small>
+                            </div>
+                            <div>${rec.price}</div>
+                        </div>
+                    `;
+                }
+            }).join('');
+        }
+
+        // Modal functionality
+        function showCreateTripModal() {
+            document.getElementById('create-trip-modal').classList.add('active');
+        }
+
+        function showJoinTripModal() {
+            document.getElementById('join-trip-modal').classList.add('active');
+        }
+
+        function showAddExpenseModal() {
+            if (!currentTrip) {
+                showMessage('Please select a trip first', 'error');
+                return;
+            }
+            document.getElementById('add-expense-modal').classList.add('active');
+            loadTripMembers(); // Load members for splitting
+        }
+
+        function showAddChecklistModal() {
+            if (!currentTrip) {
+                showMessage('Please select a trip first', 'error');
+                return;
+            }
+            document.getElementById('add-checklist-modal').classList.add('active');
+        }
+
+        function showCreatePollModal() {
+            if (!currentTrip) {
+                showMessage('Please select a trip first', 'error');
+                return;
+            }
+            document.getElementById('create-poll-modal').classList.add('active');
+        }
+
+        function addPollOption() {
+            const optionsContainer = document.getElementById('poll-options-container');
+            const newOptionInput = document.createElement('input');
+            newOptionInput.type = 'text';
+            newOptionInput.className = 'poll-option';
+            newOptionInput.placeholder = 'Option ' + (optionsContainer.children.length + 1);
+            optionsContainer.appendChild(newOptionInput);
+        }
+
+        async function createPoll() {
+            const question = document.getElementById('poll-question').value;
+            const options = Array.from(document.querySelectorAll('#poll-options-container .poll-option')).map(input => input.value);
+            const endDate = document.getElementById('poll-end-date').value;
+
+            if (!question || options.length < 2 || !currentTrip) {
+                showMessage('Please fill in all fields and provide at least 2 options', 'error');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE}/api/trips/${currentTrip.id}/polls`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${authToken}`
+                    },
+                    body: JSON.stringify({
+                        question,
+                        options,
+                        end_date: endDate
+                    })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    closeModal('create-poll-modal');
+                    showMessage('Poll created successfully!', 'success');
+                    loadPolls(); // Reload polls to show the new one
+                    document.getElementById('poll-question').value = '';
+                    document.getElementById('poll-options-container').innerHTML = `
+                        <input type="text" class="poll-option" placeholder="Option 1">
+                        <input type="text" class="poll-option" placeholder="Option 2">
+                    `;
+                    document.getElementById('poll-end-date').value = '';
+                } else {
+                    showMessage(data.message || 'Failed to create poll', 'error');
+                }
+            } catch (error) {
+                showMessage('Connection error. Please try again.', 'error');
+            }
+        }
+
+        async function loadPolls() {
+            if (!currentTrip) return;
+
+            try {
+                const response = await fetch(`${API_BASE}/api/trips/${currentTrip.id}/polls`, {
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`
+                    }
+                });
+
+                const polls = await response.json();
+                displayPolls(polls);
+            } catch (error) {
+                showMessage('Failed to load polls', 'error');
+            }
+        }
+
+        function displayPolls(polls) {
+            const container = document.getElementById('polls-container');
+            
+            if (polls.length === 0) {
+                container.innerHTML = `
+                    <div style="text-align: center; padding: 40px;">
+                        <i class="fas fa-vote-yea" style="font-size: 3rem; color: #667eea; margin-bottom: 15px;"></i>
+                        <h3>No polls yet</h3>
+                        <p>Create your first poll to get feedback!</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = polls.map(poll => `
+                <div class="recommendation-card" style="margin-bottom: 20px;">
+                    <div class="recommendation-header">
+                        <h3><i class="fas fa-question-circle"></i> ${poll.question}</h3>
+                        <small>By ${poll.created_by} | ${poll.total_votes} total votes</small>
+                        ${poll.ends_at ? `<br><small>Ends: ${new Date(poll.ends_at).toLocaleDateString()}</small>` : ''}
+                    </div>
+                    <div class="recommendation-content">
+                        ${poll.options.map((option, index) => {
+                            const votes = poll.votes[option] || 0;
+                            const percentage = poll.total_votes > 0 ? Math.round((votes / poll.total_votes) * 100) : 0;
+                            const isUserVote = poll.user_vote === option;
+                            return `
+                                <div class="poll-option" style="margin-bottom: 10px; padding: 10px; border: 1px solid #e1e5e9; border-radius: 8px; ${isUserVote ? 'background: #e3f2fd;' : ''}">
+                                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                                        <span>${option} ${isUserVote ? '✓' : ''}</span>
+                                        <span>${votes} votes (${percentage}%)</span>
+                                    </div>
+                                    <div style="background: #f8f9fa; height: 6px; border-radius: 3px; margin-top: 5px;">
+                                        <div style="background: #667eea; height: 100%; width: ${percentage}%; border-radius: 3px; transition: width 0.3s;"></div>
+                                    </div>
+                                    ${poll.is_active && !poll.user_vote ? `
+                                        <button class="btn btn-secondary" onclick="votePoll(${poll.id}, ${index})" style="margin-top: 8px; padding: 4px 12px; font-size: 12px;">
+                                            Vote
+                                        </button>
+                                    ` : ''}
+                                </div>
+                            `;
+                        }).join('')}
+                        ${!poll.is_active ? '<p style="color: #666; font-style: italic; margin-top: 10px;">This poll has ended.</p>' : ''}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        async function votePoll(pollId, optionIndex) {
+            try {
+                const response = await fetch(`${API_BASE}/api/polls/${pollId}/vote`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${authToken}`
+                    },
+                    body: JSON.stringify({ option_index: optionIndex })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    showMessage('Vote recorded!', 'success');
+                    loadPolls(); // Reload to show updated results
+                } else {
+                    showMessage(data.message || 'Failed to vote', 'error');
+                }
+            } catch (error) {
+                showMessage('Connection error. Please try again.', 'error');
+            }
+        }
+
+        // Food Recommendations
+        async function loadFoodRecommendations(category = 'all') {
+            try {
+                const response = await fetch(`${API_BASE}/api/recommendations/food?category=${category}`, {
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`
+                    }
+                });
+
+                const restaurants = await response.json();
+                displayFoodRecommendations(restaurants);
+            } catch (error) {
+                showMessage('Failed to load food recommendations', 'error');
+            }
+        }
+
+        function displayFoodRecommendations(restaurants) {
+            const container = document.getElementById('food-recommendations');
+            
+            if (restaurants.length === 0) {
+                container.innerHTML = `
+                    <div style="text-align: center; padding: 40px; grid-column: 1 / -1;">
+                        <i class="fas fa-utensils" style="font-size: 3rem; color: #667eea; margin-bottom: 15px;"></i>
+                        <h3>No restaurants found</h3>
+                        <p>Try a different category or check back later!</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = restaurants.map(restaurant => `
+                <div class="recommendation-card">
+                    <div class="recommendation-header">
+                        <h3><i class="fas fa-utensils"></i> ${restaurant.name}</h3>
+                        <p>${restaurant.cuisine} • ${restaurant.price_range}</p>
+                    </div>
+                    <div class="recommendation-content">
+                        <div class="recommendation-item">
+                            <div>
+                                <strong>Rating:</strong> ⭐ ${restaurant.rating}<br>
+                                <strong>Distance:</strong> ${restaurant.distance}<br>
+                                <strong>Address:</strong> ${restaurant.address}
+                            </div>
+                        </div>
+                        <p style="font-size: 14px; color: #666; margin-top: 10px;">${restaurant.description}</p>
+                        <div style="margin-top: 15px;">
+                            <span style="background: #28a745; color: white; padding: 4px 8px; border-radius: 12px; font-size: 12px; text-transform: uppercase;">
+                                ${restaurant.category}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Itinerary functionality
+        async function loadItinerary() {
+            if (!currentTrip) return;
+
+            try {
+                const response = await fetch(`${API_BASE}/api/trips/${currentTrip.id}/itinerary`, {
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`
+                    }
+                });
+
+                const itinerary = await response.json();
+                displayItinerary(itinerary);
+            } catch (error) {
+                showMessage('Failed to load itinerary', 'error');
+            }
+        }
+
+        function displayItinerary(itinerary) {
+            const container = document.getElementById('itinerary-content');
+            
+            container.innerHTML = `
+                <!-- Trip Overview -->
+                <div class="expense-summary" style="margin-bottom: 30px;">
+                    <h3>${itinerary.trip_info.name}</h3>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-top: 15px;">
+                        <div>
+                            <strong>Destination:</strong><br>
+                            ${itinerary.trip_info.destination || 'Not set'}
+                        </div>
+                        <div>
+                            <strong>Duration:</strong><br>
+                            ${itinerary.trip_info.duration_days} days
+                        </div>
+                        <div>
+                            <strong>Members:</strong><br>
+                            ${itinerary.trip_info.member_count} people
+                        </div>
+                        <div>
+                            <strong>Total Expenses:</strong><br>
+                            $${itinerary.summary.total_expenses.toFixed(2)}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Progress Summary -->
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin-bottom: 30px;">
+                    <div class="recommendation-card">
+                        <div class="recommendation-header">
+                            <h3><i class="fas fa-comments"></i> Communication</h3>
+                        </div>
+                        <div class="recommendation-content">
+                            <p><strong>${itinerary.summary.total_messages}</strong> messages sent</p>
+                            <p><strong>${itinerary.summary.active_polls}</strong> active polls</p>
+                        </div>
+                    </div>
+                    
+                    <div class="recommendation-card">
+                        <div class="recommendation-header">
+                            <h3><i class="fas fa-check-square"></i> Tasks</h3>
+                        </div>
+                        <div class="recommendation-content">
+                            <p><strong>${itinerary.summary.checklist_progress.completed}/${itinerary.summary.checklist_progress.total}</strong> items completed</p>
+                            <div style="background: #f8f9fa; height: 8px; border-radius: 4px; margin-top: 10px;">
+                                <div style="background: #28a745; height: 100%; width: ${itinerary.summary.checklist_progress.percentage}%; border-radius: 4px;"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Daily Itinerary -->
+                ${itinerary.daily_itinerary.length > 0 ? `
+                    <h3 style="margin-bottom: 20px;">Daily Breakdown</h3>
+                    <div style="display: grid; gap: 15px;">
+                        ${itinerary.daily_itinerary.map(day => `
+                            <div class="recommendation-card">
+                                <div class="recommendation-header">
+                                    <h3>Day ${day.day_number} - ${new Date(day.date).toLocaleDateString()}</h3>
+                                </div>
+                                <div class="recommendation-content">
+                                    ${day.expenses.length > 0 ? `
+                                        <h4>Expenses ($${day.total_spent.toFixed(2)})</h4>
+                                        ${day.expenses.map(exp => `
+                                            <div class="recommendation-item">
+                                                <div>${exp.description}</div>
+                                                <div>$${exp.amount.toFixed(2)} by ${exp.paid_by}</div>
+                                            </div>
+                                        `).join('')}
+                                    ` : '<p>No expenses recorded for this day</p>'}
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                ` : '<div style="text-align: center; padding: 40px;"><p>Set trip dates to see daily breakdown</p></div>'}
+
+                <!-- Recommendations -->
+                <div style="margin-top: 30px;">
+                    <h3>Travel Tips</h3>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; margin-top: 15px;">
+                        <div class="recommendation-card">
+                            <div class="recommendation-header">
+                                <h3><i class="fas fa-piggy-bank"></i> Budget Tips</h3>
+                            </div>
+                            <div class="recommendation-content">
+                                ${itinerary.recommendations.budget_tips.map(tip => `<p>• ${tip}</p>`).join('')}
+                            </div>
+                        </div>
+                        
+                        <div class="recommendation-card">
+                            <div class="recommendation-header">
+                                <h3><i class="fas fa-map-marked-alt"></i> Activity Ideas</h3>
+                            </div>
+                            <div class="recommendation-content">
+                                ${itinerary.recommendations.activities.map(activity => `<p>• ${activity}</p>`).join('')}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        async function exportTripSummary() {
+            if (!currentTrip) {
+                showMessage('Please select a trip first', 'error');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE}/api/trips/${currentTrip.id}/summary/export`, {
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`
+                    }
+                });
+
+                const summary = await response.json();
+                
+                // Create a downloadable text summary
+                const summaryText = `
+TRIP SUMMARY: ${summary.trip_name}
+=====================================
+
+Destination: ${summary.destination}
+Dates: ${summary.dates}
+Members: ${summary.members.join(', ')}
+
+EXPENSE SUMMARY:
+- Total Spent: $${summary.expense_summary.total_spent.toFixed(2)}
+- Number of Expenses: ${summary.expense_summary.number_of_expenses}
+- Average per Person: $${summary.expense_summary.average_per_person.toFixed(2)}
+
+MEMBER BALANCES:
+${Object.entries(summary.member_balances).map(([name, balance]) => 
+    `${name}: Paid $${balance.paid.toFixed(2)} | Owes $${balance.owes.toFixed(2)} | Balance: $${balance.balance.toFixed(2)}`
+).join('\n')}
+
+DETAILED EXPENSES:
+${summary.detailed_expenses.map(exp => 
+    `${new Date(exp.date).toLocaleDateString()} - ${exp.description}: $${exp.amount.toFixed(2)} (paid by ${exp.paid_by})`
+).join('\n')}
+                `;
+
+                // Create and download file
+                const blob = new Blob([summaryText], { type: 'text/plain' });
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `${summary.trip_name}_summary.txt`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                window.URL.revokeObjectURL(url);
+
+                showMessage('Trip summary downloaded!', 'success');
+            } catch (error) {
+                showMessage('Failed to export summary', 'error');
+            }
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.remove('active');
+        }
+
+        // Utility functions
+        function showMessage(message, type = 'info') {
+            // Remove existing messages
+            const existingMessages = document.querySelectorAll('.success-message, .error-message');
+            existingMessages.forEach(msg => msg.remove());
+
+            // Create new message
+            const messageEl = document.createElement('div');
+            messageEl.className = type === 'error' ? 'error-message' : 'success-message';
+            messageEl.textContent = message;
+
+            // Insert at the top of main content
+            const mainContent = document.querySelector('.main-content');
+            mainContent.insertBefore(messageEl, mainContent.firstChild);
+
+            // Auto remove after 5 seconds
+            setTimeout(() => {
+                messageEl.remove();
+            }, 5000);
+        }
+
+        // Close modals when clicking outside
+        window.onclick = function(event) {
+            if (event.target.classList.contains('modal')) {
+                event.target.classList.remove('active');
+            }
+        }
+
+        let tripMembers = [];
+
+        async function loadTripMembers() {
+            if (!currentTrip) return;
+
+            try {
+                const response = await fetch(`${API_BASE}/api/trips/${currentTrip.id}/members`, {
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`
+                    }
+                });
+
+                tripMembers = await response.json();
+                setupCustomSplitInterface();
+            } catch (error) {
+                console.error('Failed to load trip members');
+            }
+        }
+
+        function toggleCustomSplit() {
+            const checkbox = document.getElementById('custom-split-checkbox');
+            const container = document.getElementById('custom-split-container');
+            
+            if (checkbox.checked) {
+                container.classList.remove('hidden');
+                setupCustomSplitInterface();
+            } else {
+                container.classList.add('hidden');
+            }
+        }
+
+        function setupCustomSplitInterface() {
+            const container = document.getElementById('split-members-container');
+            const totalAmount = parseFloat(document.getElementById('expense-amount').value) || 0;
+            const equalAmount = totalAmount / tripMembers.length;
+
+            container.innerHTML = tripMembers.map(member => `
+                <div style="display: flex; align-items: center; margin-bottom: 10px; padding: 10px; border: 1px solid #e1e5e9; border-radius: 8px;">
+                    <div style="flex: 1;">
+                        <strong>${member.username}</strong>
+                        ${member.id === currentUser.id ? '<span style="color: #667eea; font-size: 12px;">(You)</span>' : ''}
+                    </div>
+                    <div style="width: 120px;">
+                        <input type="number" 
+                               class="split-amount-input" 
+                               data-user-id="${member.id}"
+                               value="${equalAmount.toFixed(2)}" 
+                               step="0.01" 
+                               onchange="validateSplitTotal()"
+                               style="width: 100%; padding: 6px; border: 1px solid #ddd; border-radius: 4px;">
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function updateSplitAmounts() {
+            const checkbox = document.getElementById('custom-split-checkbox');
+            if (checkbox.checked) {
+                setupCustomSplitInterface();
+            }
+        }
+
+        function validateSplitTotal() {
+            const totalAmount = parseFloat(document.getElementById('expense-amount').value) || 0;
+            const splitInputs = document.querySelectorAll('.split-amount-input');
+            const warningDiv = document.getElementById('split-total-warning');
+            
+            let splitTotal = 0;
+            splitInputs.forEach(input => {
+                splitTotal += parseFloat(input.value) || 0;
+            });
+
+            const difference = Math.abs(totalAmount - splitTotal);
+            
+            if (difference > 0.01) { // Allow for small rounding differences
+                warningDiv.classList.remove('hidden');
+                warningDiv.textContent = `Total splits ($${splitTotal.toFixed(2)}) don't match expense amount ($${totalAmount.toFixed(2)})!`;
+                return false;
+            } else {
+                warningDiv.classList.add('hidden');
+                return true;
+            }
+        }
+    </script>
+</body>
+</html>
