@@ -1,11 +1,19 @@
 // API Base URL
 const API_BASE = (() => {
     // Check if we're in production (Render deployment)
-    if (window.location.hostname.includes('render.com') || window.location.hostname.includes('tripbox-intelliorganizer.onrender.com')) {
+    if (window.location.hostname.includes('render.com') || 
+        window.location.hostname.includes('tripbox-intelliorganizer.onrender.com') ||
+        window.location.hostname.includes('tripbox-prototype.onrender.com')) {
         return 'https://tripbox-intelliorganizer.onrender.com';
     }
-    // Local development
-    return 'http://127.0.0.1:5000';
+    // Check if we're on localhost or 127.0.0.1
+    if (window.location.hostname === 'localhost' || 
+        window.location.hostname === '127.0.0.1' ||
+        window.location.protocol === 'file:') {
+        return 'http://127.0.0.1:5000';
+    }
+    // Default to production
+    return 'https://tripbox-intelliorganizer.onrender.com';
 })();
 
 // Live Location Tracking
