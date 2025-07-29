@@ -11,4 +11,6 @@ services:
       - key: FLASK_ENV
         value: production
       - key: JWT_SECRET_KEY
-        generateValue: true 
+        generateValue: true
+      - key: PYTHON_VERSION
+        value: "3.13.4" 
