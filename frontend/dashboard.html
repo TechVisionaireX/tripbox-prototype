@@ -785,6 +785,27 @@
             padding: 2rem;
             color: var(--text-secondary);
         }
+
+        /* Trip Role Badges */
+        .trip-role {
+            display: inline-block;
+            padding: 0.25rem 0.5rem;
+            margin-left: 0.5rem;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 500;
+            text-transform: uppercase;
+        }
+
+        .trip-role.owner {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .trip-role.member {
+            background: var(--accent-color);
+            color: white;
+        }
     </style>
 </head>
 <body>
@@ -1276,10 +1297,15 @@
         }
 
         function createTripCard(trip, showActions = false) {
+            const roleDisplay = trip.role ? `<span class="trip-role ${trip.is_owner ? 'owner' : 'member'}">${trip.role}</span>` : '';
+            
             return `
                 <div class="trip-card slide-in-up">
                     <div class="trip-card-header">
-                        <div class="trip-title">${trip.name}</div>
+                        <div class="trip-title">
+                            ${trip.name}
+                            ${roleDisplay}
+                        </div>
                         <div class="trip-dates">
                             <i class="fas fa-calendar"></i>
                             ${trip.start_date} - ${trip.end_date}
@@ -1289,20 +1315,27 @@
                         <div class="trip-description">
                             ${trip.description || 'No description provided'}
                         </div>
-                        ${showActions ? `
+                        ${showActions && trip.is_owner !== false ? `
                             <div class="trip-actions">
-                                <button class="btn btn-primary btn-sm">
-                                    <i class="fas fa-edit"></i>
-                                    Edit
-                                </button>
-                                <button class="btn btn-secondary btn-sm" onclick="openMemberModal(${trip.id}, '${trip.name}')">
-                                    <i class="fas fa-users"></i>
-                                    Manage Members
-                                </button>
-                                <button class="btn btn-success btn-sm">
-                                    <i class="fas fa-check"></i>
-                                    Finalize
-                                </button>
+                                ${trip.is_owner ? `
+                                    <button class="btn btn-primary btn-sm">
+                                        <i class="fas fa-edit"></i>
+                                        Edit
+                                    </button>
+                                    <button class="btn btn-secondary btn-sm" onclick="openMemberModal(${trip.id}, '${trip.name}')">
+                                        <i class="fas fa-users"></i>
+                                        Manage Members
+                                    </button>
+                                    <button class="btn btn-success btn-sm">
+                                        <i class="fas fa-check"></i>
+                                        Finalize
+                                    </button>
+                                ` : `
+                                    <button class="btn btn-secondary btn-sm" onclick="openMemberModal(${trip.id}, '${trip.name}')">
+                                        <i class="fas fa-users"></i>
+                                        View Members
+                                    </button>
+                                `}
                             </div>
                         ` : ''}
                     </div>

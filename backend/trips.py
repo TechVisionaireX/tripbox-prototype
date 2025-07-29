@@ -58,15 +58,37 @@ def create_trip():
 @jwt_required()
 def get_trips():
     user_id = int(get_jwt_identity())
-    trips = Trip.query.filter_by(user_id=user_id).all()
-    trips_list = [{
-        'id': t.id,
-        'name': t.name,
-        'start_date': t.start_date,
-        'end_date': t.end_date,
-        'description': t.description
-    } for t in trips]
-    return jsonify(trips_list)
+    
+    # Get trips owned by the user
+    owned_trips = Trip.query.filter_by(user_id=user_id).all()
+    
+    # Get trips where user is a member (through groups)
+    member_trips = db.session.query(Trip).join(Group).join(GroupMember).filter(
+        GroupMember.user_id == user_id,
+        Trip.user_id != user_id  # Exclude trips they already own
+    ).all()
+    
+    # Combine owned and member trips
+    all_trips = owned_trips + member_trips
+    
+    # Remove duplicates and format response
+    unique_trips = []
+    seen_trip_ids = set()
+    
+    for trip in all_trips:
+        if trip.id not in seen_trip_ids:
+            seen_trip_ids.add(trip.id)
+            unique_trips.append({
+                'id': trip.id,
+                'name': trip.name,
+                'start_date': trip.start_date,
+                'end_date': trip.end_date,
+                'description': trip.description,
+                'is_owner': trip.user_id == user_id,
+                'role': 'Owner' if trip.user_id == user_id else 'Member'
+            })
+    
+    return jsonify(unique_trips)
 
 @trips_bp.route('/api/trips/<int:trip_id>', methods=['PUT'])
 @jwt_required()
@@ -168,7 +190,7 @@ def get_trip_members(trip_id):
     ).first() is not None
     
     if not (is_owner or is_member):
-        return jsonify({'error': 'Unauthorized access to trip members'}), 403
+        return jsonify({'error': 'You must be a member or owner of this trip to view members'}), 403
     
     # Get all members with user details
     from models import User
