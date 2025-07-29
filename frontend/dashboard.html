@@ -1658,7 +1658,17 @@
     </main>
 
   <script>
-        const API_BASE = 'http://127.0.0.1:5000';
+        // API Base URL - Auto-detect local vs production
+        const API_BASE = (() => {
+            if (window.location.protocol === 'file:' || 
+                window.location.hostname === 'localhost' || 
+                window.location.hostname === '127.0.0.1') {
+                return 'http://127.0.0.1:5000';
+            }
+            return 'https://tripbox-backend.onrender.com';
+        })();
+
+        console.log('API_BASE configured as:', API_BASE);
         let currentTrips = [];
 
         let currentExpenses = [];

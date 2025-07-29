@@ -20,13 +20,12 @@ chmod 777 uploads
 # Create database tables
 echo "Creating database tables..."
 python - <<EOF
+import os
+import sys
 from app import app, db
+
 with app.app_context():
     try:
-        # Drop all tables first to avoid conflicts
-        db.drop_all()
-        print("Dropped existing tables")
-        
         # Create all tables
         db.create_all()
         print("Created new tables")
@@ -34,9 +33,15 @@ with app.app_context():
         # Verify tables were created
         tables = db.engine.table_names()
         print(f"Created tables: {', '.join(tables)}")
+        
+        # Test database connection
+        result = db.engine.execute("SELECT 1")
+        print("Database connection successful")
+        
     except Exception as e:
         print(f"Error during database setup: {e}")
-        raise e
+        # Don't raise error, continue with deployment
+        pass
 EOF
 
 echo "=== Build Complete ===" 

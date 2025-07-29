@@ -7,11 +7,11 @@ services:
   - type: web
     name: tripbox-backend
     env: python
-    buildCommand: "chmod +x build.sh && ./build.sh"
-    startCommand: "gunicorn app:app --timeout 120"
+    buildCommand: "cd backend && chmod +x build.sh && ./build.sh"
+    startCommand: "cd backend && gunicorn app:app --timeout 120 --bind 0.0.0.0:$PORT"
     disk:
       name: uploads
-      mountPath: /opt/render/project/src/uploads
+      mountPath: /opt/render/project/src/backend/uploads
       sizeGB: 1
     envVars:
       - key: PYTHON_VERSION

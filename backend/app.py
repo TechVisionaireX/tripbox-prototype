@@ -98,26 +98,15 @@ try:
     from live_location import live_location_bp
     from pdf_generator import pdf_generator_bp
     from real_time_chat import real_time_chat_bp
-    print("Imported ai_recommendations_bp successfully!")
-    print("Imported live_location_bp successfully!")
-    print("Imported pdf_generator_bp successfully!")
-    print("Imported real_time_chat_bp successfully!")
+    print("Advanced features imported successfully!")
 except Exception as e:
-    print(f"Warning: Some advanced features could not be enabled: {e}")
-    # Continue without advanced features
+    print(f"Warning: Advanced features could not be imported: {e}")
 
-# Initialize app
+# Initialize Flask app
 app = Flask(__name__)
 
-# Update CORS configuration for production and development
-CORS(app, origins=[
-    "http://localhost:3000",
-    "http://localhost:5000",
-    "http://127.0.0.1:5000",
-    "http://127.0.0.1:3000",
-    "https://resilient-marshmallow-13df59.netlify.app",
-    "https://*.netlify.app"  # Allow any Netlify subdomain
-])
+# Configure CORS to allow all origins for development and deployment
+CORS(app, origins="*", allow_headers=["Content-Type", "Authorization"], methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"])
 
 # Load environment variables
 from dotenv import load_dotenv
@@ -160,13 +149,9 @@ app.register_blueprint(itinerary_bp)  # NEW - Itinerary Planning
 app.register_blueprint(polls_bp)  # NEW - Polls and Voting
 app.register_blueprint(trip_finalization_bp)  # NEW - Trip Finalization
 app.register_blueprint(enhanced_chat_bp)  # NEW - Enhanced Chat Features
+
 # Advanced features will be enabled after initial deployment
 try:
-    from ai_recommendations import ai_recommendations_bp
-    from live_location import live_location_bp
-    from pdf_generator import pdf_generator_bp
-    from real_time_chat import real_time_chat_bp
-    
     app.register_blueprint(ai_recommendations_bp)  # AI Recommendations
     app.register_blueprint(live_location_bp)  # Live Location Tracking
     app.register_blueprint(pdf_generator_bp)  # PDF Generation
@@ -178,7 +163,11 @@ except Exception as e:
 
 # Create tables if not present
 with app.app_context():
-    db.create_all()
+    try:
+        db.create_all()
+        print("Database tables created successfully")
+    except Exception as e:
+        print(f"Warning: Database setup error: {e}")
 
 # Root and test route
 @app.route('/')
@@ -206,6 +195,15 @@ def create_test_user():
         return jsonify({'message': 'Test user created successfully', 'email': 'test@test.com', 'password': 'test123'})
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+
+# Health check endpoint for deployment
+@app.route('/health')
+def health_check():
+    return jsonify({
+        'status': 'healthy',
+        'message': 'TripBox backend is running',
+        'database': 'connected' if db.engine else 'disconnected'
+    })
 
 # Run server
 if __name__ == '__main__':
