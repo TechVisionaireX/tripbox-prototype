@@ -139,7 +139,18 @@ app.register_blueprint(location_bp)  #  NEW
 
 # Create tables if not present
 with app.app_context():
-    db.create_all()
+    try:
+        db.create_all()
+        print("✅ Database tables created successfully")
+        
+        # Test database connection
+        from models import User
+        user_count = User.query.count()
+        print(f"✅ Database connected - {user_count} users found")
+        
+    except Exception as e:
+        print(f"❌ Database initialization error: {str(e)}")
+        raise e
 
 # Root and test route
 @app.route('/')
