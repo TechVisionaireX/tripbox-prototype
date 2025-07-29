@@ -2,9 +2,7 @@ from flask import Flask, jsonify, request, send_from_directory, send_file
 from flask_cors import CORS
 from flask_jwt_extended import JWTManager
 # NOTE: Remove local SQLAlchemy and Bcrypt instances – we will use the shared ones
-# Standard libs
 import os
-from pathlib import Path
 from dotenv import load_dotenv
 
 # Load environment variables
@@ -26,20 +24,16 @@ CORS(app, origins=[
     "file://"  # Allow file:// protocol for local HTML files
 ], supports_credentials=True, allow_headers=["Content-Type", "Authorization"])
 
-# Build absolute path to the instance directory (so gunicorn workers & Render see the same path)
-BASE_DIR = Path(__file__).resolve().parent
-INSTANCE_DIR = BASE_DIR / 'instance'
-INSTANCE_DIR.mkdir(parents=True, exist_ok=True)
+# Ensure instance directory exists
+os.makedirs('instance', exist_ok=True)
 
 # Configurations
 if os.environ.get('FLASK_ENV') == 'production':
-    env_db = os.environ.get('DATABASE_URL')
-    if env_db:
-        database_url = env_db
-    else:
-        database_url = f"sqlite:///{INSTANCE_DIR / 'tripbox.db'}"
+    database_url = os.environ.get('DATABASE_URL', 'sqlite:///instance/tripbox.db')
+    if database_url.startswith('postgres://'):
+        database_url = database_url.replace('postgres://', 'postgresql://', 1)
 else:
-    database_url = f"sqlite:///{INSTANCE_DIR / 'tripbox.db'}"
+    database_url = 'sqlite:///instance/tripbox.db'
 
 app.config['SQLALCHEMY_DATABASE_URI'] = database_url
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
