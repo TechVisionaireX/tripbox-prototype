@@ -70,26 +70,27 @@ for module_name, blueprint_name in blueprints_to_try:
     except Exception as e:
         print(f"⚠️ Failed to register {blueprint_name}: {e}")
 
-# Create tables if not present
-with app.app_context():
-    try:
-        db.create_all()
-        print("✅ Database tables created successfully")
-        
-        # Create test user if it doesn't exist
-        test_user = User.query.filter_by(email='test@test.com').first()
-        if not test_user:
-            hashed_password = bcrypt.generate_password_hash('test123').decode('utf-8')
-            test_user = User(email='test@test.com', password=hashed_password, name='Test User')
-            db.session.add(test_user)
-            db.session.commit()
-            print("✅ Test user created successfully")
-        else:
-            print("✅ Test user already exists")
+# Create tables if not present (only if running directly, not with gunicorn)
+if __name__ == '__main__':
+    with app.app_context():
+        try:
+            db.create_all()
+            print("✅ Database tables created successfully")
             
-    except Exception as e:
-        print(f"⚠️ Warning: Database setup error: {e}")
-        print("🔄 Continuing without database initialization...")
+            # Create test user if it doesn't exist
+            test_user = User.query.filter_by(email='test@test.com').first()
+            if not test_user:
+                hashed_password = bcrypt.generate_password_hash('test123').decode('utf-8')
+                test_user = User(email='test@test.com', password=hashed_password, name='Test User')
+                db.session.add(test_user)
+                db.session.commit()
+                print("✅ Test user created successfully")
+            else:
+                print("✅ Test user already exists")
+                
+        except Exception as e:
+            print(f"⚠️ Warning: Database setup error: {e}")
+            print("🔄 Continuing without database initialization...")
 
 # API test route
 @app.route('/api/hello')
@@ -155,3 +156,6 @@ if __name__ == '__main__':
     print("📧 Test Login: test@test.com / test123")
     print("🌐 Frontend served from backend at root URL")
     app.run(host="0.0.0.0", port=port, debug=False)
+
+# For Gunicorn deployment
+application = app
