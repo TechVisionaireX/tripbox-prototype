@@ -21,7 +21,6 @@ CORS(app, origins=[
     "http://localhost:3000",
     "http://127.0.0.1:5000", 
     "http://localhost:5000",
-    "https://tripbox-intelliorganizer.onrender.com",
     "https://tripbox-prototype.onrender.com",
     "file://"  # Allow file:// protocol for local HTML files
 ], supports_credentials=True, allow_headers=["Content-Type", "Authorization"])
@@ -30,9 +29,12 @@ CORS(app, origins=[
 os.makedirs('instance', exist_ok=True)
 
 # Configurations
-database_url = os.environ.get('DATABASE_URL', 'sqlite:///instance/tripbox.db')
-if database_url.startswith('postgres://'):
-    database_url = database_url.replace('postgres://', 'postgresql://', 1)
+if os.environ.get('FLASK_ENV') == 'production':
+    database_url = os.environ.get('DATABASE_URL', 'sqlite:///instance/tripbox.db')
+    if database_url.startswith('postgres://'):
+        database_url = database_url.replace('postgres://', 'postgresql://', 1)
+else:
+    database_url = 'sqlite:///instance/tripbox.db'
 
 app.config['SQLALCHEMY_DATABASE_URI'] = database_url
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
@@ -74,7 +76,7 @@ for module_name, blueprint_name in blueprints:
         print(f"⚠️ Failed to register {blueprint_name}: {e}")
 
 # Create tables if not present (only if running directly, not with gunicorn)
-if __name__ == '__main__':
+def init_db():
     with app.app_context():
         try:
             db.create_all()
@@ -94,6 +96,9 @@ if __name__ == '__main__':
         except Exception as e:
             print(f"⚠️ Warning: Database setup error: {e}")
             print("🔄 Continuing without database initialization...")
+
+# Initialize database
+init_db()
 
 # API test route
 @app.route('/api/hello')
