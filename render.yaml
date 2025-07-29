@@ -3,11 +3,14 @@ services:
     name: tripbox-intelliorganizer
     env: python
     buildCommand: |
+      pip install --upgrade pip
       cd backend
       pip install -r requirements.txt
-    startCommand: cd backend && gunicorn app:app --bind 0.0.0.0:$PORT
+    startCommand: cd backend && gunicorn app:app --bind 0.0.0.0:$PORT --workers 1 --timeout 120
     envVars:
       - key: FLASK_ENV
         value: production
       - key: JWT_SECRET_KEY
-        generateValue: true 
+        generateValue: true
+      - key: PYTHON_VERSION
+        value: "3.10.12" 

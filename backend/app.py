@@ -1,13 +1,25 @@
-from flask import Flask, jsonify, request, send_from_directory, send_file
+from flask import Flask, jsonify, request, send_from_directory
 from flask_cors import CORS
 from flask_jwt_extended import JWTManager
-from models import db, User
-from auth import auth_bp, bcrypt
 import os
-from dotenv import load_dotenv
 
-# Load environment variables
-load_dotenv()
+# Try to import modules with error handling
+try:
+    from models import db, User
+    from auth import auth_bp, bcrypt
+    models_available = True
+except ImportError as e:
+    print(f"Warning: Could not import models/auth: {e}")
+    models_available = False
+    db = None
+    auth_bp = None
+    bcrypt = None
+
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except ImportError:
+    print("Warning: python-dotenv not available")
 
 # Create Flask app
 app = Flask(__name__)
@@ -33,40 +45,53 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['JWT_SECRET_KEY'] = os.environ.get('JWT_SECRET_KEY', 'your_secret_key_here')
 
 # Initialize extensions
-db.init_app(app)
-bcrypt.init_app(app)
 jwt = JWTManager(app)
 
-# Register auth blueprint
-app.register_blueprint(auth_bp)
-
-# Create tables
-with app.app_context():
-    try:
-        db.create_all()
-        print("Database tables created successfully")
-        
-        # Create test user if it doesn't exist
-        test_user = User.query.filter_by(email='test@test.com').first()
-        if not test_user:
-            hashed_password = bcrypt.generate_password_hash('test123').decode('utf-8')
-            test_user = User(email='test@test.com', password=hashed_password, name='Test User')
-            db.session.add(test_user)
-            db.session.commit()
-            print("Test user created successfully")
-    except Exception as e:
-        print(f"Database setup error: {e}")
+if models_available and db:
+    db.init_app(app)
+    bcrypt.init_app(app)
+    
+    # Register auth blueprint
+    app.register_blueprint(auth_bp)
+    
+    # Create tables
+    with app.app_context():
+        try:
+            db.create_all()
+            print("Database tables created successfully")
+            
+            # Create test user if it doesn't exist
+            test_user = User.query.filter_by(email='test@test.com').first()
+            if not test_user:
+                hashed_password = bcrypt.generate_password_hash('test123').decode('utf-8')
+                test_user = User(email='test@test.com', password=hashed_password, name='Test User')
+                db.session.add(test_user)
+                db.session.commit()
+                print("Test user created successfully")
+        except Exception as e:
+            print(f"Database setup error: {e}")
+else:
+    print("Running in minimal mode without database")
 
 # API routes
 @app.route('/api/hello')
 def hello():
-    return jsonify(message="TripBox backend is running!")
+    return jsonify(message="TripBox backend is running!", version="1.0.0")
 
 @app.route('/health')
 def health_check():
     return jsonify({
         'status': 'healthy',
-        'message': 'TripBox backend is running'
+        'message': 'TripBox backend is running',
+        'database': 'connected' if models_available else 'minimal_mode'
+    })
+
+@app.route('/api/test')
+def test_endpoint():
+    return jsonify({
+        'success': True,
+        'message': 'Backend is working properly',
+        'timestamp': str(os.environ.get('PORT', '5000'))
     })
 
 # Frontend serving routes
