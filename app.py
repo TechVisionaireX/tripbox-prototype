@@ -5,10 +5,19 @@ import sys
 import os
 
 # Add backend directory to Python path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'backend'))
+backend_path = os.path.join(os.path.dirname(__file__), 'backend')
+if backend_path not in sys.path:
+    sys.path.insert(0, backend_path)
 
-from backend.models import db, User
-from backend.auth import auth_bp, bcrypt
+# Import from backend modules
+try:
+    from models import db, User
+    from auth import auth_bp, bcrypt
+except ImportError:
+    # Fallback for Render deployment
+    from backend.models import db, User
+    from backend.auth import auth_bp, bcrypt
+
 from dotenv import load_dotenv
 
 # Load environment variables
@@ -68,7 +77,13 @@ blueprints_to_try = [
 
 for module_name, blueprint_name in blueprints_to_try:
     try:
-        module = __import__(f'backend.{module_name}', fromlist=[blueprint_name])
+        # Try direct import first (when backend is in path)
+        try:
+            module = __import__(module_name, fromlist=[blueprint_name])
+        except ImportError:
+            # Fallback to backend.module import
+            module = __import__(f'backend.{module_name}', fromlist=[blueprint_name])
+        
         blueprint = getattr(module, blueprint_name)
         app.register_blueprint(blueprint)
         print(f"✅ {blueprint_name} registered successfully")
