@@ -1,16 +1,33 @@
-from flask import Flask, jsonify, request, send_from_directory, send_file
-from flask_cors import CORS
-from flask_jwt_extended import JWTManager
-from models import db, User
-from auth import auth_bp, bcrypt
 import os
-from dotenv import load_dotenv
+import sys
 
-# Load environment variables
-load_dotenv()
+# Add error handling for imports
+try:
+    from flask import Flask, jsonify, request, send_from_directory, send_file
+    from flask_cors import CORS
+    from flask_jwt_extended import JWTManager
+    print("✅ Flask imports successful")
+except ImportError as e:
+    print(f"❌ Flask import error: {e}")
+    sys.exit(1)
+
+try:
+    from models import db, User
+    from auth import auth_bp, bcrypt
+    print("✅ Local imports successful")
+except ImportError as e:
+    print(f"❌ Local import error: {e}")
+    sys.exit(1)
+
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except ImportError:
+    print("⚠️ python-dotenv not available, continuing without .env")
 
 # Create Flask app
 app = Flask(__name__)
+print("✅ Flask app created")
 
 # Configure CORS for all origins in development
 CORS(app, origins=[
@@ -30,12 +47,19 @@ if database_url.startswith('postgres://'):
 
 app.config['SQLALCHEMY_DATABASE_URI'] = database_url
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-app.config['JWT_SECRET_KEY'] = os.environ.get('JWT_SECRET_KEY', 'your_secret_key_here')
+app.config['JWT_SECRET_KEY'] = os.environ.get('JWT_SECRET_KEY', 'fallback-secret-key-for-development')
+
+print(f"✅ Database URL: {database_url}")
 
 # Initialize extensions
-db.init_app(app)
-bcrypt.init_app(app)
-jwt = JWTManager(app)
+try:
+    db.init_app(app)
+    bcrypt.init_app(app)
+    jwt = JWTManager(app)
+    print("✅ Extensions initialized")
+except Exception as e:
+    print(f"❌ Extension initialization error: {e}")
+    sys.exit(1)
 
 # Register only the auth blueprint (core functionality)
 try:
@@ -58,7 +82,7 @@ def health_check():
     try:
         # Test database connection
         with db.engine.connect() as connection:
-            connection.execute(db.text("SELECT 1"))
+            result = connection.execute(db.text("SELECT 1"))
         return jsonify({"status": "healthy", "database": "connected"})
     except Exception as e:
         return jsonify({"status": "unhealthy", "error": str(e)}), 500
@@ -68,10 +92,11 @@ def hello():
     return jsonify({"message": "Hello from TripBox API!"})
 
 # Create tables and test user when app starts
-with app.app_context():
-    try:
+try:
+    with app.app_context():
         # Ensure instance directory exists
         os.makedirs('instance', exist_ok=True)
+        print("✅ Instance directory created")
         
         # Create all tables
         db.create_all()
@@ -88,12 +113,13 @@ with app.app_context():
         else:
             print("✅ Test user already exists")
             
-    except Exception as e:
-        print(f"⚠️ Warning during database setup: {e}")
+except Exception as e:
+    print(f"⚠️ Warning during database setup: {e}")
 
 # For Gunicorn
 application = app
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
+    print(f"🚀 Starting server on port {port}")
     app.run(host='0.0.0.0', port=port, debug=False)
