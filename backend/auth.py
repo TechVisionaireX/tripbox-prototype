@@ -28,7 +28,7 @@ def login():
     password = data.get('password')
     user = User.query.filter_by(email=email).first()
     if user and bcrypt.check_password_hash(user.password, password):
-        access_token = create_access_token(identity=str(user.id), expires_delta=datetime.timedelta(days=1))
+        access_token = create_access_token(identity=str(user.id), expires_delta=datetime.timedelta(days=30))
         return jsonify({'token': access_token, 'user': {'email': user.email, 'name': user.name}})
     else:
         return jsonify({'error': 'Invalid credentials'}), 401
