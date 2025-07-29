@@ -17,23 +17,23 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
-          python-version: '3.10'  
+          python-version: '3.11'  
 
       - name: Install Dependencies
         run: |
           cd backend
           python -m pip install --upgrade pip
-          pip install flask flask-cors
+          pip install -r requirements.txt
 
       - name: Test Import
         run: |
           cd backend
-          python -c "print('Testing basic imports...'); import flask; print('✅ Flask imports successfully')"
+          python -c "print('Testing basic imports...'); import app; print('✅ App imports successfully')"
 
       - name: Run Health Check
         run: |
           cd backend
-          python -c "print('✅ Backend setup completed')"
+          python -c "from app import app; print('✅ App created successfully')"
 
       - name: Trigger Render Deployment
         if: github.ref == 'refs/heads/main'

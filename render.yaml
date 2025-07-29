@@ -7,12 +7,16 @@ services:
   - type: web
     name: tripbox-prototype
     env: python
+    runtime: python-3.10.0
     buildCommand: |
       cd backend
       python --version
-      pip install flask flask-cors
-      echo "✅ Build completed"
+      pip install --upgrade pip
+      pip install flask flask-cors gunicorn
+      echo "✅ Minimal build completed successfully"
     startCommand: "cd backend && python super_minimal.py"
     envVars:
       - key: FLASK_ENV
-        value: "production" 
+        value: "production"
+      - key: PORT
+        value: "5000" 
