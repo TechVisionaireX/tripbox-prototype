@@ -9,12 +9,12 @@ services:
     env: python
     buildCommand: |
       cd backend
-      chmod +x build.sh
-      ./build.sh
-    startCommand: "cd backend && gunicorn app:application --bind 0.0.0.0:$PORT --workers 1 --timeout 120 --log-level info"
+      pip install -r requirements.txt
+      mkdir -p instance
+    startCommand: "cd backend && gunicorn app:application --bind 0.0.0.0:$PORT --workers 1 --timeout 120"
     envVars:
       - key: PYTHON_VERSION
-        value: "3.10"
+        value: "3.11.0"
       - key: FLASK_ENV
         value: "production"
       - key: DATABASE_URL
