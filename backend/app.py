@@ -1,4 +1,4 @@
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, request, send_from_directory, send_file
 from flask_cors import CORS
 from flask_jwt_extended import JWTManager
 from models import db, User
@@ -12,13 +12,15 @@ load_dotenv()
 # Create Flask app
 app = Flask(__name__)
 
-# Configure CORS for production
+# Configure CORS for all origins in development
 CORS(app, origins=[
     "http://localhost:3000",
     "http://127.0.0.1:5000", 
+    "http://localhost:5000",
     "https://tripbox-intelliorganizer.onrender.com",
-    "https://tripbox-prototype.onrender.com"
-], supports_credentials=True)
+    "https://tripbox-prototype.onrender.com",
+    "file://"  # Allow file:// protocol for local HTML files
+], supports_credentials=True, allow_headers=["Content-Type", "Authorization"])
 
 # Configurations
 database_url = os.environ.get('DATABASE_URL', 'sqlite:///tripbox.db')
@@ -89,11 +91,7 @@ with app.app_context():
         print(f"⚠️ Warning: Database setup error: {e}")
         print("🔄 Continuing without database initialization...")
 
-# Root and test route
-@app.route('/')
-def home():
-    return jsonify(message="TripBox-IntelliOrganizer backend is running!")
-
+# API test route
 @app.route('/api/hello')
 def hello():
     return jsonify(message="TripBox-IntelliOrganizer backend is running!")
@@ -124,6 +122,29 @@ def health_check():
         'message': 'TripBox backend is running',
         'database': 'connected' if db.engine else 'disconnected'
     })
+
+# Frontend serving routes
+@app.route('/')
+def serve_frontend():
+    """Serve the main frontend page"""
+    frontend_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'frontend')
+    return send_from_directory(frontend_path, 'index.html')
+
+@app.route('/<path:filename>')
+def serve_frontend_files(filename):
+    """Serve frontend static files"""
+    frontend_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'frontend')
+    
+    # Handle common frontend routes
+    if filename in ['dashboard', 'features', 'advanced-features']:
+        return send_from_directory(frontend_path, f'{filename}.html')
+    
+    # Try to serve the requested file
+    try:
+        return send_from_directory(frontend_path, filename)
+    except:
+        # If file not found, serve index.html for SPA behavior
+        return send_from_directory(frontend_path, 'index.html')
 
 # Run server
 if __name__ == '__main__':
