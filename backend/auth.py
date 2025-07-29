@@ -33,10 +33,24 @@ def login():
     if user and bcrypt.check_password_hash(user.password, password):
         access_token = create_access_token(identity=str(user.id), expires_delta=datetime.timedelta(days=1))
         print(f"Login successful for user: {user.name}")
-        return jsonify({'token': access_token, 'user': {'email': user.email, 'name': user.name}})
+        return jsonify({
+            'token': access_token, 
+            'user': {
+                'id': user.id,
+                'email': user.email, 
+                'name': user.name
+            },
+            'message': 'Login successful'
+        })
     else:
         print(f"Login failed for email: {email}")
         return jsonify({'error': 'Invalid credentials'}), 401
+
+@auth_bp.route('/api/test-token', methods=['GET'])
+@jwt_required()
+def test_token():
+    user_id = get_jwt_identity()
+    return jsonify({'message': 'Token is valid', 'user_id': user_id})
 
 @auth_bp.route('/api/validate-token', methods=['GET'])
 @jwt_required()
@@ -47,7 +61,14 @@ def validate_token():
     user = User.query.get(user_id)
     if user:
         print(f"Token valid for user: {user.name}")
-        return jsonify({'valid': True, 'user': {'email': user.email, 'name': user.name}})
+        return jsonify({
+            'valid': True, 
+            'user': {
+                'id': user.id,
+                'email': user.email, 
+                'name': user.name
+            }
+        })
     else:
         print(f"Token invalid - user not found for user_id: {user_id}")
         return jsonify({'valid': False, 'error': 'User not found'}), 401
