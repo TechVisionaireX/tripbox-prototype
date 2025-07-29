@@ -657,6 +657,134 @@
             margin-bottom: 0.5rem;
             color: var(--text-primary);
         }
+
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 2000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(4px);
+        }
+
+        .modal-content {
+            background-color: white;
+            margin: 5% auto;
+            padding: 0;
+            border-radius: var(--border-radius-lg);
+            width: 90%;
+            max-width: 600px;
+            box-shadow: var(--shadow-strong);
+            animation: modalSlideIn 0.3s ease-out;
+        }
+
+        @keyframes modalSlideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .modal-header {
+            padding: 1.5rem 2rem;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+            color: white;
+            border-radius: var(--border-radius-lg) var(--border-radius-lg) 0 0;
+        }
+
+        .modal-header h3 {
+            margin: 0;
+            font-size: 1.25rem;
+            font-weight: 600;
+        }
+
+        .close {
+            font-size: 1.5rem;
+            cursor: pointer;
+            background: none;
+            border: none;
+            color: white;
+            opacity: 0.8;
+            transition: opacity 0.2s;
+        }
+
+        .close:hover {
+            opacity: 1;
+        }
+
+        .modal-body {
+            padding: 2rem;
+            max-height: 70vh;
+            overflow-y: auto;
+        }
+
+        .add-member-section, .current-members-section {
+            margin-bottom: 2rem;
+        }
+
+        .add-member-section h4, .current-members-section h4 {
+            margin-bottom: 1rem;
+            color: var(--text-primary);
+            font-size: 1.1rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .member-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem;
+            background: var(--bg-secondary);
+            border-radius: var(--border-radius);
+            margin-bottom: 0.5rem;
+            border: 1px solid var(--border-color);
+        }
+
+        .member-info {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .member-name {
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .member-email {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+        }
+
+        .member-role {
+            display: inline-block;
+            padding: 0.25rem 0.5rem;
+            background: var(--primary-color);
+            color: white;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+
+        .loading-spinner {
+            text-align: center;
+            padding: 2rem;
+            color: var(--text-secondary);
+        }
     </style>
 </head>
 <body>
@@ -933,6 +1061,41 @@
         </section>
     </main>
 
+    <!-- Member Management Modal -->
+    <div id="memberModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modalTripName">Manage Trip Members</h3>
+                <span class="close" onclick="closeMemberModal()">&times;</span>
+            </div>
+            <div class="modal-body">
+                <!-- Add Member Section -->
+                <div class="add-member-section">
+                    <h4><i class="fas fa-user-plus"></i> Add New Member</h4>
+                    <form id="addMemberForm">
+                        <div class="form-group">
+                            <label for="memberEmail">Member Email</label>
+                            <input type="email" id="memberEmail" placeholder="friend@example.com" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-plus"></i>
+                            Add Member
+                        </button>
+                    </form>
+                    <div id="addMemberMessage" class="message" style="display: none;"></div>
+                </div>
+
+                <!-- Current Members Section -->
+                <div class="current-members-section">
+                    <h4><i class="fas fa-users"></i> Current Members</h4>
+                    <div id="membersList">
+                        <div class="loading-spinner">Loading members...</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script>
         // API Configuration
         const API_BASE = 'https://tripbox-intelliorganizer.onrender.com';
@@ -1131,9 +1294,9 @@
                                     <i class="fas fa-edit"></i>
                                     Edit
                                 </button>
-                                <button class="btn btn-secondary btn-sm">
+                                <button class="btn btn-secondary btn-sm" onclick="openMemberModal(${trip.id}, '${trip.name}')">
                                     <i class="fas fa-users"></i>
-                                    Manage Group
+                                    Manage Members
                                 </button>
                                 <button class="btn btn-success btn-sm">
                                     <i class="fas fa-check"></i>
@@ -1212,6 +1375,100 @@
             localStorage.removeItem('user');
             window.location.href = 'index.html';
         }
+
+        // Member Management Functions
+        let currentTripId = null;
+
+        function openMemberModal(tripId, tripName) {
+            currentTripId = tripId;
+            document.getElementById('modalTripName').textContent = `Manage Members - ${tripName}`;
+            document.getElementById('memberModal').style.display = 'block';
+            loadTripMembers(tripId);
+        }
+
+        function closeMemberModal() {
+            document.getElementById('memberModal').style.display = 'none';
+            currentTripId = null;
+            document.getElementById('addMemberForm').reset();
+            document.getElementById('addMemberMessage').style.display = 'none';
+        }
+
+        async function loadTripMembers(tripId) {
+            const membersList = document.getElementById('membersList');
+            membersList.innerHTML = '<div class="loading-spinner">Loading members...</div>';
+            
+            try {
+                const data = await apiCall(`/api/trips/${tripId}/members`);
+                displayMembers(data.members);
+            } catch (error) {
+                console.error('Error loading members:', error);
+                membersList.innerHTML = '<div class="loading-spinner">Error loading members</div>';
+            }
+        }
+
+        function displayMembers(members) {
+            const membersList = document.getElementById('membersList');
+            
+            if (members.length === 0) {
+                membersList.innerHTML = '<div class="loading-spinner">No members yet. Add some!</div>';
+                return;
+            }
+            
+            membersList.innerHTML = members.map(member => `
+                <div class="member-item">
+                    <div class="member-info">
+                        <div class="member-name">${member.name}</div>
+                        <div class="member-email">${member.email}</div>
+                    </div>
+                    <div class="member-role">
+                        ${member.is_owner ? 'Owner' : 'Member'}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Add Member Form Handler
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('addMemberForm').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                
+                if (!currentTripId) return;
+                
+                const email = document.getElementById('memberEmail').value.trim();
+                const submitBtn = e.target.querySelector('button[type="submit"]');
+                
+                try {
+                    submitBtn.disabled = true;
+                    submitBtn.innerHTML = '<span class="loading"></span> Adding...';
+                    
+                    await apiCall(`/api/trips/${currentTripId}/members`, {
+                        method: 'POST',
+                        body: JSON.stringify({ email })
+                    });
+                    
+                    showMessage('addMemberMessage', 'Member added successfully!', 'success');
+                    document.getElementById('memberEmail').value = '';
+                    
+                    // Reload members list
+                    loadTripMembers(currentTripId);
+                    
+                } catch (error) {
+                    console.error('Error adding member:', error);
+                    showMessage('addMemberMessage', error.message || 'Failed to add member', 'error');
+                } finally {
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = '<i class="fas fa-plus"></i> Add Member';
+                }
+            });
+        });
+
+        // Close modal when clicking outside
+        window.addEventListener('click', (event) => {
+            const modal = document.getElementById('memberModal');
+            if (event.target === modal) {
+                closeMemberModal();
+            }
+        });
 
         // Initialize App
         document.addEventListener('DOMContentLoaded', () => {
