@@ -1658,16 +1658,16 @@
     </main>
 
   <script>
-        // API Base URL - Auto-detect local vs production
+        // API Configuration
         const API_BASE = (() => {
-            if (window.location.protocol === 'file:' || 
-                window.location.hostname === 'localhost' || 
-                window.location.hostname === '127.0.0.1') {
-                return 'http://127.0.0.1:5000';
+            // Check if we're in production (Render deployment)
+            if (window.location.hostname.includes('render.com') || window.location.hostname.includes('tripbox-intelliorganizer.onrender.com')) {
+                return 'https://tripbox-intelliorganizer.onrender.com';
             }
-            return 'https://tripbox-backend.onrender.com';
+            // Local development
+            return 'http://127.0.0.1:5000';
         })();
-
+        
         console.log('API_BASE configured as:', API_BASE);
         let currentTrips = [];
 

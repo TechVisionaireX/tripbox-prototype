@@ -1,5 +1,12 @@
 // API Base URL
-const API_BASE = 'https://tripbox-intelliorganizer.onrender.com';
+const API_BASE = (() => {
+    // Check if we're in production (Render deployment)
+    if (window.location.hostname.includes('render.com') || window.location.hostname.includes('tripbox-intelliorganizer.onrender.com')) {
+        return 'https://tripbox-intelliorganizer.onrender.com';
+    }
+    // Local development
+    return 'http://127.0.0.1:5000';
+})();
 
 // Live Location Tracking
 class LiveLocationTracker {
