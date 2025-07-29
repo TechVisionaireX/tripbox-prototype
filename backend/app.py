@@ -1,129 +1,13 @@
-from flask import Flask, jsonify
+from flask import Flask, jsonify, request
 from flask_cors import CORS
 from flask_jwt_extended import JWTManager
 from models import db, User
 from auth import auth_bp, bcrypt
 import os
+from dotenv import load_dotenv
 
-# Import your feature blueprints
-try:
-    from trips import trips_bp
-    print("✅ Imported trips_bp successfully!")
-except Exception as e:
-    print(f"❌ FAILED to import trips_bp: {e}")
-    trips_bp = None
-
-# try:
-#     from groups import groups_bp
-#     print("Imported groups_bp successfully!")
-# except Exception as e:
-#     print("FAILED to import groups_bp:", e)
-
-try:
-    from chat import chat_bp
-    print("✅ Imported chat_bp successfully!")
-except Exception as e:
-    print(f"❌ FAILED to import chat_bp: {e}")
-    chat_bp = None
-
-try:
-    from recommend import recommend_bp
-    print("✅ Imported recommend_bp successfully!")
-except Exception as e:
-    print(f"❌ FAILED to import recommend_bp: {e}")
-    recommend_bp = None
-
-try:
-    from expense import expense_bp
-    print("✅ Imported expense_bp successfully!")
-except Exception as e:
-    print(f"❌ FAILED to import expense_bp: {e}")
-    expense_bp = None
-
-try:
-    from gallery import gallery_bp
-    print("✅ Imported gallery_bp successfully!")
-except Exception as e:
-    print(f"❌ FAILED to import gallery_bp: {e}")
-    gallery_bp = None
-
-try:
-    from checklist import checklist_bp
-    print("✅ Imported checklist_bp successfully!")
-except Exception as e:
-    print(f"❌ FAILED to import checklist_bp: {e}")
-    checklist_bp = None
-
-try:
-    from budget import budget_bp
-    print("✅ Imported budget_bp successfully!")
-except Exception as e:
-    print(f"❌ FAILED to import budget_bp: {e}")
-    budget_bp = None
-
-try:
-    from finalize import finalize_bp
-    print("✅ Imported finalize_bp successfully!")
-except Exception as e:
-    print(f"❌ FAILED to import finalize_bp: {e}")
-    finalize_bp = None
-
-# ✅ NEW: Location Check-in Blueprint
-try:
-    from location import location_bp
-    print("✅ Imported location_bp successfully!")
-except Exception as e:
-    print(f"❌ FAILED to import location_bp: {e}")
-    location_bp = None
-
-# ✅ NEW: Additional Feature Blueprints
-try:
-    from itinerary import itinerary_bp
-    print("✅ Imported itinerary_bp successfully!")
-except Exception as e:
-    print(f"❌ FAILED to import itinerary_bp: {e}")
-    itinerary_bp = None
-
-try:
-    from polls import polls_bp
-    print("✅ Imported polls_bp successfully!")
-except Exception as e:
-    print(f"❌ FAILED to import polls_bp: {e}")
-    polls_bp = None
-
-try:
-    from trip_finalization import trip_finalization_bp
-    print("✅ Imported trip_finalization_bp successfully!")
-except Exception as e:
-    print(f"❌ FAILED to import trip_finalization_bp: {e}")
-    trip_finalization_bp = None
-
-try:
-    from enhanced_chat import enhanced_chat_bp
-    print("✅ Imported enhanced_chat_bp successfully!")
-except Exception as e:
-    print(f"❌ FAILED to import enhanced_chat_bp: {e}")
-    enhanced_chat_bp = None
-
-# Advanced features will be enabled after initial deployment
-try:
-    from ai_recommendations import ai_recommendations_bp
-    from live_location import live_location_bp
-    from pdf_generator import pdf_generator_bp
-    from real_time_chat import real_time_chat_bp
-    
-    if ai_recommendations_bp:
-        app.register_blueprint(ai_recommendations_bp)
-    if live_location_bp:
-        app.register_blueprint(live_location_bp)
-    if pdf_generator_bp:
-        app.register_blueprint(pdf_generator_bp)
-    if real_time_chat_bp:
-        app.register_blueprint(real_time_chat_bp)
-    print("✅ Advanced features enabled successfully")
-except Exception as e:
-    print(f"⚠️ Warning: Advanced features could not be enabled: {e}")
-    # Continue without advanced features
+# Load environment variables
+load_dotenv()
 
 # Create Flask app
 app = Flask(__name__)
@@ -136,12 +20,7 @@ CORS(app, origins=[
     "https://tripbox-prototype.onrender.com"
 ], supports_credentials=True)
 
-# Load environment variables
-from dotenv import load_dotenv
-load_dotenv()
-
 # Configurations
-# Use environment variable for database URL in production, fallback to SQLite for development
 database_url = os.environ.get('DATABASE_URL', 'sqlite:///tripbox.db')
 # Fix for Render's postgres:// URL (needs to be postgresql://)
 if database_url.startswith('postgres://'):
@@ -151,60 +30,43 @@ app.config['SQLALCHEMY_DATABASE_URI'] = database_url
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['JWT_SECRET_KEY'] = os.environ.get('JWT_SECRET_KEY', 'your_secret_key_here')
 
-# API Keys
-app.config['GOOGLE_PLACES_API_KEY'] = os.environ.get('GOOGLE_PLACES_API_KEY')
-app.config['GOOGLE_MAPS_API_KEY'] = os.environ.get('GOOGLE_MAPS_API_KEY')
-app.config['OPENWEATHER_API_KEY'] = os.environ.get('OPENWEATHER_API_KEY')
-app.config['OPENAI_API_KEY'] = os.environ.get('OPENAI_API_KEY')
-
 # Initialize extensions
 db.init_app(app)
 bcrypt.init_app(app)
 jwt = JWTManager(app)
 
-# Register all blueprints
+# Register core blueprints only
 try:
     app.register_blueprint(auth_bp)
-    if trips_bp:
-        app.register_blueprint(trips_bp)
-    if chat_bp:
-        app.register_blueprint(chat_bp)
-    if recommend_bp:
-        app.register_blueprint(recommend_bp)
-    if expense_bp:
-        app.register_blueprint(expense_bp)
-    if gallery_bp:
-        app.register_blueprint(gallery_bp)
-    if checklist_bp:
-        app.register_blueprint(checklist_bp)
-    if budget_bp:
-        app.register_blueprint(budget_bp)
-    if finalize_bp:
-        app.register_blueprint(finalize_bp)
-    if location_bp:
-        app.register_blueprint(location_bp)
-    if itinerary_bp:
-        app.register_blueprint(itinerary_bp)
-    if polls_bp:
-        app.register_blueprint(polls_bp)
-    if trip_finalization_bp:
-        app.register_blueprint(trip_finalization_bp)
-    if enhanced_chat_bp:
-        app.register_blueprint(enhanced_chat_bp)
-    print("✅ Core blueprints registered successfully")
+    print("✅ Auth blueprint registered successfully")
 except Exception as e:
-    print(f"⚠️ Warning: Core blueprint registration error: {e}")
+    print(f"❌ Failed to register auth blueprint: {e}")
 
-# Advanced features will be enabled after initial deployment
-try:
-    app.register_blueprint(ai_recommendations_bp)
-    app.register_blueprint(live_location_bp)
-    app.register_blueprint(pdf_generator_bp)
-    app.register_blueprint(real_time_chat_bp)
-    print("✅ Advanced features enabled successfully")
-except Exception as e:
-    print(f"⚠️ Warning: Advanced features could not be enabled: {e}")
-    # Continue without advanced features
+# Import and register other blueprints with error handling
+blueprints_to_try = [
+    ('trips', 'trips_bp'),
+    ('chat', 'chat_bp'),
+    ('recommend', 'recommend_bp'),
+    ('expense', 'expense_bp'),
+    ('gallery', 'gallery_bp'),
+    ('checklist', 'checklist_bp'),
+    ('budget', 'budget_bp'),
+    ('finalize', 'finalize_bp'),
+    ('location', 'location_bp'),
+    ('itinerary', 'itinerary_bp'),
+    ('polls', 'polls_bp'),
+    ('trip_finalization', 'trip_finalization_bp'),
+    ('enhanced_chat', 'enhanced_chat_bp')
+]
+
+for module_name, blueprint_name in blueprints_to_try:
+    try:
+        module = __import__(module_name)
+        blueprint = getattr(module, blueprint_name)
+        app.register_blueprint(blueprint)
+        print(f"✅ {blueprint_name} registered successfully")
+    except Exception as e:
+        print(f"⚠️ Failed to register {blueprint_name}: {e}")
 
 # Create tables if not present
 with app.app_context():
