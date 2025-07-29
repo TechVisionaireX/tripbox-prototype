@@ -1662,7 +1662,8 @@
         const API_BASE = (() => {
             // Check if we're in production (Render deployment)
             if (window.location.hostname.includes('render.com') || 
-                window.location.hostname.includes('tripbox-intelliorganizer.onrender.com')) {
+                window.location.hostname.includes('tripbox-intelliorganizer.onrender.com') ||
+                window.location.hostname.includes('tripbox-prototype.onrender.com')) {
                 return 'https://tripbox-intelliorganizer.onrender.com';
             }
             // Check if we're on localhost or 127.0.0.1

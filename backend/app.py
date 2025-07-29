@@ -30,7 +30,14 @@ app = Flask(__name__)
 print("✅ Flask app created")
 
 # Configure CORS for all origins in development
-CORS(app, origins="*", supports_credentials=True, allow_headers=["Content-Type", "Authorization"])
+CORS(app, origins=[
+    "http://localhost:3000",
+    "http://127.0.0.1:5000", 
+    "http://localhost:5000",
+    "https://tripbox-intelliorganizer.onrender.com",
+    "https://tripbox-prototype.onrender.com",
+    "file://"  # Allow file:// protocol for local HTML files
+], supports_credentials=True, allow_headers=["Content-Type", "Authorization"])
 
 # Configurations
 database_url = os.environ.get('DATABASE_URL', 'sqlite:///instance/tripbox.db')

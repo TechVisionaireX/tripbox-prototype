@@ -734,8 +734,8 @@
         const API_BASE = (() => {
             // Check if we're in production (Render deployment)
             if (window.location.hostname.includes('render.com') || 
-                window.location.hostname.includes('tripbox-intelliorganizer.onrender.com')) {
-                return 'https://tripbox-intelliorganizer.onrender.com';
+                window.location.hostname.includes('tripbox-prototype.onrender.com')) {
+                return 'https://tripbox-prototype.onrender.com';
             }
             // Check if we're on localhost or 127.0.0.1
             if (window.location.hostname === 'localhost' || 
@@ -744,7 +744,7 @@
                 return 'http://127.0.0.1:5000';
             }
             // Default to production
-            return 'https://tripbox-intelliorganizer.onrender.com';
+            return 'https://tripbox-prototype.onrender.com';
         })();
         
         console.log('API_BASE configured as:', API_BASE);
