@@ -1,11 +1,119 @@
 from flask import Blueprint, request, jsonify
 from flask_jwt_extended import get_jwt_identity, jwt_required
-from models import db, Poll, Group, GroupMember, RecommendationVote, Recommendation
+from models import db, Poll, Group, GroupMember, RecommendationVote, Recommendation, Trip
 import json
 from datetime import datetime, timedelta
 
 polls_bp = Blueprint('polls_bp', __name__)
 
+# Add trip-based poll endpoints
+@polls_bp.route('/api/trips/<int:trip_id>/polls', methods=['GET'])
+@jwt_required()
+def get_trip_polls(trip_id):
+    """Get all polls for a trip"""
+    try:
+        current_user_id = get_jwt_identity()
+        
+        # Check if user owns the trip
+        trip = Trip.query.filter_by(id=trip_id, user_id=current_user_id).first()
+        if not trip:
+            return jsonify({'error': 'Trip not found or access denied'}), 403
+        
+        # Get or create a group for this trip
+        group = Group.query.filter_by(trip_id=trip_id).first()
+        if not group:
+            # Create default group for trip
+            group = Group(
+                name=f"{trip.name} Group",
+                creator_id=current_user_id,
+                trip_id=trip_id
+            )
+            db.session.add(group)
+            
+            # Add user as member
+            member = GroupMember(group_id=group.id, user_id=current_user_id)
+            db.session.add(member)
+            db.session.commit()
+        
+        polls = Poll.query.filter_by(group_id=group.id).order_by(Poll.timestamp.desc()).all()
+        
+        return jsonify({
+            'polls': [{
+                'id': poll.id,
+                'question': poll.question,
+                'options': json.loads(poll.options) if poll.options else [],
+                'votes': json.loads(poll.votes) if poll.votes else {},
+                'is_active': poll.is_active,
+                'multiple_choice': poll.multiple_choice,
+                'timestamp': poll.timestamp.isoformat() if poll.timestamp else None,
+                'expires_at': poll.expires_at.isoformat() if poll.expires_at else None
+            } for poll in polls]
+        })
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@polls_bp.route('/api/trips/<int:trip_id>/polls', methods=['POST'])
+@jwt_required()
+def create_trip_poll(trip_id):
+    """Create new poll for a trip"""
+    try:
+        current_user_id = get_jwt_identity()
+        data = request.get_json()
+        
+        # Check if user owns the trip
+        trip = Trip.query.filter_by(id=trip_id, user_id=current_user_id).first()
+        if not trip:
+            return jsonify({'error': 'Trip not found or access denied'}), 403
+        
+        # Get or create a group for this trip
+        group = Group.query.filter_by(trip_id=trip_id).first()
+        if not group:
+            # Create default group for trip
+            group = Group(
+                name=f"{trip.name} Group",
+                creator_id=current_user_id,
+                trip_id=trip_id
+            )
+            db.session.add(group)
+            db.session.flush()  # Get the ID
+            
+            # Add user as member
+            member = GroupMember(group_id=group.id, user_id=current_user_id)
+            db.session.add(member)
+        
+        # Set expiry date if provided
+        expires_at = None
+        if data.get('expires_in_hours'):
+            expires_at = datetime.utcnow() + timedelta(hours=int(data['expires_in_hours']))
+        
+        poll = Poll(
+            group_id=group.id,
+            user_id=current_user_id,
+            question=data.get('question'),
+            options=json.dumps(data.get('options', [])),
+            votes=json.dumps({}),
+            multiple_choice=data.get('multiple_choice', False),
+            expires_at=expires_at
+        )
+        
+        db.session.add(poll)
+        db.session.commit()
+        
+        return jsonify({
+            'message': 'Poll created successfully',
+            'poll': {
+                'id': poll.id,
+                'question': poll.question,
+                'options': json.loads(poll.options),
+                'votes': {},
+                'is_active': poll.is_active,
+                'multiple_choice': poll.multiple_choice
+            }
+        })
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+# Original group-based endpoints
 @polls_bp.route('/api/groups/<int:group_id>/polls', methods=['GET'])
 @jwt_required()
 def get_polls(group_id):

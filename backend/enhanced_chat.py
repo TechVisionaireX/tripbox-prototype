@@ -1,11 +1,122 @@
 from flask import Blueprint, request, jsonify
 from flask_jwt_extended import get_jwt_identity, jwt_required
-from models import db, EnhancedChatMessage, Group, GroupMember, User, Recommendation, Notification
+from models import db, EnhancedChatMessage, Group, GroupMember, User, Recommendation, Notification, Trip
 import json
 from datetime import datetime
 
 enhanced_chat_bp = Blueprint('enhanced_chat_bp', __name__)
 
+# Trip-based enhanced chat endpoints
+@enhanced_chat_bp.route('/api/trips/<int:trip_id>/enhanced-chat', methods=['GET'])
+@jwt_required()
+def get_trip_enhanced_messages(trip_id):
+    """Get enhanced chat messages for a trip"""
+    try:
+        current_user_id = get_jwt_identity()
+        
+        # Check if user owns the trip
+        trip = Trip.query.filter_by(id=trip_id, user_id=current_user_id).first()
+        if not trip:
+            return jsonify({'error': 'Trip not found or access denied'}), 403
+        
+        # Get or create a group for this trip
+        group = Group.query.filter_by(trip_id=trip_id).first()
+        if not group:
+            # Create default group for trip
+            group = Group(
+                name=f"{trip.name} Group",
+                creator_id=current_user_id,
+                trip_id=trip_id
+            )
+            db.session.add(group)
+            db.session.flush()  # Get the ID
+            
+            # Add user as member
+            member = GroupMember(group_id=group.id, user_id=current_user_id)
+            db.session.add(member)
+            db.session.commit()
+        
+        messages = EnhancedChatMessage.query.filter_by(group_id=group.id).order_by(EnhancedChatMessage.timestamp).all()
+        
+        enhanced_messages = []
+        for message in messages:
+            user = User.query.get(message.user_id)
+            
+            # Parse read_by JSON
+            read_by = json.loads(message.read_by) if message.read_by else []
+            
+            # Parse metadata
+            metadata = json.loads(message.message_metadata) if message.message_metadata else {}
+            
+            enhanced_messages.append({
+                'id': message.id,
+                'user_id': message.user_id,
+                'user_name': user.name if user else 'Unknown',
+                'message': message.message,
+                'message_type': message.message_type,
+                'reply_to_message_id': message.reply_to_message_id,
+                'is_edited': message.is_edited,
+                'edited_at': message.edited_at.isoformat() if message.edited_at else None,
+                'read_by': read_by,
+                'is_read': current_user_id in read_by,
+                'timestamp': message.timestamp.isoformat() if message.timestamp else None,
+                'metadata': metadata
+            })
+        
+        return jsonify({'messages': enhanced_messages})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@enhanced_chat_bp.route('/api/trips/<int:trip_id>/enhanced-chat', methods=['POST'])
+@jwt_required()
+def send_trip_enhanced_message(trip_id):
+    """Send enhanced chat message to a trip"""
+    try:
+        current_user_id = get_jwt_identity()
+        data = request.get_json()
+        
+        # Check if user owns the trip
+        trip = Trip.query.filter_by(id=trip_id, user_id=current_user_id).first()
+        if not trip:
+            return jsonify({'error': 'Trip not found or access denied'}), 403
+        
+        # Get or create a group for this trip
+        group = Group.query.filter_by(trip_id=trip_id).first()
+        if not group:
+            # Create default group for trip
+            group = Group(
+                name=f"{trip.name} Group",
+                creator_id=current_user_id,
+                trip_id=trip_id
+            )
+            db.session.add(group)
+            db.session.flush()  # Get the ID
+            
+            # Add user as member
+            member = GroupMember(group_id=group.id, user_id=current_user_id)
+            db.session.add(member)
+        
+        message = EnhancedChatMessage(
+            group_id=group.id,
+            user_id=current_user_id,
+            message=data.get('message'),
+            message_type=data.get('message_type', 'text'),
+            reply_to_message_id=data.get('reply_to_message_id'),
+            message_metadata=json.dumps(data.get('metadata', {})),
+            read_by=json.dumps([current_user_id])  # Sender has read it
+        )
+        
+        db.session.add(message)
+        db.session.commit()
+        
+        return jsonify({
+            'message': 'Message sent successfully',
+            'message_id': message.id
+        })
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+# Original group-based endpoints
 @enhanced_chat_bp.route('/api/groups/<int:group_id>/enhanced-chat', methods=['GET'])
 @jwt_required()
 def get_enhanced_messages(group_id):
