@@ -1,65 +1,85 @@
 #!/usr/bin/env python3
 """
-Super minimal Flask app for debugging Render deployment
+Super minimal Flask app for debugging Render deployment - ULTRA SIMPLE VERSION
 """
 import os
-import json
-from datetime import datetime
+
+print("🚀 Starting super minimal TripBox backend...")
 
 try:
     from flask import Flask, jsonify, request
-    from flask_cors import CORS
-    print("✅ Flask imports successful")
-except ImportError as e:
+    print("✅ Flask imported successfully")
+except Exception as e:
     print(f"❌ Flask import failed: {e}")
     exit(1)
 
-# Create minimal app
-app = Flask(__name__)
-CORS(app)  # Allow all CORS
+try:
+    from flask_cors import CORS
+    print("✅ CORS imported successfully")
+except Exception as e:
+    print(f"⚠️ CORS import failed, continuing without: {e}")
+    CORS = None
 
-print("✅ Minimal Flask app created")
+# Create the simplest possible Flask app
+app = Flask(__name__)
+
+# Enable CORS if available
+if CORS:
+    CORS(app, origins="*")
+    print("✅ CORS enabled")
+
+print("✅ Flask app created successfully")
 
 @app.route('/')
 def root():
-    return jsonify({
-        "message": "TripBox Minimal API is WORKING!",
-        "status": "healthy",
-        "timestamp": datetime.now().isoformat(),
-        "version": "minimal-1.0"
-    })
+    return {
+        "message": "🎉 TripBox Minimal Backend is WORKING!",
+        "status": "success",
+        "backend": "super-minimal-v2"
+    }
 
 @app.route('/health')
 def health():
-    return jsonify({
+    return {
         "status": "healthy",
-        "message": "Minimal backend is working perfectly",
-        "timestamp": datetime.now().isoformat(),
-        "server": "minimal-backend"
-    })
+        "message": "Backend is working perfectly!",
+        "version": "minimal-v2"
+    }
 
 @app.route('/api/hello')
 def hello():
-    return jsonify({
+    return {
         "message": "Hello from minimal TripBox API!",
-        "status": "success",
-        "timestamp": datetime.now().isoformat()
-    })
+        "status": "working"
+    }
 
-@app.route('/api/login', methods=['POST'])
+@app.route('/api/login', methods=['POST', 'OPTIONS'])
 def login():
+    # Handle CORS preflight
+    if request.method == 'OPTIONS':
+        response = jsonify({'status': 'ok'})
+        response.headers.add('Access-Control-Allow-Origin', '*')
+        response.headers.add('Access-Control-Allow-Headers', 'Content-Type')
+        response.headers.add('Access-Control-Allow-Methods', 'POST')
+        return response
+    
     try:
-        data = request.get_json() or {}
-        email = data.get('email', '')
-        password = data.get('password', '')
+        # Get JSON data safely
+        if request.is_json:
+            data = request.get_json()
+        else:
+            data = {}
+        
+        email = data.get('email', '') if data else ''
+        password = data.get('password', '') if data else ''
         
         print(f"Login attempt - Email: {email}")
         
         # Simple test login
         if email == 'test@test.com' and password == 'test123':
-            return jsonify({
-                "message": "Login successful",
-                "token": "minimal-test-token-123",
+            response = jsonify({
+                "message": "✅ Login successful!",
+                "token": "test-token-12345",
                 "user": {
                     "id": 1,
                     "email": email,
@@ -67,45 +87,33 @@ def login():
                 }
             })
         else:
-            return jsonify({
-                "error": "Invalid credentials"
-            }), 401
-            
+            response = jsonify({
+                "error": "❌ Invalid credentials - use test@test.com / test123"
+            })
+            response.status_code = 401
+        
+        # Add CORS headers
+        response.headers.add('Access-Control-Allow-Origin', '*')
+        return response
+        
     except Exception as e:
         print(f"Login error: {e}")
-        return jsonify({
-            "error": f"Login error: {str(e)}"
-        }), 500
-
-@app.route('/api/register', methods=['POST'])
-def register():
-    try:
-        data = request.get_json() or {}
-        return jsonify({
-            "message": "Registration successful (minimal mode)",
-            "user": data
+        response = jsonify({
+            "error": f"Server error: {str(e)}"
         })
-    except Exception as e:
-        return jsonify({
-            "error": f"Registration error: {str(e)}"
-        }), 500
-
-# For debugging
-@app.route('/debug')
-def debug():
-    return jsonify({
-        "environment": dict(os.environ),
-        "request_headers": dict(request.headers),
-        "app_config": {
-            "debug": app.debug,
-            "testing": app.testing
-        }
-    })
-
-# For Gunicorn
-application = app
+        response.status_code = 500
+        response.headers.add('Access-Control-Allow-Origin', '*')
+        return response
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
-    print(f"🚀 Starting minimal server on port {port}")
-    app.run(host='0.0.0.0', port=port, debug=False) 
+    print(f"🚀 Starting server on port {port}")
+    print(f"🌐 Test login: test@test.com / test123")
+    
+    # Run with the most basic configuration possible
+    app.run(
+        host='0.0.0.0', 
+        port=port, 
+        debug=False,
+        threaded=True
+    ) 
