@@ -1,9 +1,10 @@
 services:
   - type: web
-    name: tripbox-emergency
+    name: tripbox-prototype
     env: python
     buildCommand: |
       cd backend
+      python --version
       pip install flask
-      echo "Build completed"
+      echo "✅ Emergency build completed"
     startCommand: "cd backend && python emergency_minimal.py" 
