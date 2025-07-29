@@ -695,6 +695,10 @@
                         <label for="loginPassword">Password</label>
                         <input type="password" id="loginPassword" required placeholder="••••••••">
                     </div>
+                    <div class="form-group" style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1rem;">
+                        <input type="checkbox" id="rememberMe" style="width: auto; margin: 0;">
+                        <label for="rememberMe" style="margin: 0; font-size: 0.9rem;">Remember me for 30 days</label>
+                    </div>
                     <button type="submit" class="submit-btn">
                         <span class="btn-text">Sign In</span>
                         <span class="loading" style="display: none;"></span>
@@ -729,6 +733,58 @@
     <script>
         // API Base URL
         const API_BASE = 'https://tripbox-intelliorganizer.onrender.com';
+
+        // Check if user is already logged in
+        async function checkExistingAuth() {
+            const accessToken = localStorage.getItem('access_token');
+            const refreshToken = localStorage.getItem('refresh_token');
+            const user = localStorage.getItem('user');
+            
+            if (!accessToken || !refreshToken || !user) {
+                return false;
+            }
+            
+            try {
+                // Try to validate the current token
+                const response = await fetch(`${API_BASE}/api/validate-token`, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${accessToken}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                if (response.ok) {
+                    // User is already logged in, redirect to dashboard
+                    window.location.href = 'dashboard.html';
+                    return true;
+                } else {
+                    // Token might be expired, try to refresh
+                    const refreshResponse = await fetch(`${API_BASE}/api/refresh`, {
+                        method: 'POST',
+                        headers: {
+                            'Authorization': `Bearer ${refreshToken}`,
+                            'Content-Type': 'application/json'
+                        }
+                    });
+                    
+                    if (refreshResponse.ok) {
+                        const data = await refreshResponse.json();
+                        localStorage.setItem('access_token', data.access_token);
+                        if (data.user) {
+                            localStorage.setItem('user', JSON.stringify(data.user));
+                        }
+                        window.location.href = 'dashboard.html';
+                        return true;
+                    }
+                }
+                
+                return false;
+            } catch (error) {
+                console.error('Error checking existing auth:', error);
+                return false;
+            }
+        }
 
         // Auth Toggle Functions
         function showLogin() {
@@ -776,6 +832,7 @@
             
             const email = document.getElementById('loginEmail').value;
             const password = document.getElementById('loginPassword').value;
+            const rememberMe = document.getElementById('rememberMe').checked;
             
             setLoading('loginForm', true);
             
@@ -791,8 +848,19 @@
                 const data = await response.json();
                 
                 if (response.ok) {
-                    localStorage.setItem('token', data.token);
+                    localStorage.setItem('access_token', data.access_token);
+                    localStorage.setItem('refresh_token', data.refresh_token);
                     localStorage.setItem('user', JSON.stringify(data.user));
+                    
+                    // Store remember me preference
+                    if (rememberMe) {
+                        localStorage.setItem('remember_me', 'true');
+                        localStorage.setItem('login_email', email);
+                    } else {
+                        localStorage.removeItem('remember_me');
+                        localStorage.removeItem('login_email');
+                    }
+                    
                     showMessage('loginMessage', 'Login successful! Redirecting...', 'success');
                     setTimeout(() => {
                         window.location.href = 'dashboard.html';
@@ -880,6 +948,20 @@
             .catch(error => {
                 console.error('Backend connection failed:', error);
             });
+
+        // Check if user is already logged in when page loads
+        document.addEventListener('DOMContentLoaded', async () => {
+            await checkExistingAuth();
+            
+            // Pre-fill login form if remember me was enabled
+            const rememberedEmail = localStorage.getItem('login_email');
+            const rememberMe = localStorage.getItem('remember_me');
+            
+            if (rememberedEmail && rememberMe === 'true') {
+                document.getElementById('loginEmail').value = rememberedEmail;
+                document.getElementById('rememberMe').checked = true;
+            }
+        });
     </script>
 </body>
 </html>

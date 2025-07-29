@@ -1,6 +1,6 @@
 from flask import Blueprint, request, jsonify
 from flask_bcrypt import Bcrypt
-from flask_jwt_extended import create_access_token
+from flask_jwt_extended import create_access_token, create_refresh_token, jwt_required, get_jwt_identity
 from models import db, User
 import datetime
 
@@ -32,7 +32,7 @@ def register():
         db.session.add(user)
         db.session.commit()
         
-        print(f"✅ User registered successfully: {email}")  # Debug log
+        print(f"✅ User registered successfully: {email}")
         
         return jsonify({
             'message': 'Registration successful', 
@@ -40,8 +40,8 @@ def register():
         })
         
     except Exception as e:
-        print(f"❌ Registration error: {str(e)}")  # Debug log
-        db.session.rollback()  # Rollback on error
+        print(f"❌ Registration error: {str(e)}")
+        db.session.rollback()
         return jsonify({'error': f'Registration failed: {str(e)}'}), 500
 
 @auth_bp.route('/api/login', methods=['POST'])
@@ -57,33 +57,80 @@ def login():
         
         # Find user
         user = User.query.filter_by(email=email).first()
-        print(f"🔍 Login attempt for: {email}")  # Debug log
+        print(f"🔍 Login attempt for: {email}")
         
         if not user:
-            print(f"❌ User not found: {email}")  # Debug log
+            print(f"❌ User not found: {email}")
             return jsonify({'error': 'No account found with this email. Please register first.'}), 401
         
         # Check password
         if bcrypt.check_password_hash(user.password, password):
-            print(f"✅ Login successful: {email}")  # Debug log
-            access_token = create_access_token(identity=str(user.id), expires_delta=datetime.timedelta(days=30))
+            print(f"✅ Login successful: {email}")
+            
+            # Create both access and refresh tokens
+            access_token = create_access_token(identity=str(user.id), expires_delta=datetime.timedelta(hours=24))
+            refresh_token = create_refresh_token(identity=str(user.id), expires_delta=datetime.timedelta(days=30))
+            
             return jsonify({
-                'token': access_token, 
+                'access_token': access_token,
+                'refresh_token': refresh_token,
                 'user': {'email': user.email, 'name': user.name},
                 'message': 'Login successful'
             })
         else:
-            print(f"❌ Invalid password for: {email}")  # Debug log
+            print(f"❌ Invalid password for: {email}")
             return jsonify({'error': 'Invalid password'}), 401
             
     except Exception as e:
-        print(f"❌ Login error: {str(e)}")  # Debug log
+        print(f"❌ Login error: {str(e)}")
         return jsonify({'error': f'Login failed: {str(e)}'}), 500
 
+@auth_bp.route('/api/refresh', methods=['POST'])
+@jwt_required(refresh=True)
+def refresh():
+    try:
+        current_user_id = get_jwt_identity()
+        user = User.query.get(int(current_user_id))
+        
+        if not user:
+            return jsonify({'error': 'User not found'}), 401
+        
+        # Create new access token
+        new_access_token = create_access_token(identity=str(user.id), expires_delta=datetime.timedelta(hours=24))
+        
+        return jsonify({
+            'access_token': new_access_token,
+            'user': {'email': user.email, 'name': user.name}
+        })
+        
+    except Exception as e:
+        print(f"❌ Token refresh error: {str(e)}")
+        return jsonify({'error': 'Token refresh failed'}), 500
+
 @auth_bp.route('/api/validate-token', methods=['GET'])
+@jwt_required()
 def validate_token():
-    # Always return valid for no-auth mode
-    return jsonify({'valid': True, 'message': 'No authentication required'})
+    try:
+        current_user_id = get_jwt_identity()
+        user = User.query.get(int(current_user_id))
+        
+        if not user:
+            return jsonify({'valid': False, 'error': 'User not found'}), 401
+        
+        return jsonify({
+            'valid': True, 
+            'user': {'email': user.email, 'name': user.name}
+        })
+        
+    except Exception as e:
+        return jsonify({'valid': False, 'error': str(e)}), 401
+
+@auth_bp.route('/api/logout', methods=['POST'])
+@jwt_required()
+def logout():
+    # In a more advanced implementation, you might want to blacklist the token
+    # For now, we'll just return a success response
+    return jsonify({'message': 'Logged out successfully'})
 
 # Debug endpoint to check database status
 @auth_bp.route('/api/debug/users', methods=['GET'])

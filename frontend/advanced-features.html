@@ -689,7 +689,7 @@
         // Get auth headers
         function getAuthHeaders() {
             return {
-                'Authorization': `Bearer ${localStorage.getItem('token')}`,
+                'Authorization': `Bearer ${localStorage.getItem('access_token')}`,
                 'Content-Type': 'application/json'
             };
         }
