@@ -1,24 +1,13 @@
-databases:
-  - name: tripbox-db
-    databaseName: tripbox
-    user: tripbox
-
 services:
   - type: web
     name: tripbox-intelliorganizer
     env: python
     buildCommand: |
+      cd backend
       pip install -r requirements.txt
-      mkdir -p instance
-    startCommand: "gunicorn app:application --bind 0.0.0.0:$PORT --workers 2 --timeout 120"
+    startCommand: cd backend && gunicorn app:app --bind 0.0.0.0:$PORT
     envVars:
-      - key: PYTHON_VERSION
-        value: "3.11.0"
       - key: FLASK_ENV
-        value: "production"
-      - key: DATABASE_URL
-        value: "sqlite:///instance/tripbox.db"
+        value: production
       - key: JWT_SECRET_KEY
-        generateValue: true
-      - key: FLASK_APP
-        value: "app.py" 
+        generateValue: true 
