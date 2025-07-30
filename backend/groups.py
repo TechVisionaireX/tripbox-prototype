@@ -168,7 +168,7 @@ def get_group_members(group_id):
             return jsonify({'error': 'Group not found'}), 404
         
         # Get all members with user info
-        members = db.session.query(GroupMember, User).join(User).filter(
+        members = db.session.query(GroupMember, User).select_from(GroupMember).join(User).filter(
             GroupMember.group_id == group_id
         ).all()
         

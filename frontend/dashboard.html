@@ -2481,7 +2481,10 @@
         // Trip Functions
         async function loadTrips() {
             try {
+                console.log('Loading trips...');
                 currentTrips = await apiCall('/api/trips');
+                console.log('Trips loaded:', currentTrips);
+                console.log('Number of trips:', currentTrips.length);
             } catch (error) {
                 console.error('Error loading trips:', error);
                 showMessage('Error loading trips', 'error');
@@ -2530,17 +2533,23 @@
 
         async function loadAllTrips() {
             try {
+                console.log('Loading all trips...');
                 await loadTrips();
+                console.log('Trips loaded, now displaying...');
                 displayAllTrips();
             } catch (error) {
                 console.error('Error loading trips:', error);
+                showMessage('addTripMessage', 'Failed to load trips. Please try again.', 'error');
             }
         }
 
         function displayAllTrips() {
             const allTripsContainer = document.getElementById('allTrips');
+            console.log('Displaying trips. Current trips:', currentTrips);
+            console.log('Number of trips to display:', currentTrips.length);
             
             if (currentTrips.length === 0) {
+                console.log('No trips to display, showing empty state');
                 allTripsContainer.innerHTML = `
                     <div class="empty-state">
                         <i class="fas fa-route"></i>
@@ -2551,6 +2560,7 @@
                 return;
             }
             
+            console.log('Creating trip cards for', currentTrips.length, 'trips');
             allTripsContainer.innerHTML = currentTrips.map(trip => createTripCard(trip, true)).join('');
         }
 
@@ -2903,7 +2913,7 @@
                 }
 
                 // Check if we have a valid group ID (not trip ID)
-                if (currentGalleryGroupId === currentTrips[0]?.id) {
+                if (!currentGalleryGroupId || currentGalleryGroupId === currentTrips[0]?.id) {
                     showMessage('uploadMessage', 'Please create a trip first to upload photos.', 'error');
                     return;
                 }
