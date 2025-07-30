@@ -1690,6 +1690,130 @@
             box-shadow: var(--shadow-medium);
         }
 
+        /* Chat Styles */
+        .chat-modal .modal-content {
+            max-width: 600px;
+            height: 80vh;
+        }
+
+        .chat-container {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 1rem;
+            background: var(--bg-secondary);
+            border-radius: var(--border-radius);
+            margin-bottom: 1rem;
+            max-height: 400px;
+        }
+
+        .chat-message {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            border-radius: var(--border-radius);
+            max-width: 80%;
+        }
+
+        .chat-message.own-message {
+            background: var(--primary-color);
+            color: white;
+            margin-left: auto;
+        }
+
+        .chat-message.other-message {
+            background: white;
+            border: 1px solid var(--border-color);
+        }
+
+        .message-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.5rem;
+            font-size: 0.8rem;
+            opacity: 0.8;
+        }
+
+        .message-content {
+            word-wrap: break-word;
+        }
+
+        .chat-input-container {
+            padding: 1rem 0;
+        }
+
+        .chat-form {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .chat-form input {
+            flex: 1;
+        }
+
+        /* Chat Notifications Styles */
+        .chat-notifications-list {
+            margin-top: 1rem;
+        }
+
+        .chat-notification-item {
+            background: white;
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius);
+            padding: 1rem;
+            margin-bottom: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: var(--transition);
+        }
+
+        .chat-notification-item:hover {
+            box-shadow: var(--shadow-soft);
+            border-color: var(--primary-color);
+        }
+
+        .notification-content {
+            flex: 1;
+        }
+
+        .notification-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.5rem;
+        }
+
+        .sender-name {
+            font-weight: 600;
+            color: var(--primary-color);
+        }
+
+        .notification-time {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+        }
+
+        .notification-message {
+            font-style: italic;
+            color: var(--text-secondary);
+            margin-bottom: 0.25rem;
+        }
+
+        .notification-group {
+            font-size: 0.8rem;
+            color: var(--text-light);
+        }
+
+        .notification-actions {
+            margin-left: 1rem;
+        }
+
         .member-item {
             display: flex;
             justify-content: space-between;
@@ -1896,6 +2020,24 @@
                             <div class="stat-icon secondary">
                                 <i class="fas fa-camera"></i>
                             </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Chat Notifications Section -->
+                <div class="card">
+                    <div class="card-header">
+                        <h2>
+                            <i class="fas fa-bell"></i>
+                            Chat Notifications
+                        </h2>
+                        <button class="btn btn-secondary btn-sm" onclick="refreshChatNotifications()">
+                            <i class="fas fa-sync-alt"></i> Refresh
+                        </button>
+                    </div>
+                    <div class="card-body">
+                        <div id="chatNotificationsList" class="chat-notifications-list">
+                            <div class="loading-spinner">Loading notifications...</div>
                         </div>
                     </div>
                 </div>
@@ -2460,6 +2602,32 @@
         </div>
     </div>
 
+    <!-- Group Chat Modal -->
+    <div id="groupChatModal" class="modal" style="display: none;">
+        <div class="modal-content chat-modal">
+            <div class="modal-header">
+                <h3 id="modalChatGroupName">Group Chat</h3>
+                <span class="close" onclick="closeGroupChatModal()">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="chat-container">
+                    <div id="chatMessages" class="chat-messages">
+                        <!-- Messages will be loaded here -->
+                    </div>
+                    <div class="chat-input-container">
+                        <form id="chatMessageForm" class="chat-form">
+                            <input type="text" id="chatMessageInput" placeholder="Type your message..." required>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-paper-plane"></i>
+                                Send
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script>
         // API Base URL
         const API_BASE = 'http://localhost:5000';
@@ -2583,6 +2751,7 @@
                 case 'dashboard':
                     loadDashboardData();
                     loadUserTripExpenses();
+                    loadChatNotifications();
                     break;
                 case 'trips':
                     console.log('Loading trips section...');
@@ -3182,6 +3351,179 @@
             await loadUserTripExpenses();
         }
 
+        // Chat Functions
+        let currentChatGroupId = null;
+        let chatNotifications = [];
+
+        async function openGroupChat(groupId, groupName) {
+            currentChatGroupId = groupId;
+            document.getElementById('modalChatGroupName').textContent = `Group Chat - ${groupName}`;
+            document.getElementById('groupChatModal').style.display = 'block';
+            
+            await loadChatMessages(groupId);
+            setupChatMessageForm(groupId);
+        }
+
+        function closeGroupChatModal() {
+            document.getElementById('groupChatModal').style.display = 'none';
+            currentChatGroupId = null;
+        }
+
+        async function loadChatMessages(groupId) {
+            try {
+                const messages = await apiCall(`/api/groups/${groupId}/messages`);
+                displayChatMessages(messages);
+            } catch (error) {
+                console.error('Error loading chat messages:', error);
+                document.getElementById('chatMessages').innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-comments"></i>
+                        <h3>No messages yet</h3>
+                        <p>Start the conversation!</p>
+                    </div>
+                `;
+            }
+        }
+
+        function displayChatMessages(messages) {
+            const container = document.getElementById('chatMessages');
+            
+            if (!messages || messages.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-comments"></i>
+                        <h3>No messages yet</h3>
+                        <p>Start the conversation!</p>
+                    </div>
+                `;
+                return;
+            }
+
+            const messagesHtml = messages.map(message => `
+                <div class="chat-message ${message.sender_id === currentUser.id ? 'own-message' : 'other-message'}">
+                    <div class="message-header">
+                        <span class="sender-name">${message.sender_name}</span>
+                        <span class="message-time">${formatMessageTime(message.timestamp)}</span>
+                    </div>
+                    <div class="message-content">
+                        ${message.content}
+                    </div>
+                </div>
+            `).join('');
+
+            container.innerHTML = messagesHtml;
+            container.scrollTop = container.scrollHeight;
+        }
+
+        function setupChatMessageForm(groupId) {
+            const form = document.getElementById('chatMessageForm');
+            const input = document.getElementById('chatMessageInput');
+            
+            form.onsubmit = async (e) => {
+                e.preventDefault();
+                
+                const message = input.value.trim();
+                if (!message) return;
+                
+                try {
+                    await apiCall(`/api/groups/${groupId}/messages`, {
+                        method: 'POST',
+                        body: JSON.stringify({ content: message })
+                    });
+                    
+                    input.value = '';
+                    await loadChatMessages(groupId);
+                    
+                    // Add to notifications for other users
+                    addChatNotification(currentUser.name, message, groupId);
+                    
+                } catch (error) {
+                    console.error('Error sending message:', error);
+                    showMessage('chatMessage', 'Failed to send message. Please try again.', 'error');
+                }
+            };
+        }
+
+        function formatMessageTime(timestamp) {
+            const date = new Date(timestamp);
+            return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        }
+
+        // Chat Notifications
+        async function loadChatNotifications() {
+            try {
+                const notifications = await apiCall('/api/notifications/chat');
+                chatNotifications = notifications;
+                displayChatNotifications(notifications);
+            } catch (error) {
+                console.error('Error loading chat notifications:', error);
+                document.getElementById('chatNotificationsList').innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-bell"></i>
+                        <h3>No notifications</h3>
+                        <p>You're all caught up!</p>
+                    </div>
+                `;
+            }
+        }
+
+        function displayChatNotifications(notifications) {
+            const container = document.getElementById('chatNotificationsList');
+            
+            if (!notifications || notifications.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-bell"></i>
+                        <h3>No notifications</h3>
+                        <p>You're all caught up!</p>
+                    </div>
+                `;
+                return;
+            }
+
+            const notificationsHtml = notifications.map(notification => `
+                <div class="chat-notification-item">
+                    <div class="notification-content">
+                        <div class="notification-header">
+                            <span class="sender-name">${notification.sender_name}</span>
+                            <span class="notification-time">${formatMessageTime(notification.timestamp)}</span>
+                        </div>
+                        <div class="notification-message">
+                            "${notification.message_preview}"
+                        </div>
+                        <div class="notification-group">
+                            in ${notification.group_name}
+                        </div>
+                    </div>
+                    <div class="notification-actions">
+                        <button class="btn btn-primary btn-sm" onclick="openGroupChat(${notification.group_id}, '${notification.group_name}')">
+                            <i class="fas fa-eye"></i>
+                            View
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+
+            container.innerHTML = notificationsHtml;
+        }
+
+        function addChatNotification(senderName, message, groupId) {
+            const notification = {
+                sender_name: senderName,
+                message_preview: message.length > 30 ? message.substring(0, 30) + '...' : message,
+                timestamp: new Date().toISOString(),
+                group_id: groupId,
+                group_name: 'Group Chat' // This would be fetched from the group
+            };
+            
+            chatNotifications.unshift(notification);
+            displayChatNotifications(chatNotifications);
+        }
+
+        async function refreshChatNotifications() {
+            await loadChatNotifications();
+        }
+
         function resetTripForm() {
             const form = document.getElementById('addTripForm');
             form.reset();
@@ -3393,6 +3735,11 @@
                 });
                 
                 showMessage('addTripMessage', 'Trip deleted successfully!', 'success');
+                
+                // Remove trip from current trips array
+                currentTrips = currentTrips.filter(trip => trip.id !== tripId);
+                
+                // Reload all data
                 await loadTrips();
                 if (document.getElementById('tripsSection').style.display !== 'none') {
                     displayAllTrips();
@@ -3400,6 +3747,8 @@
                 if (document.getElementById('dashboardSection').style.display !== 'none') {
                     displayRecentTrips();
                     await updateDashboardStats();
+                    await loadUserTripExpenses();
+                    await loadChatNotifications();
                 }
             } catch (error) {
                 console.error('Error deleting trip:', error);
@@ -4466,6 +4815,9 @@
                 // Load user trip expenses
                 await loadUserTripExpenses();
                 
+                // Load chat notifications
+                await loadChatNotifications();
+                
                 // Set up periodic token validation
                 setInterval(async () => {
                     const isValid = await validateToken();
@@ -4559,8 +4911,12 @@
                                 <i class="fas fa-eye"></i>
                                 View Details
                             </button>
+                            <button class="btn btn-success btn-sm" onclick="openGroupChat(${group.id}, '${group.name}')">
+                                <i class="fas fa-comments"></i>
+                                Chat
+                            </button>
                             ${group.is_owner ? `
-                                <button class="btn btn-secondary btn-sm" onclick="deleteGroup(${group.id})">
+                                <button class="btn btn-danger btn-sm" onclick="deleteGroup(${group.id})">
                                     <i class="fas fa-trash"></i>
                                     Delete Group
                                 </button>
