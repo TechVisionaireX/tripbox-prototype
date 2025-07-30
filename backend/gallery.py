@@ -101,7 +101,7 @@ def get_group_photos(group_id):
         # Get photos with user information
         photos = db.session.query(Photo, User).join(User).filter(
             Photo.group_id == group_id
-        ).order_by(Photo.upload_date.desc()).all()
+        ).order_by(Photo.id.desc()).all()
         
         result = []
         for photo, user in photos:
@@ -109,10 +109,8 @@ def get_group_photos(group_id):
                 'id': photo.id,
                 'filename': photo.filename,
                 'caption': photo.caption,
-                'upload_date': photo.upload_date.isoformat(),
                 'user_id': photo.user_id,
                 'user_name': user.name,
-                'user_email': user.email,
                 'url': f'/uploads/photos/{photo.filename}'
             })
         

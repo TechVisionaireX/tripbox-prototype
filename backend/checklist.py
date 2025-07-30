@@ -73,7 +73,7 @@ def get_packing_items(group_id):
         items = db.session.query(ChecklistItem, User).join(User).filter(
             ChecklistItem.group_id == group_id,
             ChecklistItem.item_type == 'packing'
-        ).order_by(ChecklistItem.created_date.desc()).all()
+        ).order_by(ChecklistItem.id.desc()).all()
         
         result = []
         for item, user in items:
@@ -106,7 +106,7 @@ def get_todo_items(group_id):
         items = db.session.query(ChecklistItem, User).join(User).filter(
             ChecklistItem.group_id == group_id,
             ChecklistItem.item_type == 'todo'
-        ).order_by(ChecklistItem.created_date.desc()).all()
+        ).order_by(ChecklistItem.id.desc()).all()
         
         result = []
         for item, user in items:
@@ -114,7 +114,6 @@ def get_todo_items(group_id):
                 'id': item.id,
                 'text': item.text,
                 'is_completed': item.is_completed,
-                'created_date': item.created_date.isoformat(),
                 'user_id': item.user_id,
                 'user_name': user.name
             })
@@ -140,7 +139,7 @@ def get_reminder_items(group_id):
         items = db.session.query(ChecklistItem, User).join(User).filter(
             ChecklistItem.group_id == group_id,
             ChecklistItem.item_type == 'reminder'
-        ).order_by(ChecklistItem.created_date.desc()).all()
+        ).order_by(ChecklistItem.id.desc()).all()
         
         result = []
         for item, user in items:
@@ -148,7 +147,6 @@ def get_reminder_items(group_id):
                 'id': item.id,
                 'text': item.text,
                 'is_completed': item.is_completed,
-                'created_date': item.created_date.isoformat(),
                 'user_id': item.user_id,
                 'user_name': user.name
             })
@@ -183,7 +181,7 @@ def toggle_packing_item(item_id):
         items = db.session.query(ChecklistItem, User).join(User).filter(
             ChecklistItem.group_id == item.group_id,
             ChecklistItem.item_type == 'packing'
-        ).order_by(ChecklistItem.created_date.desc()).all()
+        ).order_by(ChecklistItem.id.desc()).all()
         
         result = []
         for updated_item, user in items:
@@ -191,7 +189,6 @@ def toggle_packing_item(item_id):
                 'id': updated_item.id,
                 'text': updated_item.text,
                 'is_completed': updated_item.is_completed,
-                'created_date': updated_item.created_date.isoformat(),
                 'user_id': updated_item.user_id,
                 'user_name': user.name
             })
@@ -226,7 +223,7 @@ def toggle_todo_item(item_id):
         items = db.session.query(ChecklistItem, User).join(User).filter(
             ChecklistItem.group_id == item.group_id,
             ChecklistItem.item_type == 'todo'
-        ).order_by(ChecklistItem.created_date.desc()).all()
+        ).order_by(ChecklistItem.id.desc()).all()
         
         result = []
         for updated_item, user in items:
@@ -234,7 +231,6 @@ def toggle_todo_item(item_id):
                 'id': updated_item.id,
                 'text': updated_item.text,
                 'is_completed': updated_item.is_completed,
-                'created_date': updated_item.created_date.isoformat(),
                 'user_id': updated_item.user_id,
                 'user_name': user.name
             })
@@ -269,7 +265,7 @@ def toggle_reminder_item(item_id):
         items = db.session.query(ChecklistItem, User).join(User).filter(
             ChecklistItem.group_id == item.group_id,
             ChecklistItem.item_type == 'reminder'
-        ).order_by(ChecklistItem.created_date.desc()).all()
+        ).order_by(ChecklistItem.id.desc()).all()
         
         result = []
         for updated_item, user in items:
@@ -277,7 +273,6 @@ def toggle_reminder_item(item_id):
                 'id': updated_item.id,
                 'text': updated_item.text,
                 'is_completed': updated_item.is_completed,
-                'created_date': updated_item.created_date.isoformat(),
                 'user_id': updated_item.user_id,
                 'user_name': user.name
             })
