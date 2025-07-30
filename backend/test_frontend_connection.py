@@ -1,71 +1,123 @@
+#!/usr/bin/env python3
+"""
+Test Frontend Connection Issues
+"""
+
 import requests
 import json
 
-def test_frontend_connection():
-    base_url = 'http://localhost:5000'
+def test_frontend_requests():
+    print("🔍 Testing Frontend Connection Issues")
+    print("📍 Testing against: http://localhost:5000")
     
-    print("Testing frontend-backend connection...")
-    
-    # Test 1: Check if server is running
+    # Test 1: Simulate frontend login request
+    print("\n1. Testing Login Request (Frontend Style)")
     try:
-        response = requests.get(f'{base_url}/')
-        print(f"✅ Server is running (Status: {response.status_code})")
-    except Exception as e:
-        print(f"❌ Server connection failed: {e}")
-        return
-    
-    # Test 2: Login
-    print("\n2. Testing login...")
-    login_data = {
-        'email': 'test@gmail.com',
-        'password': 'password123'
-    }
-    
-    try:
-        login_response = requests.post(f'{base_url}/api/login', json=login_data)
-        if login_response.status_code == 200:
-            login_result = login_response.json()
-            access_token = login_result.get('access_token')
-            print(f"✅ Login successful")
-            
-            # Test 3: Create trip via API
-            print("\n3. Testing trip creation...")
-            trip_data = {
-                'name': 'Frontend Test Trip',
-                'start_date': '2024-01-01',
-                'end_date': '2024-01-05',
-                'description': 'Testing frontend connection'
-            }
-            
-            headers = {
-                'Authorization': f'Bearer {access_token}',
-                'Content-Type': 'application/json'
-            }
-            
-            trip_response = requests.post(f'{base_url}/api/trips', json=trip_data, headers=headers)
-            if trip_response.status_code == 200:
-                print("✅ Trip creation successful!")
-                trip_result = trip_response.json()
-                print(f"   Trip ID: {trip_result.get('trip', {}).get('id')}")
-                print(f"   Group ID: {trip_result.get('group', {}).get('id')}")
-                
-                # Test 4: Get trips
-                print("\n4. Testing get trips...")
-                trips_response = requests.get(f'{base_url}/api/trips', headers=headers)
-                if trips_response.status_code == 200:
-                    trips_result = trips_response.json()
-                    print(f"✅ Retrieved {len(trips_result)} trips")
-                    for trip in trips_result:
-                        print(f"   - {trip.get('name')} (ID: {trip.get('id')})")
-                else:
-                    print(f"❌ Failed to get trips: {trips_response.text}")
-            else:
-                print(f"❌ Trip creation failed: {trip_response.text}")
+        response = requests.post("http://localhost:5000/api/login", 
+                               json={"email": "kk@gmail.com", "password": "kk123"},
+                               headers={"Content-Type": "application/json"},
+                               timeout=10)
+        
+        print(f"📝 Status: {response.status_code}")
+        print(f"📝 Headers: {dict(response.headers)}")
+        
+        if response.status_code == 200:
+            data = response.json()
+            print("✅ Login successful")
+            print(f"📝 Response keys: {list(data.keys())}")
+            return data.get('access_token')
         else:
-            print(f"❌ Login failed: {login_response.text}")
+            print(f"❌ Login failed: {response.text}")
+            return None
+            
+    except requests.exceptions.ConnectionError as e:
+        print(f"❌ Connection Error: {e}")
+        return None
+    except Exception as e:
+        print(f"❌ Error: {e}")
+        return None
+    
+    # Test 2: Test CORS headers
+    print("\n2. Testing CORS Headers")
+    try:
+        response = requests.options("http://localhost:5000/api/login", timeout=5)
+        print(f"📝 CORS Status: {response.status_code}")
+        print(f"📝 CORS Headers: {dict(response.headers)}")
+        
+        if 'Access-Control-Allow-Origin' in response.headers:
+            print("✅ CORS headers present")
+        else:
+            print("❌ CORS headers missing")
             
     except Exception as e:
-        print(f"❌ Error during testing: {e}")
+        print(f"❌ CORS test error: {e}")
+    
+    # Test 3: Test with different origins
+    print("\n3. Testing Different Origins")
+    origins_to_test = [
+        "http://localhost:3000",
+        "http://127.0.0.1:3000", 
+        "http://localhost:8000",
+        "file://"
+    ]
+    
+    for origin in origins_to_test:
+        try:
+            response = requests.post("http://localhost:5000/api/login", 
+                                   json={"email": "kk@gmail.com", "password": "kk123"},
+                                   headers={
+                                       "Content-Type": "application/json",
+                                       "Origin": origin
+                                   },
+                                   timeout=5)
+            print(f"📝 Origin {origin}: Status {response.status_code}")
+        except Exception as e:
+            print(f"📝 Origin {origin}: Error {e}")
+
+def test_browser_simulation():
+    print("\n" + "="*50)
+    print("🌐 BROWSER SIMULATION")
+    print("="*50)
+    
+    # Simulate browser fetch request
+    print("\n4. Simulating Browser Fetch Request")
+    try:
+        response = requests.post("http://localhost:5000/api/login", 
+                               json={"email": "kk@gmail.com", "password": "kk123"},
+                               headers={
+                                   "Content-Type": "application/json",
+                                   "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+                                   "Accept": "application/json",
+                                   "Accept-Language": "en-US,en;q=0.9",
+                                   "Accept-Encoding": "gzip, deflate, br",
+                                   "Connection": "keep-alive"
+                               },
+                               timeout=10)
+        
+        print(f"📝 Browser Simulation Status: {response.status_code}")
+        print(f"📝 Response Headers: {dict(response.headers)}")
+        
+        if response.status_code == 200:
+            data = response.json()
+            print("✅ Browser simulation successful")
+            return data.get('access_token')
+        else:
+            print(f"❌ Browser simulation failed: {response.text}")
+            return None
+            
+    except Exception as e:
+        print(f"❌ Browser simulation error: {e}")
+        return None
 
 if __name__ == "__main__":
-    test_frontend_connection() 
+    token = test_frontend_requests()
+    if token:
+        print(f"\n✅ Got access token: {token[:20]}...")
+    
+    browser_token = test_browser_simulation()
+    if browser_token:
+        print(f"\n✅ Got browser token: {browser_token[:20]}...")
+    
+    print("\n" + "="*50)
+    print("🎉 FRONTEND CONNECTION TEST COMPLETED!")
+    print("="*50) 
