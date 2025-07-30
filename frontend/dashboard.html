@@ -3689,17 +3689,28 @@
                 return;
             }
 
-            const messagesHtml = messages.map(message => `
-                <div class="chat-message ${message.user_id === currentUser.id ? 'own-message' : 'other-message'}">
-                    <div class="message-header">
-                        <span class="sender-name">${message.sender_name}</span>
-                        <span class="message-time">${formatMessageTime(message.timestamp)}</span>
+            const messagesHtml = messages.map(message => {
+                // Debug logging
+                console.log('Message:', message);
+                console.log('Current user:', currentUser);
+                console.log('Message user_id:', message.user_id);
+                console.log('Current user id:', currentUser?.id);
+                
+                const isOwnMessage = currentUser && message.user_id === currentUser.id;
+                console.log('Is own message:', isOwnMessage);
+                
+                return `
+                    <div class="chat-message ${isOwnMessage ? 'own-message' : 'other-message'}">
+                        <div class="message-header">
+                            <span class="sender-name">${message.sender_name || 'Unknown User'}</span>
+                            <span class="message-time">${formatMessageTime(message.timestamp)}</span>
+                        </div>
+                        <div class="message-content">
+                            ${message.message}
+                        </div>
                     </div>
-                    <div class="message-content">
-                        ${message.message}
-                    </div>
-                </div>
-            `).join('');
+                `;
+            }).join('');
 
             container.innerHTML = messagesHtml;
             container.scrollTop = container.scrollHeight;
@@ -3753,7 +3764,9 @@
         // Chat Notifications
         async function loadChatNotifications() {
             try {
+                console.log('Loading chat notifications...');
                 const notifications = await apiCall('/api/notifications/chat');
+                console.log('Chat notifications received:', notifications);
                 chatNotifications = notifications;
                 displayChatNotifications(notifications);
             } catch (error) {
@@ -3769,10 +3782,12 @@
         }
 
         function displayChatNotifications(notifications) {
+            console.log('Displaying chat notifications:', notifications);
             const container = document.getElementById('chatNotificationsList');
             const notificationCount = document.getElementById('notificationCount');
             
             if (!notifications || notifications.length === 0) {
+                console.log('No notifications to display');
                 container.innerHTML = `
                     <div class="empty-state">
                         <i class="fas fa-bell"></i>
@@ -3841,6 +3856,16 @@
             setTimeout(() => {
                 loadChatNotifications();
             }, 1000);
+        }
+
+        // Debug function to check current user
+        function debugCurrentUser() {
+            console.log('=== Current User Debug ===');
+            console.log('currentUser:', currentUser);
+            console.log('currentUser.id:', currentUser?.id);
+            console.log('currentUser.name:', currentUser?.name);
+            console.log('localStorage user:', localStorage.getItem('user'));
+            console.log('=======================');
         }
 
         // Polls Functions
@@ -5450,7 +5475,11 @@
 
         // Initialize App
         document.addEventListener('DOMContentLoaded', async () => {
+            console.log('Dashboard initialization started');
             if (await checkAuth()) {
+                console.log('Authentication successful, current user:', currentUser);
+                debugCurrentUser();
+                
                 // Load trips first
                 try {
                     await loadTrips();
