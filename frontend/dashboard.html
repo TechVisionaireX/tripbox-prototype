@@ -2115,6 +2115,7 @@
                     loadDashboardData();
                     break;
                 case 'trips':
+                    console.log('Loading trips section...');
                     loadAllTrips();
                     break;
                 case 'groups':
@@ -2605,6 +2606,23 @@
             }
         }
 
+        async function refreshTrips() {
+            console.log('Forcing trip refresh...');
+            try {
+                await loadTrips();
+                console.log('Trips refreshed:', currentTrips);
+                if (document.getElementById('tripsSection').style.display !== 'none') {
+                    displayAllTrips();
+                }
+                if (document.getElementById('dashboardSection').style.display !== 'none') {
+                    displayRecentTrips();
+                    await updateDashboardStats();
+                }
+            } catch (error) {
+                console.error('Error refreshing trips:', error);
+            }
+        }
+
         function displayAllTrips() {
             const allTripsContainer = document.getElementById('allTrips');
             console.log('Displaying trips. Current trips:', currentTrips);
@@ -2645,7 +2663,7 @@
                         <div class="trip-description">
                             ${trip.description || 'No description provided'}
                         </div>
-                        ${showActions && trip.is_owner !== false ? `
+                        ${showActions ? `
                             <div class="trip-actions">
                                 ${trip.is_owner ? `
                                     <button class="btn btn-primary btn-sm" onclick="editTrip(${trip.id}, '${trip.name}', '${trip.start_date}', '${trip.end_date}', '${trip.description || ''}')">
@@ -3384,6 +3402,14 @@
         // Initialize App
         document.addEventListener('DOMContentLoaded', async () => {
             if (await checkAuth()) {
+                // Load trips first
+                try {
+                    await loadTrips();
+                    console.log('Trips loaded during initialization:', currentTrips);
+                } catch (error) {
+                    console.error('Error loading trips during initialization:', error);
+                }
+                
                 // Show dashboard section initially
                 showSection('dashboard');
                 
