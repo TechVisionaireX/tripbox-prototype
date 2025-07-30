@@ -404,12 +404,15 @@
             overflow: hidden;
             transition: var(--transition);
             position: relative;
+            cursor: pointer;
         }
 
         .trip-card:hover {
             transform: translateY(-4px);
             box-shadow: var(--shadow-strong);
         }
+        
+
 
         .trip-card-header {
             padding: 1.5rem;
@@ -2223,6 +2226,8 @@
             }
         }
 
+
+
         // Expense Management Functions
         let currentGroupId = null;
 
@@ -2243,20 +2248,40 @@
                 return;
             }
 
-            // Use the first trip's main group
-            const trip = currentTrips[0];
+            // Try to find a trip with accessible groups
+            let trip = null;
+            let accessibleGroup = null;
+            
+            for (const t of currentTrips) {
+                try {
+                    const groups = await apiCall(`/api/trips/${t.id}/groups`);
+                    if (groups.length > 0) {
+                        // Test if we can access the first group
+                        try {
+                            await apiCall(`/api/groups/${groups[0].id}/expenses/split`);
+                            trip = t;
+                            accessibleGroup = groups[0];
+                            break;
+                        } catch (accessError) {
+                            console.log(`Cannot access group ${groups[0].id} for trip ${t.id}`);
+                            continue;
+                        }
+                    }
+                } catch (error) {
+                    console.log(`Error loading groups for trip ${t.id}:`, error);
+                    continue;
+                }
+            }
+            
+            if (!trip || !accessibleGroup) {
+                showMessage('expenseMessage', 'No accessible trips found. Create a new trip or join an existing one.', 'error');
+                return;
+            }
             
             try {
-                // Get the group for this trip
-                const groups = await apiCall(`/api/trips/${trip.id}/groups`);
-                if (groups.length > 0) {
-                    currentGroupId = groups[0].id; // Use the first group
-                    console.log('Using group ID:', currentGroupId);
-                } else {
-                    // Fallback: try using trip ID as group ID (for backward compatibility)
-                    console.log('No groups found, trying trip ID as group ID');
-                    currentGroupId = trip.id;
-                }
+                // Use the accessible group we found
+                currentGroupId = accessibleGroup.id;
+                console.log('Using accessible group ID:', currentGroupId);
 
                 // Load expense summary
                 await loadExpenseSummary();
@@ -2264,17 +2289,7 @@
                 await loadExpensesList();
             } catch (error) {
                 console.error('Error loading expenses:', error);
-                // Fallback: try using trip ID as group ID
-                console.log('Falling back to using trip ID as group ID');
-                currentGroupId = trip.id;
-                
-                try {
-                    await loadExpenseSummary();
-                    await loadExpensesList();
-                } catch (fallbackError) {
-                    console.error('Fallback also failed:', fallbackError);
-                    showMessage('expenseMessage', 'Failed to load expenses. Please try again.', 'error');
-                }
+                showMessage('expenseMessage', 'Failed to load expenses. Please try again.', 'error');
             }
         }
 
@@ -2581,7 +2596,7 @@
             const roleDisplay = trip.role ? `<span class="trip-role ${trip.is_owner ? 'owner' : 'member'}">${trip.role}</span>` : '';
             
             return `
-                <div class="trip-card slide-in-up">
+                <div class="trip-card slide-in-up" data-trip-id="${trip.id}">
                     <div class="trip-card-header">
                         <div class="trip-title">
                             ${trip.name}
@@ -2654,12 +2669,29 @@
                     delete e.target.dataset.editTripId;
                 } else {
                     // Create new trip
-                await apiCall('/api/trips', {
-                    method: 'POST',
-                    body: JSON.stringify(formData)
-                });
-                
-                showMessage('addTripMessage', 'Trip created successfully!', 'success');
+                    const tripResponse = await apiCall('/api/trips', {
+                        method: 'POST',
+                        body: JSON.stringify(formData)
+                    });
+                    
+                    // Create a default group for the new trip
+                    if (tripResponse && tripResponse.trip_id) {
+                        try {
+                            await apiCall('/api/groups', {
+                                method: 'POST',
+                                body: JSON.stringify({
+                                    name: `${formData.name} Group`,
+                                    trip_id: tripResponse.trip_id
+                                })
+                            });
+                            console.log('Default group created for trip:', tripResponse.trip_id);
+                        } catch (groupError) {
+                            console.error('Failed to create default group:', groupError);
+                            // Continue even if group creation fails
+                        }
+                    }
+                    
+                    showMessage('addTripMessage', 'Trip created successfully!', 'success');
                 }
                 
                 document.getElementById('addTripForm').reset();
@@ -2763,6 +2795,8 @@
                 </div>
             `).join('');
         }
+
+
 
         // Comprehensive data refresh function
         async function refreshAllData() {
@@ -2891,25 +2925,47 @@
                 return;
             }
 
-            const trip = currentTrips[0];
-            try {
-                const groups = await apiCall(`/api/trips/${trip.id}/groups`);
-                if (groups.length > 0) {
-                    currentGalleryGroupId = groups[0].id;
-                    console.log('Using group ID for gallery:', currentGalleryGroupId);
-                    await loadGalleryPhotos();
-                } else {
-                    // If no groups exist, show message to create a group first
-                    console.log('No groups found for gallery');
-                    showMessage('uploadMessage', 'Please create a group first to upload photos.', 'error');
-                    document.getElementById('galleryGrid').innerHTML = `
-                        <div class="empty-state">
-                            <i class="fas fa-users"></i>
-                            <h3>No groups available</h3>
-                            <p>Create a group first to upload photos!</p>
-                        </div>
-                    `;
+            // Try to find a trip with accessible groups
+            let trip = null;
+            let accessibleGroup = null;
+            
+            for (const t of currentTrips) {
+                try {
+                    const groups = await apiCall(`/api/trips/${t.id}/groups`);
+                    if (groups.length > 0) {
+                        // Test if we can access the first group
+                        try {
+                            await apiCall(`/api/groups/${groups[0].id}/photos`);
+                            trip = t;
+                            accessibleGroup = groups[0];
+                            break;
+                        } catch (accessError) {
+                            console.log(`Cannot access group ${groups[0].id} for trip ${t.id}`);
+                            continue;
+                        }
+                    }
+                } catch (error) {
+                    console.log(`Error loading groups for trip ${t.id}:`, error);
+                    continue;
                 }
+            }
+            
+            if (!trip || !accessibleGroup) {
+                showMessage('uploadMessage', 'No accessible trips found. Create a new trip or join an existing one.', 'error');
+                document.getElementById('galleryGrid').innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-users"></i>
+                        <h3>No accessible trips</h3>
+                        <p>Create a new trip or join an existing one to upload photos!</p>
+                    </div>
+                `;
+                return;
+            }
+            try {
+                // Use the accessible group we found
+                currentGalleryGroupId = accessibleGroup.id;
+                console.log('Using accessible group ID for gallery:', currentGalleryGroupId);
+                await loadGalleryPhotos();
             } catch (error) {
                 console.error('Error loading gallery:', error);
                 showMessage('uploadMessage', 'Failed to load gallery. Please try again.', 'error');
@@ -3064,33 +3120,45 @@
                 return;
             }
 
-            const trip = currentTrips[0];
-            try {
-                const groups = await apiCall(`/api/trips/${trip.id}/groups`);
-                if (groups.length > 0) {
-                    // Assuming the first group is the main group for checklists
-                    const groupId = groups[0].id;
-                    await loadPackingItems(groupId);
-                    await loadTodoItems(groupId);
-                    await loadReminderItems(groupId);
-                } else {
-                    // Fallback to trip ID if no groups
-                    const groupId = trip.id;
-                    await loadPackingItems(groupId);
-                    await loadTodoItems(groupId);
-                    await loadReminderItems(groupId);
+            // Try to find a trip with accessible groups
+            let trip = null;
+            let accessibleGroup = null;
+            
+            for (const t of currentTrips) {
+                try {
+                    const groups = await apiCall(`/api/trips/${t.id}/groups`);
+                    if (groups.length > 0) {
+                        // Test if we can access the first group
+                        try {
+                            await apiCall(`/api/groups/${groups[0].id}/packing-items`);
+                            trip = t;
+                            accessibleGroup = groups[0];
+                            break;
+                        } catch (accessError) {
+                            console.log(`Cannot access group ${groups[0].id} for trip ${t.id}`);
+                            continue;
+                        }
+                    }
+                } catch (error) {
+                    console.log(`Error loading groups for trip ${t.id}:`, error);
+                    continue;
                 }
+            }
+            
+            if (!trip || !accessibleGroup) {
+                showMessage('checklistMessage', 'No accessible trips found. Create a new trip or join an existing one.', 'error');
+                return;
+            }
+            try {
+                // Use the accessible group we found
+                const groupId = accessibleGroup.id;
+                console.log('Using accessible group ID for checklists:', groupId);
+                await loadPackingItems(groupId);
+                await loadTodoItems(groupId);
+                await loadReminderItems(groupId);
             } catch (error) {
                 console.error('Error loading checklists:', error);
-                const groupId = trip.id; // Fallback to trip ID
-                try {
-                    await loadPackingItems(groupId);
-                    await loadTodoItems(groupId);
-                    await loadReminderItems(groupId);
-                } catch (fallbackError) {
-                    console.error('Fallback also failed:', fallbackError);
-                    showMessage('checklistMessage', 'Failed to load checklists. Please try again.', 'error');
-                }
+                showMessage('checklistMessage', 'Failed to load checklists. Please try again.', 'error');
             }
         }
 
@@ -3251,7 +3319,7 @@
                     
                     // Refresh all data to ensure consistency
                     await refreshAllData();
-
+                    
                 } catch (error) {
                     console.error('Error adding checklist item:', error);
                     let errorMessage = 'Failed to add item. Please try again.';
