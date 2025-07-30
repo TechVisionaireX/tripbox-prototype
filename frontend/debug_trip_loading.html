@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debug Trip Loading</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .success { color: green; }
+        .error { color: red; }
+        .info { color: blue; }
+        .warning { color: orange; }
+        button {
+            padding: 10px 15px;
+            margin: 5px;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        pre {
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 3px;
+            overflow-x: auto;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .trip-card {
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 15px;
+            margin: 10px 0;
+            background: white;
+        }
+        .trip-title {
+            font-weight: bold;
+            font-size: 1.1em;
+            margin-bottom: 5px;
+        }
+        .trip-dates {
+            color: #666;
+            font-size: 0.9em;
+        }
+        .trip-description {
+            margin: 10px 0;
+        }
+        .trip-actions {
+            margin-top: 10px;
+        }
+        .trip-actions button {
+            margin-right: 5px;
+            font-size: 0.9em;
+        }
+    </style>
+</head>
+<body>
+    <h1>Debug Trip Loading</h1>
+    
+    <div class="test-section">
+        <h2>Authentication</h2>
+        <input type="email" id="emailInput" placeholder="Email" value="test@gmail.com" style="padding: 8px; margin: 5px;">
+        <input type="password" id="passwordInput" placeholder="Password" value="password123" style="padding: 8px; margin: 5px;">
+        <button onclick="testLogin()">Login</button>
+        <button onclick="testLogout()">Logout</button>
+        <div id="authResult"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>Trip Loading Test</h2>
+        <button onclick="testLoadTrips()">Load Trips</button>
+        <button onclick="testDisplayTrips()">Display Trips</button>
+        <div id="tripResult"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>API Call Test</h2>
+        <button onclick="testApiCall()">Test API Call</button>
+        <div id="apiResult"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>Current State</h2>
+        <button onclick="showCurrentState()">Show Current State</button>
+        <div id="stateResult"></div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:8080';
+        let accessToken = null;
+        let currentTrips = [];
+
+        async function apiCall(endpoint, options = {}) {
+            const url = `${API_BASE}${endpoint}`;
+            const config = {
+                method: options.method || 'GET',
+                headers: {},
+                ...options
+            };
+
+            // Handle headers properly for FormData vs JSON
+            if (accessToken) {
+                config.headers['Authorization'] = `Bearer ${accessToken}`;
+            }
+
+            // Only set Content-Type for non-FormData requests
+            if (!(options.body instanceof FormData)) {
+                config.headers['Content-Type'] = 'application/json';
+            }
+
+            console.log('API Call:', url, config);
+            const response = await fetch(url, config);
+            
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
+            }
+            
+            return await response.json();
+        }
+
+        async function testLogin() {
+            const resultDiv = document.getElementById('authResult');
+            const email = document.getElementById('emailInput').value;
+            const password = document.getElementById('passwordInput').value;
+            
+            resultDiv.innerHTML = '<span class="info">Logging in...</span>';
+            
+            try {
+                const response = await apiCall('/api/login', {
+                    method: 'POST',
+                    body: {
+                        email: email,
+                        password: password
+                    }
+                });
+                
+                accessToken = response.access_token;
+                resultDiv.innerHTML = `
+                    <span class="success">✅ Login successful!</span>
+                    <pre>${JSON.stringify(response, null, 2)}</pre>
+                `;
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <span class="error">❌ Login failed: ${error.message}</span>
+                `;
+            }
+        }
+
+        async function testLogout() {
+            accessToken = null;
+            currentTrips = [];
+            document.getElementById('authResult').innerHTML = '<span class="success">✅ Logged out</span>';
+            document.getElementById('tripResult').innerHTML = '';
+            document.getElementById('apiResult').innerHTML = '';
+            document.getElementById('stateResult').innerHTML = '';
+        }
+
+        async function testLoadTrips() {
+            const resultDiv = document.getElementById('tripResult');
+            resultDiv.innerHTML = '<span class="info">Loading trips...</span>';
+            
+            if (!accessToken) {
+                resultDiv.innerHTML = '<span class="error">❌ Please login first</span>';
+                return;
+            }
+            
+            try {
+                currentTrips = await apiCall('/api/trips');
+                resultDiv.innerHTML = `
+                    <span class="success">✅ Loaded ${currentTrips.length} trips</span>
+                    <pre>${JSON.stringify(currentTrips, null, 2)}</pre>
+                `;
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <span class="error">❌ Failed to load trips: ${error.message}</span>
+                `;
+            }
+        }
+
+        function testDisplayTrips() {
+            const resultDiv = document.getElementById('tripResult');
+            
+            if (!currentTrips || currentTrips.length === 0) {
+                resultDiv.innerHTML = '<span class="warning">⚠️ No trips to display</span>';
+                return;
+            }
+            
+            const tripCards = currentTrips.map(trip => `
+                <div class="trip-card">
+                    <div class="trip-title">
+                        ${trip.name}
+                        <span style="color: ${trip.is_owner ? 'green' : 'blue'}">
+                            (${trip.is_owner ? 'Owner' : 'Member'})
+                        </span>
+                    </div>
+                    <div class="trip-dates">
+                        ${trip.start_date} - ${trip.end_date}
+                    </div>
+                    <div class="trip-description">
+                        ${trip.description || 'No description'}
+                    </div>
+                    <div class="trip-actions">
+                        ${trip.is_owner ? `
+                            <button onclick="alert('Edit trip: ${trip.name}')">Edit</button>
+                            <button onclick="alert('Manage members: ${trip.name}')">Manage Members</button>
+                            <button onclick="alert('Finalize trip: ${trip.name}')">Finalize</button>
+                        ` : `
+                            <button onclick="alert('View members: ${trip.name}')">View Members</button>
+                        `}
+                    </div>
+                </div>
+            `).join('');
+            
+            resultDiv.innerHTML = `
+                <span class="success">✅ Displaying ${currentTrips.length} trips</span>
+                <div style="margin-top: 10px;">
+                    ${tripCards}
+                </div>
+            `;
+        }
+
+        async function testApiCall() {
+            const resultDiv = document.getElementById('apiResult');
+            resultDiv.innerHTML = '<span class="info">Testing API call...</span>';
+            
+            if (!accessToken) {
+                resultDiv.innerHTML = '<span class="error">❌ Please login first</span>';
+                return;
+            }
+            
+            try {
+                const response = await apiCall('/api/trips');
+                resultDiv.innerHTML = `
+                    <span class="success">✅ API call successful</span>
+                    <pre>${JSON.stringify(response, null, 2)}</pre>
+                `;
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <span class="error">❌ API call failed: ${error.message}</span>
+                `;
+            }
+        }
+
+        function showCurrentState() {
+            const resultDiv = document.getElementById('stateResult');
+            resultDiv.innerHTML = `
+                <span class="info">Current State:</span>
+                <pre>
+Access Token: ${accessToken ? 'Present' : 'None'}
+Current Trips: ${currentTrips.length}
+Trips Data: ${JSON.stringify(currentTrips, null, 2)}
+                </pre>
+            `;
+        }
+    </script>
+</body>
+</html> 
