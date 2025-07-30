@@ -90,6 +90,44 @@ def get_trips():
     
     return jsonify(unique_trips)
 
+@trips_bp.route('/api/trips/<int:trip_id>/groups', methods=['GET'])
+@jwt_required()
+def get_trip_groups(trip_id):
+    user_id = int(get_jwt_identity())
+    
+    # Verify user has access to this trip
+    trip = Trip.query.get(trip_id)
+    if not trip:
+        return jsonify({'error': 'Trip not found'}), 404
+    
+    # Check if user is owner or member
+    is_owner = trip.user_id == user_id
+    is_member = db.session.query(GroupMember).join(Group).filter(
+        Group.trip_id == trip_id,
+        GroupMember.user_id == user_id
+    ).first()
+    
+    if not is_owner and not is_member:
+        return jsonify({'error': 'You do not have access to this trip'}), 403
+    
+    # Get all groups for this trip
+    groups = Group.query.filter_by(trip_id=trip_id).all()
+    
+    result = []
+    for group in groups:
+        # Get member count for each group
+        member_count = GroupMember.query.filter_by(group_id=group.id).count()
+        
+        result.append({
+            'id': group.id,
+            'name': group.name,
+            'creator_id': group.creator_id,
+            'member_count': member_count,
+            'is_owner': group.creator_id == user_id
+        })
+    
+    return jsonify(result)
+
 @trips_bp.route('/api/trips/<int:trip_id>', methods=['PUT'])
 @jwt_required()
 def update_trip(trip_id):

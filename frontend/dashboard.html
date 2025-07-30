@@ -1578,22 +1578,44 @@
 
             // Use the first trip's main group
             const trip = currentTrips[0];
-            currentGroupId = trip.id; // Assuming trip ID is the group ID for now
-
+            
             try {
+                // Get the group for this trip
+                const groups = await apiCall(`/api/trips/${trip.id}/groups`);
+                if (groups.length > 0) {
+                    currentGroupId = groups[0].id; // Use the first group
+                    console.log('Using group ID:', currentGroupId);
+                } else {
+                    // Fallback: try using trip ID as group ID (for backward compatibility)
+                    console.log('No groups found, trying trip ID as group ID');
+                    currentGroupId = trip.id;
+                }
+
                 // Load expense summary
                 await loadExpenseSummary();
                 // Load expenses list
                 await loadExpensesList();
             } catch (error) {
                 console.error('Error loading expenses:', error);
-                showMessage('expenseMessage', 'Failed to load expenses.', 'error');
+                // Fallback: try using trip ID as group ID
+                console.log('Falling back to using trip ID as group ID');
+                currentGroupId = trip.id;
+                
+                try {
+                    await loadExpenseSummary();
+                    await loadExpensesList();
+                } catch (fallbackError) {
+                    console.error('Fallback also failed:', fallbackError);
+                    showMessage('expenseMessage', 'Failed to load expenses. Please try again.', 'error');
+                }
             }
         }
 
         async function loadExpenseSummary() {
             try {
+                console.log('Loading expense summary for group:', currentGroupId);
                 const response = await apiCall(`/api/groups/${currentGroupId}/expenses/split`);
+                console.log('Expense summary response:', response);
                 
                 document.getElementById('totalExpenseAmount').textContent = `$${response.total_expense}`;
                 document.getElementById('memberCount').textContent = response.member_count;
@@ -1606,7 +1628,9 @@
 
         async function loadExpensesList() {
             try {
+                console.log('Loading expenses list for group:', currentGroupId);
                 const expenses = await apiCall(`/api/groups/${currentGroupId}/expenses`);
+                console.log('Expenses list response:', expenses);
                 
                 const expensesList = document.getElementById('expensesList');
                 
@@ -1705,6 +1729,8 @@
                     return;
                 }
 
+                console.log('Adding expense:', { amount, category, description, groupId: currentGroupId });
+
                 try {
                     const response = await apiCall(`/api/groups/${currentGroupId}/expenses`, {
                         method: 'POST',
@@ -1715,6 +1741,7 @@
                         })
                     });
 
+                    console.log('Expense added successfully:', response);
                     showMessage('expenseMessage', 'Expense added successfully!', 'success');
                     
                     // Clear form
@@ -1726,7 +1753,17 @@
                     
                 } catch (error) {
                     console.error('Error adding expense:', error);
-                    showMessage('expenseMessage', 'Failed to add expense. Please try again.', 'error');
+                    let errorMessage = 'Failed to add expense. Please try again.';
+                    
+                    if (error.message.includes('403')) {
+                        errorMessage = 'You are not a member of this group.';
+                    } else if (error.message.includes('404')) {
+                        errorMessage = 'Group not found. Please refresh the page.';
+                    } else if (error.message.includes('400')) {
+                        errorMessage = 'Invalid expense data. Please check your input.';
+                    }
+                    
+                    showMessage('expenseMessage', errorMessage, 'error');
                 }
             });
         });
