@@ -806,6 +806,183 @@
             background: var(--accent-color);
             color: white;
         }
+
+        /* Expense Summary Styles */
+        .expense-summary {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .summary-card {
+            background: var(--bg-secondary);
+            border-radius: var(--border-radius-lg);
+            box-shadow: var(--shadow-soft);
+            border: 1px solid var(--border-color);
+            padding: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            text-align: center;
+        }
+
+        .summary-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.8rem;
+            color: white;
+            background: var(--primary-color);
+        }
+
+        .summary-content h3 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 0.25rem;
+        }
+
+        .summary-content p {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+
+        /* Expense Form Styles */
+        .expense-form-section {
+            margin-bottom: 2rem;
+        }
+
+        .expense-form {
+            background: var(--bg-secondary);
+            border-radius: var(--border-radius-lg);
+            box-shadow: var(--shadow-soft);
+            border: 1px solid var(--border-color);
+            padding: 2rem;
+        }
+
+        .expense-form .form-row {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .expense-form .form-group {
+            flex: 1;
+        }
+
+        .expense-form .form-group label {
+            font-size: 0.9rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .expense-form .form-group input,
+        .expense-form .form-group select {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border: 2px solid var(--border-color);
+            border-radius: var(--border-radius);
+            font-size: 0.95rem;
+            transition: var(--transition);
+            background: white;
+        }
+
+        .expense-form .form-group input:focus,
+        .expense-form .form-group select:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+        }
+
+        .expenses-list-section h3 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .expenses-list-section .trips-grid {
+            grid-template-columns: 1fr; /* Single column for expenses */
+        }
+
+        .expenses-list-section .trip-card {
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            box-shadow: var(--shadow-soft);
+            margin-bottom: 1rem;
+        }
+
+        .expenses-list-section .trip-card .trip-card-header {
+            background: var(--bg-secondary);
+            padding: 1rem 1.5rem;
+        }
+
+        .expenses-list-section .trip-card .trip-card-header .trip-title {
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .expenses-list-section .trip-card .trip-card-header .trip-dates {
+            font-size: 0.8rem;
+            opacity: 0.8;
+        }
+
+        .expenses-list-section .trip-card .trip-card-body {
+            padding: 1rem 1.5rem;
+        }
+
+        .expenses-list-section .trip-card .trip-description {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            margin-bottom: 0.5rem;
+        }
+
+        .expenses-list-section .trip-card .trip-actions {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .expenses-list-section .trip-card .trip-actions .btn {
+            padding: 0.5rem 0.75rem;
+            font-size: 0.8rem;
+        }
+
+        .expenses-list-section .trip-card .trip-actions .btn-sm {
+            padding: 0.4rem 0.75rem;
+            font-size: 0.75rem;
+        }
+
+        .expenses-list-section .trip-card .trip-actions .btn-primary {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .expenses-list-section .trip-card .trip-actions .btn-secondary {
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+        }
+
+        .expenses-list-section .trip-card .trip-actions .btn-secondary:hover {
+            background: var(--border-color);
+        }
+
+        .expenses-list-section .trip-card .trip-actions .btn-success {
+            background: var(--success-color);
+            color: white;
+        }
+
+        .expenses-list-section .trip-card .trip-actions .btn-success:hover {
+            background: #047857;
+        }
     </style>
 </head>
 <body>
@@ -1033,14 +1210,81 @@
                 <p>Track and split your travel costs</p>
             </div>
             <div class="content">
-                <div class="empty-state">
-                    <i class="fas fa-wallet"></i>
-                    <h3>Expense Tracking</h3>
-                    <p>Monitor your spending and split costs with group members.</p>
-                    <button class="btn btn-primary" style="margin-top: 1rem;">
-                        <i class="fas fa-plus"></i>
-                        Add Expense
-                    </button>
+                <!-- Expense Summary -->
+                <div class="expense-summary">
+                    <div class="summary-card">
+                        <div class="summary-icon">
+                            <i class="fas fa-wallet"></i>
+                        </div>
+                        <div class="summary-content">
+                            <h3 id="totalExpenseAmount">$0.00</h3>
+                            <p>Total Expenses</p>
+                        </div>
+                    </div>
+                    <div class="summary-card">
+                        <div class="summary-icon">
+                            <i class="fas fa-users"></i>
+                        </div>
+                        <div class="summary-content">
+                            <h3 id="memberCount">0</h3>
+                            <p>Members</p>
+                        </div>
+                    </div>
+                    <div class="summary-card">
+                        <div class="summary-icon">
+                            <i class="fas fa-calculator"></i>
+                        </div>
+                        <div class="summary-content">
+                            <h3 id="splitAmount">$0.00</h3>
+                            <p>Per Person</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Add Expense Form -->
+                <div class="expense-form-section">
+                    <h3><i class="fas fa-plus"></i> Add New Expense</h3>
+                    <form id="addExpenseForm" class="expense-form">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="expenseAmount">Amount ($)</label>
+                                <input type="number" id="expenseAmount" step="0.01" min="0" required placeholder="25.50">
+                            </div>
+                            <div class="form-group">
+                                <label for="expenseCategory">Category</label>
+                                <select id="expenseCategory" required>
+                                    <option value="">Select Category</option>
+                                    <option value="Food">Food & Dining</option>
+                                    <option value="Transport">Transportation</option>
+                                    <option value="Accommodation">Accommodation</option>
+                                    <option value="Activities">Activities & Entertainment</option>
+                                    <option value="Shopping">Shopping</option>
+                                    <option value="Other">Other</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="expenseDescription">Description</label>
+                            <input type="text" id="expenseDescription" required placeholder="Dinner at Italian restaurant">
+                        </div>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-plus"></i>
+                            Add Expense
+                        </button>
+                    </form>
+                    <div id="expenseMessage" class="message" style="display: none;"></div>
+                </div>
+
+                <!-- Expenses List -->
+                <div class="expenses-list-section">
+                    <h3><i class="fas fa-list"></i> All Expenses</h3>
+                    <div id="expensesList">
+                        <div class="empty-state">
+                            <i class="fas fa-receipt"></i>
+                            <h3>No expenses yet</h3>
+                            <p>Add your first expense to get started!</p>
+                        </div>
+                    </div>
                 </div>
             </div>
         </section>
@@ -1243,6 +1487,9 @@
                 case 'trips':
                     loadAllTrips();
                     break;
+                case 'expenses':
+                    loadExpenses();
+                    break;
                 // Add cases for other sections as needed
             }
         }
@@ -1317,6 +1564,192 @@
                 displayRecentTrips();
             } catch (error) {
                 console.error('Error loading dashboard data:', error);
+            }
+        }
+
+        // Expense Management Functions
+        let currentGroupId = null;
+
+        async function loadExpenses() {
+            if (!currentTrips.length) {
+                showMessage('expenseMessage', 'No trips available. Create a trip first.', 'error');
+                return;
+            }
+
+            // Use the first trip's main group
+            const trip = currentTrips[0];
+            currentGroupId = trip.id; // Assuming trip ID is the group ID for now
+
+            try {
+                // Load expense summary
+                await loadExpenseSummary();
+                // Load expenses list
+                await loadExpensesList();
+            } catch (error) {
+                console.error('Error loading expenses:', error);
+                showMessage('expenseMessage', 'Failed to load expenses.', 'error');
+            }
+        }
+
+        async function loadExpenseSummary() {
+            try {
+                const response = await apiCall(`/api/groups/${currentGroupId}/expenses/split`);
+                
+                document.getElementById('totalExpenseAmount').textContent = `$${response.total_expense}`;
+                document.getElementById('memberCount').textContent = response.member_count;
+                document.getElementById('splitAmount').textContent = `$${response.split_per_member}`;
+                
+            } catch (error) {
+                console.error('Error loading expense summary:', error);
+            }
+        }
+
+        async function loadExpensesList() {
+            try {
+                const expenses = await apiCall(`/api/groups/${currentGroupId}/expenses`);
+                
+                const expensesList = document.getElementById('expensesList');
+                
+                if (expenses.length === 0) {
+                    expensesList.innerHTML = `
+                        <div class="empty-state">
+                            <i class="fas fa-receipt"></i>
+                            <h3>No expenses yet</h3>
+                            <p>Add your first expense to get started!</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                expensesList.innerHTML = expenses.map(expense => `
+                    <div class="trip-card">
+                        <div class="trip-card-header">
+                            <div class="trip-title">
+                                <i class="fas fa-${getCategoryIcon(expense.category)}"></i>
+                                ${expense.category}
+                            </div>
+                            <div class="trip-dates">
+                                Added by ${expense.user_name} • ${formatDate(expense.timestamp)}
+                            </div>
+                        </div>
+                        <div class="trip-card-body">
+                            <div class="trip-description">
+                                ${expense.note}
+                            </div>
+                            <div class="trip-actions">
+                                <span class="btn btn-success btn-sm">
+                                    <i class="fas fa-dollar-sign"></i>
+                                    $${expense.amount}
+                                </span>
+                                ${expense.user_id === currentUser.id ? 
+                                    `<button class="btn btn-secondary btn-sm" onclick="deleteExpense(${expense.id})">
+                                        <i class="fas fa-trash"></i>
+                                        Delete
+                                    </button>` : ''
+                                }
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+
+            } catch (error) {
+                console.error('Error loading expenses list:', error);
+                document.getElementById('expensesList').innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <h3>Error loading expenses</h3>
+                        <p>Please try again later.</p>
+                    </div>
+                `;
+            }
+        }
+
+        function getCategoryIcon(category) {
+            const icons = {
+                'Food': 'utensils',
+                'Transport': 'car',
+                'Accommodation': 'bed',
+                'Activities': 'ticket-alt',
+                'Shopping': 'shopping-bag',
+                'Other': 'receipt'
+            };
+            return icons[category] || 'receipt';
+        }
+
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            return date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+        }
+
+        // Add Expense Form Handler
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('addExpenseForm').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                
+                if (!currentGroupId) {
+                    showMessage('expenseMessage', 'Please select a trip first.', 'error');
+                    return;
+                }
+
+                const amount = parseFloat(document.getElementById('expenseAmount').value);
+                const category = document.getElementById('expenseCategory').value;
+                const description = document.getElementById('expenseDescription').value;
+
+                if (!amount || amount <= 0) {
+                    showMessage('expenseMessage', 'Please enter a valid amount.', 'error');
+                    return;
+                }
+
+                if (!category) {
+                    showMessage('expenseMessage', 'Please select a category.', 'error');
+                    return;
+                }
+
+                try {
+                    const response = await apiCall(`/api/groups/${currentGroupId}/expenses`, {
+                        method: 'POST',
+                        body: JSON.stringify({
+                            amount: amount,
+                            category: category,
+                            description: description
+                        })
+                    });
+
+                    showMessage('expenseMessage', 'Expense added successfully!', 'success');
+                    
+                    // Clear form
+                    document.getElementById('addExpenseForm').reset();
+                    
+                    // Reload expenses
+                    await loadExpenseSummary();
+                    await loadExpensesList();
+                    
+                } catch (error) {
+                    console.error('Error adding expense:', error);
+                    showMessage('expenseMessage', 'Failed to add expense. Please try again.', 'error');
+                }
+            });
+        });
+
+        async function deleteExpense(expenseId) {
+            if (!confirm('Are you sure you want to delete this expense?')) {
+                return;
+            }
+
+            try {
+                await apiCall(`/api/expenses/${expenseId}`, {
+                    method: 'DELETE'
+                });
+
+                showMessage('expenseMessage', 'Expense deleted successfully!', 'success');
+                
+                // Reload expenses
+                await loadExpenseSummary();
+                await loadExpensesList();
+                
+            } catch (error) {
+                console.error('Error deleting expense:', error);
+                showMessage('expenseMessage', 'Failed to delete expense. Please try again.', 'error');
             }
         }
 
