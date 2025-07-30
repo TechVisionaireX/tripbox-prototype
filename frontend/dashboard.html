@@ -1,4 +1,4 @@
-g<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -2379,54 +2379,78 @@ g<!DOCTYPE html>
         let currentGroupId = null;
 
         async function loadExpenses() {
-            // First, ensure trips are loaded
-            if (!currentTrips.length) {
-                try {
+            try {
+                console.log('Loading expenses...');
+                
+                // First, ensure trips are loaded
+                if (!currentTrips || currentTrips.length === 0) {
+                    console.log('No trips loaded, loading trips first...');
                     await loadTrips();
-                } catch (error) {
-                    console.error('Error loading trips for expenses:', error);
-                    showMessage('expenseMessage', 'Failed to load trips. Please try again.', 'error');
+                }
+                
+                if (!currentTrips || currentTrips.length === 0) {
+                    console.log('No trips available after loading');
+                    document.getElementById('expensesList').innerHTML = `
+                        <div class="empty-state">
+                            <i class="fas fa-exclamation-triangle"></i>
+                            <h3>No trips available</h3>
+                            <p>Create a trip first to manage expenses.</p>
+                        </div>
+                    `;
                     return;
                 }
-            }
-            
-            if (!currentTrips.length) {
-                showMessage('expenseMessage', 'No trips available. Create a trip first.', 'error');
-                return;
-            }
 
-            // Use the first trip's main group
-            const trip = currentTrips[0];
-            
-            try {
-                // Get the group for this trip
-                const groups = await apiCall(`/api/trips/${trip.id}/groups`);
-                if (groups.length > 0) {
-                    currentGroupId = groups[0].id; // Use the first group
-                    console.log('Using group ID:', currentGroupId);
-                } else {
-                    // Fallback: try using trip ID as group ID (for backward compatibility)
-                    console.log('No groups found, trying trip ID as group ID');
-                    currentGroupId = trip.id;
-                }
-
-                // Load expense summary
-                await loadExpenseSummary();
-                // Load expenses list
-                await loadExpensesList();
-            } catch (error) {
-                console.error('Error loading expenses:', error);
-                // Fallback: try using trip ID as group ID
-                console.log('Falling back to using trip ID as group ID');
-                currentGroupId = trip.id;
+                console.log('Using first trip for expenses:', currentTrips[0]);
+                // Use the first trip's main group
+                const trip = currentTrips[0];
                 
                 try {
+                    // Get the group for this trip
+                    const groups = await apiCall(`/api/trips/${trip.id}/groups`);
+                    console.log('Groups for trip:', groups);
+                    
+                    if (groups && groups.length > 0) {
+                        currentGroupId = groups[0].id; // Use the first group
+                        console.log('Using group ID:', currentGroupId);
+                    } else {
+                        // Fallback: try using trip ID as group ID (for backward compatibility)
+                        console.log('No groups found, trying trip ID as group ID');
+                        currentGroupId = trip.id;
+                    }
+
+                    // Load expense summary
                     await loadExpenseSummary();
+                    // Load expenses list
                     await loadExpensesList();
-                } catch (fallbackError) {
-                    console.error('Fallback also failed:', fallbackError);
-                    showMessage('expenseMessage', 'Failed to load expenses. Please try again.', 'error');
+                } catch (error) {
+                    console.error('Error loading expenses:', error);
+                    // Fallback: try using trip ID as group ID
+                    console.log('Falling back to using trip ID as group ID');
+                    currentGroupId = trip.id;
+                    
+                    try {
+                        await loadExpenseSummary();
+                        await loadExpensesList();
+                    } catch (fallbackError) {
+                        console.error('Fallback also failed:', fallbackError);
+                        document.getElementById('expensesList').innerHTML = `
+                            <div class="empty-state">
+                                <i class="fas fa-exclamation-triangle"></i>
+                                <h3>Error loading expenses</h3>
+                                <p>Please try again later.</p>
+                            </div>
+                        `;
+                    }
                 }
+            } catch (error) {
+                console.error('Error in loadExpenses:', error);
+                document.getElementById('expensesList').innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <h3>Error loading expenses</h3>
+                        <p>Please try again later.</p>
+                    </div>
+                `;
             }
         }
 

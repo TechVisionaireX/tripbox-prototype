@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simple Expense Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .success { color: green; }
+        .error { color: red; }
+        .info { color: blue; }
+        button {
+            padding: 10px 15px;
+            margin: 5px;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+        pre {
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 3px;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body>
+    <h1>Simple Expense Test</h1>
+    
+    <div class="test-section">
+        <h2>Step 1: Login</h2>
+        <button onclick="login()">Login as test@gmail.com</button>
+        <div id="loginResult"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>Step 2: Load Trips</h2>
+        <button onclick="loadTrips()">Load Trips</button>
+        <div id="tripsResult"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>Step 3: Load Expenses</h2>
+        <button onclick="loadExpenses()">Load Expenses</button>
+        <div id="expensesResult"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>Step 4: Add Expense</h2>
+        <button onclick="addExpense()">Add Test Expense</button>
+        <div id="addExpenseResult"></div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:8080';
+        let accessToken = null;
+        let currentTrips = [];
+        let currentGroupId = null;
+
+        async function apiCall(endpoint, options = {}) {
+            const url = `${API_BASE}${endpoint}`;
+            const config = {
+                method: options.method || 'GET',
+                headers: {},
+                ...options
+            };
+
+            if (accessToken) {
+                config.headers['Authorization'] = `Bearer ${accessToken}`;
+            }
+
+            if (!(options.body instanceof FormData)) {
+                config.headers['Content-Type'] = 'application/json';
+            }
+
+            console.log('API Call:', url, config);
+            const response = await fetch(url, config);
+            
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
+            }
+            
+            return await response.json();
+        }
+
+        async function login() {
+            const resultDiv = document.getElementById('loginResult');
+            resultDiv.innerHTML = '<span class="info">Logging in...</span>';
+            
+            try {
+                const response = await apiCall('/api/login', {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        email: 'test@gmail.com',
+                        password: 'password123'
+                    })
+                });
+                
+                accessToken = response.access_token;
+                resultDiv.innerHTML = `
+                    <span class="success">✅ Login successful!</span>
+                    <pre>${JSON.stringify(response, null, 2)}</pre>
+                `;
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <span class="error">❌ Login failed: ${error.message}</span>
+                `;
+            }
+        }
+
+        async function loadTrips() {
+            const resultDiv = document.getElementById('tripsResult');
+            resultDiv.innerHTML = '<span class="info">Loading trips...</span>';
+            
+            try {
+                currentTrips = await apiCall('/api/trips');
+                resultDiv.innerHTML = `
+                    <span class="success">✅ Loaded ${currentTrips.length} trips!</span>
+                    <pre>${JSON.stringify(currentTrips, null, 2)}</pre>
+                `;
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <span class="error">❌ Failed to load trips: ${error.message}</span>
+                `;
+            }
+        }
+
+        async function loadExpenses() {
+            const resultDiv = document.getElementById('expensesResult');
+            resultDiv.innerHTML = '<span class="info">Loading expenses...</span>';
+            
+            if (!currentTrips || currentTrips.length === 0) {
+                resultDiv.innerHTML = '<span class="error">❌ No trips loaded. Please load trips first.</span>';
+                return;
+            }
+            
+            try {
+                const trip = currentTrips[0];
+                console.log('Using trip:', trip);
+                
+                // Get groups for the trip
+                const groups = await apiCall(`/api/trips/${trip.id}/groups`);
+                console.log('Groups:', groups);
+                
+                if (groups && groups.length > 0) {
+                    currentGroupId = groups[0].id;
+                } else {
+                    currentGroupId = trip.id; // Fallback
+                }
+                
+                console.log('Using group ID:', currentGroupId);
+                
+                // Load expense summary
+                const summary = await apiCall(`/api/groups/${currentGroupId}/expenses/split`);
+                console.log('Expense summary:', summary);
+                
+                // Load expenses list
+                const expenses = await apiCall(`/api/groups/${currentGroupId}/expenses`);
+                console.log('Expenses list:', expenses);
+                
+                resultDiv.innerHTML = `
+                    <span class="success">✅ Loaded expenses successfully!</span>
+                    <h3>Summary:</h3>
+                    <pre>${JSON.stringify(summary, null, 2)}</pre>
+                    <h3>Expenses:</h3>
+                    <pre>${JSON.stringify(expenses, null, 2)}</pre>
+                `;
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <span class="error">❌ Failed to load expenses: ${error.message}</span>
+                `;
+            }
+        }
+
+        async function addExpense() {
+            const resultDiv = document.getElementById('addExpenseResult');
+            resultDiv.innerHTML = '<span class="info">Adding expense...</span>';
+            
+            if (!currentGroupId) {
+                resultDiv.innerHTML = '<span class="error">❌ No group selected. Please load expenses first.</span>';
+                return;
+            }
+            
+            try {
+                const response = await apiCall(`/api/groups/${currentGroupId}/expenses`, {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        amount: 50.0,
+                        category: 'Food',
+                        description: 'Test expense from simple test'
+                    })
+                });
+                
+                resultDiv.innerHTML = `
+                    <span class="success">✅ Expense added successfully!</span>
+                    <pre>${JSON.stringify(response, null, 2)}</pre>
+                `;
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <span class="error">❌ Failed to add expense: ${error.message}</span>
+                `;
+            }
+        }
+    </script>
+</body>
+</html> 
