@@ -1574,6 +1574,99 @@
             color: var(--primary-color);
         }
 
+        /* Trip Expenses Section Styles */
+        .trip-expenses-list {
+            margin-top: 1rem;
+        }
+
+        .trip-expense-item {
+            background: white;
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius);
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .trip-expense-item:hover {
+            box-shadow: var(--shadow-medium);
+            border-color: var(--primary-color);
+            transform: translateY(-2px);
+        }
+
+        .trip-expense-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 1rem;
+        }
+
+        .trip-info h4 {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 0.5rem;
+        }
+
+        .expense-info {
+            text-align: right;
+        }
+
+        .user-share, .trip-total {
+            margin-bottom: 0.5rem;
+        }
+
+        .user-share .amount {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--primary-color);
+        }
+
+        .trip-total .amount {
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+        }
+
+        .label {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            margin-right: 0.5rem;
+        }
+
+        .trip-expense-footer {
+            border-top: 1px solid var(--border-color);
+            padding-top: 0.75rem;
+            text-align: center;
+        }
+
+        .click-hint {
+            font-size: 0.8rem;
+            color: var(--text-light);
+            font-style: italic;
+        }
+
+        .total-expense-summary {
+            background: var(--bg-secondary);
+            padding: 1rem;
+            border-radius: var(--border-radius);
+            margin-bottom: 1rem;
+            text-align: center;
+        }
+
+        .total-expense-summary h3 {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 0;
+        }
+
+        .total-expense-summary span {
+            color: var(--primary-color);
+            font-weight: 700;
+        }
+
         .member-item {
             display: flex;
             justify-content: space-between;
@@ -1780,6 +1873,29 @@
                             <div class="stat-icon secondary">
                                 <i class="fas fa-camera"></i>
                             </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- My Trip Expenses Section -->
+                <div class="card">
+                    <div class="card-header">
+                        <h2>
+                            <i class="fas fa-wallet"></i>
+                            My Trip Expenses
+                        </h2>
+                        <button class="btn btn-secondary btn-sm" onclick="refreshTripExpenses()">
+                            <i class="fas fa-sync-alt"></i> Refresh
+                        </button>
+                    </div>
+                    <div class="card-body">
+                        <div class="expense-summary">
+                            <div class="total-expense-summary">
+                                <h3>Total Across All Trips: <span id="totalMyExpenses">$0.00</span></h3>
+                            </div>
+                        </div>
+                        <div id="myTripExpensesList" class="trip-expenses-list">
+                            <div class="loading-spinner">Loading your trip expenses...</div>
                         </div>
                     </div>
                 </div>
@@ -2432,6 +2548,7 @@
             switch(sectionName) {
                 case 'dashboard':
                     loadDashboardData();
+                    loadUserTripExpenses();
                     break;
                 case 'trips':
                     console.log('Loading trips section...');
@@ -2902,6 +3019,130 @@
                 document.getElementById('totalExpenses').textContent = '$0';
                 document.getElementById('photosCount').textContent = '0';
             }
+        }
+
+        // User Trip Expenses Functions
+        async function loadUserTripExpenses() {
+            if (!currentTrips || currentTrips.length === 0) {
+                document.getElementById('myTripExpensesList').innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-wallet"></i>
+                        <h3>No trips found</h3>
+                        <p>Create or join a trip to see your expenses.</p>
+                    </div>
+                `;
+                document.getElementById('totalMyExpenses').textContent = '$0.00';
+                return;
+            }
+
+            try {
+                const tripExpenses = [];
+                let totalMyExpenses = 0;
+
+                // Calculate user's share for each trip
+                for (const trip of currentTrips) {
+                    try {
+                        const groups = await apiCall(`/api/trips/${trip.id}/groups`);
+                        let tripTotalExpenses = 0;
+                        let userShare = 0;
+
+                        for (const group of groups) {
+                            try {
+                                // Get expenses for this group
+                                const expenses = await apiCall(`/api/groups/${group.id}/expenses`);
+                                const groupTotal = expenses.reduce((sum, expense) => sum + expense.amount, 0);
+                                tripTotalExpenses += groupTotal;
+
+                                // Get group members to calculate user's share
+                                const members = await apiCall(`/api/groups/${group.id}/members`);
+                                const memberCount = members.length || 1; // At least 1 member (the user)
+                                
+                                // Calculate user's share for this group
+                                const groupUserShare = groupTotal / memberCount;
+                                userShare += groupUserShare;
+
+                            } catch (error) {
+                                console.error(`Error calculating expenses for group ${group.id}:`, error);
+                            }
+                        }
+
+                        tripExpenses.push({
+                            tripId: trip.id,
+                            tripName: trip.name,
+                            tripTotal: tripTotalExpenses,
+                            userShare: userShare,
+                            isOwner: trip.is_owner,
+                            role: trip.role
+                        });
+
+                        totalMyExpenses += userShare;
+
+                    } catch (error) {
+                        console.error(`Error calculating expenses for trip ${trip.id}:`, error);
+                    }
+                }
+
+                // Update total
+                document.getElementById('totalMyExpenses').textContent = `$${totalMyExpenses.toFixed(2)}`;
+
+                // Display trip expenses list
+                displayUserTripExpenses(tripExpenses);
+
+            } catch (error) {
+                console.error('Error loading user trip expenses:', error);
+                document.getElementById('myTripExpensesList').innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <h3>Error loading expenses</h3>
+                        <p>Please try refreshing the page.</p>
+                    </div>
+                `;
+            }
+        }
+
+        function displayUserTripExpenses(tripExpenses) {
+            const container = document.getElementById('myTripExpensesList');
+            
+            if (tripExpenses.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-wallet"></i>
+                        <h3>No expenses found</h3>
+                        <p>Add expenses to your trips to see your shares here.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            const expensesHtml = tripExpenses.map(trip => `
+                <div class="trip-expense-item" onclick="openTripDetailsModal(${trip.tripId})">
+                    <div class="trip-expense-header">
+                        <div class="trip-info">
+                            <h4>${trip.tripName}</h4>
+                            <span class="trip-role ${trip.isOwner ? 'owner' : 'member'}">${trip.role}</span>
+                        </div>
+                        <div class="expense-info">
+                            <div class="user-share">
+                                <span class="label">My Share:</span>
+                                <span class="amount">$${trip.userShare.toFixed(2)}</span>
+                            </div>
+                            <div class="trip-total">
+                                <span class="label">Trip Total:</span>
+                                <span class="amount">$${trip.tripTotal.toFixed(2)}</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="trip-expense-footer">
+                        <span class="click-hint">Click to view trip details</span>
+                    </div>
+                </div>
+            `).join('');
+
+            container.innerHTML = expensesHtml;
+        }
+
+        async function refreshTripExpenses() {
+            await loadUserTripExpenses();
         }
 
         function populateDashboardTripSelector() {
@@ -4125,6 +4366,9 @@
                 
                 // Show dashboard section initially
                 showSection('dashboard');
+                
+                // Load user trip expenses
+                await loadUserTripExpenses();
                 
                 // Set up periodic token validation
                 setInterval(async () => {
