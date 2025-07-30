@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debug Expense Errors</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .success { color: green; }
+        .error { color: red; }
+        .info { color: blue; }
+        .warning { color: orange; }
+        button {
+            padding: 10px 15px;
+            margin: 5px;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        pre {
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 3px;
+            overflow-x: auto;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        input, select {
+            padding: 8px;
+            margin: 5px;
+            border: 1px solid #ddd;
+            border-radius: 3px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Debug Expense Errors</h1>
+    
+    <div class="test-section">
+        <h2>Step 1: Test Backend Connection</h2>
+        <button onclick="testBackendConnection()">Test Backend</button>
+        <div id="backendResult"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>Step 2: Test Authentication</h2>
+        <input type="email" id="emailInput" placeholder="Email" value="test@gmail.com">
+        <input type="password" id="passwordInput" placeholder="Password" value="password123">
+        <button onclick="testLogin()">Login</button>
+        <div id="authResult"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>Step 3: Test Trip Creation</h2>
+        <button onclick="createTrip()">Create Trip</button>
+        <div id="tripResult"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>Step 4: Test Expense Addition</h2>
+        <input type="number" id="expenseAmount" placeholder="Amount" value="100">
+        <select id="expenseCategory">
+            <option value="Food">Food</option>
+            <option value="Transport">Transport</option>
+            <option value="Accommodation">Accommodation</option>
+        </select>
+        <input type="text" id="expenseDescription" placeholder="Description" value="Test expense">
+        <button onclick="addExpense()">Add Expense</button>
+        <div id="expenseResult"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>Step 5: Test Expense Retrieval</h2>
+        <button onclick="getExpenses()">Get Expenses</button>
+        <button onclick="getExpenseSummary()">Get Summary</button>
+        <div id="retrievalResult"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>Step 6: Test Dashboard Functions</h2>
+        <button onclick="testDashboardFunctions()">Test Dashboard Functions</button>
+        <div id="dashboardResult"></div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:8080';
+        let accessToken = null;
+        let currentTripId = null;
+        let currentGroupId = null;
+
+        async function testBackendConnection() {
+            const resultDiv = document.getElementById('backendResult');
+            resultDiv.innerHTML = '<span class="info">Testing backend connection...</span>';
+            
+            try {
+                const response = await fetch(`${API_BASE}/api/health`);
+                if (response.ok) {
+                    resultDiv.innerHTML = '<span class="success">✅ Backend is running and accessible</span>';
+                } else {
+                    resultDiv.innerHTML = `<span class="error">❌ Backend responded with status: ${response.status}</span>`;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<span class="error">❌ Backend connection failed: ${error.message}</span>`;
+            }
+        }
+
+        async function testLogin() {
+            const resultDiv = document.getElementById('authResult');
+            const email = document.getElementById('emailInput').value;
+            const password = document.getElementById('passwordInput').value;
+            
+            resultDiv.innerHTML = '<span class="info">Logging in...</span>';
+            
+            try {
+                const response = await fetch(`${API_BASE}/api/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        email: email,
+                        password: password
+                    })
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    accessToken = data.access_token;
+                    resultDiv.innerHTML = `
+                        <span class="success">✅ Login successful!</span>
+                        <pre>${JSON.stringify(data, null, 2)}</pre>
+                    `;
+                } else {
+                    const errorData = await response.json();
+                    resultDiv.innerHTML = `
+                        <span class="error">❌ Login failed: ${errorData.error || response.status}</span>
+                    `;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <span class="error">❌ Login error: ${error.message}</span>
+                `;
+            }
+        }
+
+        async function createTrip() {
+            const resultDiv = document.getElementById('tripResult');
+            
+            if (!accessToken) {
+                resultDiv.innerHTML = '<span class="error">❌ Please login first</span>';
+                return;
+            }
+            
+            resultDiv.innerHTML = '<span class="info">Creating trip...</span>';
+            
+            try {
+                const response = await fetch(`${API_BASE}/api/trips`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${accessToken}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        name: 'Debug Test Trip',
+                        start_date: '2024-08-01',
+                        end_date: '2024-08-07',
+                        description: 'Testing expense functionality'
+                    })
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    currentTripId = data.trip.id;
+                    currentGroupId = data.group.id;
+                    resultDiv.innerHTML = `
+                        <span class="success">✅ Trip created successfully!</span>
+                        <pre>Trip ID: ${currentTripId}
+Group ID: ${currentGroupId}
+${JSON.stringify(data, null, 2)}</pre>
+                    `;
+                } else {
+                    const errorData = await response.json();
+                    resultDiv.innerHTML = `
+                        <span class="error">❌ Trip creation failed: ${errorData.error || response.status}</span>
+                    `;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <span class="error">❌ Trip creation error: ${error.message}</span>
+                `;
+            }
+        }
+
+        async function addExpense() {
+            const resultDiv = document.getElementById('expenseResult');
+            const amount = parseFloat(document.getElementById('expenseAmount').value);
+            const category = document.getElementById('expenseCategory').value;
+            const description = document.getElementById('expenseDescription').value;
+            
+            if (!currentGroupId) {
+                resultDiv.innerHTML = '<span class="error">❌ Please create a trip first</span>';
+                return;
+            }
+            
+            resultDiv.innerHTML = '<span class="info">Adding expense...</span>';
+            
+            try {
+                const response = await fetch(`${API_BASE}/api/groups/${currentGroupId}/expenses`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${accessToken}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        amount: amount,
+                        category: category,
+                        description: description
+                    })
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    resultDiv.innerHTML = `
+                        <span class="success">✅ Expense added successfully!</span>
+                        <pre>${JSON.stringify(data, null, 2)}</pre>
+                    `;
+                } else {
+                    const errorData = await response.json();
+                    resultDiv.innerHTML = `
+                        <span class="error">❌ Expense addition failed: ${errorData.error || response.status}</span>
+                    `;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <span class="error">❌ Expense addition error: ${error.message}</span>
+                `;
+            }
+        }
+
+        async function getExpenses() {
+            const resultDiv = document.getElementById('retrievalResult');
+            
+            if (!currentGroupId) {
+                resultDiv.innerHTML = '<span class="error">❌ Please create a trip first</span>';
+                return;
+            }
+            
+            resultDiv.innerHTML = '<span class="info">Getting expenses...</span>';
+            
+            try {
+                const response = await fetch(`${API_BASE}/api/groups/${currentGroupId}/expenses`, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${accessToken}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                if (response.ok) {
+                    const expenses = await response.json();
+                    resultDiv.innerHTML = `
+                        <span class="success">✅ Retrieved ${expenses.length} expenses!</span>
+                        <pre>${JSON.stringify(expenses, null, 2)}</pre>
+                    `;
+                } else {
+                    const errorData = await response.json();
+                    resultDiv.innerHTML = `
+                        <span class="error">❌ Get expenses failed: ${errorData.error || response.status}</span>
+                    `;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <span class="error">❌ Get expenses error: ${error.message}</span>
+                `;
+            }
+        }
+
+        async function getExpenseSummary() {
+            const resultDiv = document.getElementById('retrievalResult');
+            
+            if (!currentGroupId) {
+                resultDiv.innerHTML = '<span class="error">❌ Please create a trip first</span>';
+                return;
+            }
+            
+            resultDiv.innerHTML = '<span class="info">Getting expense summary...</span>';
+            
+            try {
+                const response = await fetch(`${API_BASE}/api/groups/${currentGroupId}/expenses/split`, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${accessToken}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                if (response.ok) {
+                    const summary = await response.json();
+                    resultDiv.innerHTML = `
+                        <span class="success">✅ Retrieved expense summary!</span>
+                        <pre>${JSON.stringify(summary, null, 2)}</pre>
+                    `;
+                } else {
+                    const errorData = await response.json();
+                    resultDiv.innerHTML = `
+                        <span class="error">❌ Get summary failed: ${errorData.error || response.status}</span>
+                    `;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <span class="error">❌ Get summary error: ${error.message}</span>
+                `;
+            }
+        }
+
+        async function testDashboardFunctions() {
+            const resultDiv = document.getElementById('dashboardResult');
+            resultDiv.innerHTML = '<span class="info">Testing dashboard functions...</span>';
+            
+            // Test the functions that might be causing issues
+            try {
+                // Test if currentTrips is defined
+                if (typeof currentTrips !== 'undefined') {
+                    resultDiv.innerHTML += '<br><span class="success">✅ currentTrips is defined</span>';
+                } else {
+                    resultDiv.innerHTML += '<br><span class="error">❌ currentTrips is not defined</span>';
+                }
+                
+                // Test if loadExpenseSummary function exists
+                if (typeof loadExpenseSummary === 'function') {
+                    resultDiv.innerHTML += '<br><span class="success">✅ loadExpenseSummary function exists</span>';
+                } else {
+                    resultDiv.innerHTML += '<br><span class="error">❌ loadExpenseSummary function not found</span>';
+                }
+                
+                // Test if loadAllExpenses function exists
+                if (typeof loadAllExpenses === 'function') {
+                    resultDiv.innerHTML += '<br><span class="success">✅ loadAllExpenses function exists</span>';
+                } else {
+                    resultDiv.innerHTML += '<br><span class="error">❌ loadAllExpenses function not found</span>';
+                }
+                
+                // Test if currentGroupId is set
+                if (currentGroupId) {
+                    resultDiv.innerHTML += `<br><span class="success">✅ currentGroupId is set: ${currentGroupId}</span>`;
+                } else {
+                    resultDiv.innerHTML += '<br><span class="error">❌ currentGroupId is not set</span>';
+                }
+                
+            } catch (error) {
+                resultDiv.innerHTML += `<br><span class="error">❌ Dashboard function test error: ${error.message}</span>`;
+            }
+        }
+    </script>
+</body>
+</html> 
