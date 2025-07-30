@@ -1764,6 +1764,9 @@
                             <i class="fas fa-list"></i>
                             All Trips
                         </h2>
+                        <button class="btn btn-secondary btn-sm" onclick="refreshTrips()">
+                            <i class="fas fa-sync-alt"></i> Refresh
+                        </button>
                     </div>
                     <div class="card-body">
                         <div id="allTrips" class="trips-grid">
@@ -1891,6 +1894,17 @@
                 <p>Track and split your travel costs</p>
             </div>
             <div class="content">
+                <!-- Trip Selector -->
+                <div class="trip-selector-section">
+                    <h3><i class="fas fa-route"></i> Select Trip for Expenses</h3>
+                    <div class="form-group">
+                        <label for="expenseTripSelector">Choose Trip</label>
+                        <select id="expenseTripSelector" onchange="onExpenseTripChange()">
+                            <option value="">Select a trip...</option>
+                        </select>
+                    </div>
+                </div>
+                
                 <!-- Expense Summary -->
                 <div class="expense-summary">
                     <div class="summary-card">
@@ -2397,38 +2411,105 @@
                 return;
             }
 
-            // Use the first trip's main group
-            const trip = currentTrips[0];
+            // Populate trip selector
+            populateExpenseTripSelector();
             
-            try {
-                // Get the group for this trip
-                const groups = await apiCall(`/api/trips/${trip.id}/groups`);
-                if (groups.length > 0) {
-                    currentGroupId = groups[0].id; // Use the first group
-                    console.log('Using group ID:', currentGroupId);
-                } else {
-                    // Fallback: try using trip ID as group ID (for backward compatibility)
-                    console.log('No groups found, trying trip ID as group ID');
-                    currentGroupId = trip.id;
+            // Try to find a trip with accessible groups
+            let trip = null;
+            let accessibleGroup = null;
+            for (const t of currentTrips) {
+                try {
+                    const groups = await apiCall(`/api/trips/${t.id}/groups`);
+                    if (groups.length > 0) {
+                        // Test if we can access the first group
+                        try {
+                            await apiCall(`/api/groups/${groups[0].id}/expenses/split`);
+                            trip = t;
+                            accessibleGroup = groups[0];
+                            break;
+                        } catch (accessError) {
+                            console.log(`Cannot access group ${groups[0].id} for trip ${t.id}`);
+                            continue;
+                        }
+                    }
+                } catch (error) {
+                    console.log(`Error loading groups for trip ${t.id}:`, error);
+                    continue;
                 }
-
-                // Load expense summary
+            }
+            if (!trip || !accessibleGroup) {
+                showMessage('expenseMessage', 'No accessible trips found. Create a new trip or join an existing one.', 'error');
+                return;
+            }
+            try {
+                currentGroupId = accessibleGroup.id;
+                console.log('Using accessible group ID:', currentGroupId);
                 await loadExpenseSummary();
-                // Load expenses list
                 await loadExpensesList();
             } catch (error) {
                 console.error('Error loading expenses:', error);
-                // Fallback: try using trip ID as group ID
-                console.log('Falling back to using trip ID as group ID');
-                currentGroupId = trip.id;
-                
-                try {
-                    await loadExpenseSummary();
-                    await loadExpensesList();
-                } catch (fallbackError) {
-                    console.error('Fallback also failed:', fallbackError);
-                    showMessage('expenseMessage', 'Failed to load expenses. Please try again.', 'error');
+                showMessage('expenseMessage', 'Failed to load expenses. Please try again.', 'error');
+            }
+        }
+
+        function populateExpenseTripSelector() {
+            const selector = document.getElementById('expenseTripSelector');
+            if (!selector) return;
+            
+            // Clear existing options
+            selector.innerHTML = '<option value="">Select a trip...</option>';
+            
+            if (!currentTrips || currentTrips.length === 0) {
+                return;
+            }
+            
+            // Add options for each trip
+            currentTrips.forEach(trip => {
+                const option = document.createElement('option');
+                option.value = trip.id;
+                option.textContent = trip.name;
+                selector.appendChild(option);
+            });
+        }
+
+        async function onExpenseTripChange() {
+            const selector = document.getElementById('expenseTripSelector');
+            const selectedTripId = selector.value;
+            
+            if (!selectedTripId) {
+                // Clear expense display
+                document.getElementById('totalExpenseAmount').textContent = '$0.00';
+                document.getElementById('memberCount').textContent = '0';
+                document.getElementById('splitAmount').textContent = '$0.00';
+                document.getElementById('expensesList').innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-receipt"></i>
+                        <h3>No trip selected</h3>
+                        <p>Please select a trip to view expenses.</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            try {
+                // Get groups for the selected trip
+                const groups = await apiCall(`/api/trips/${selectedTripId}/groups`);
+                if (groups.length === 0) {
+                    showMessage('expenseMessage', 'No groups found for this trip.', 'error');
+                    return;
                 }
+                
+                // Use the first group
+                currentGroupId = groups[0].id;
+                console.log('Selected trip group ID:', currentGroupId);
+                
+                // Load expenses for this group
+                await loadExpenseSummary();
+                await loadExpensesList();
+                
+            } catch (error) {
+                console.error('Error loading expenses for selected trip:', error);
+                showMessage('expenseMessage', 'Failed to load expenses for selected trip.', 'error');
             }
         }
 
@@ -2682,12 +2763,20 @@
         async function loadTrips() {
             try {
                 console.log('Loading trips...');
-                currentTrips = await apiCall('/api/trips');
+                const response = await apiCall('/api/trips');
+                console.log('Raw trips response:', response);
+                currentTrips = Array.isArray(response) ? response : [];
                 console.log('Trips loaded:', currentTrips);
                 console.log('Number of trips:', currentTrips.length);
+                
+                // Debug: Check if trips have required fields
+                if (currentTrips.length > 0) {
+                    console.log('First trip structure:', currentTrips[0]);
+                }
             } catch (error) {
                 console.error('Error loading trips:', error);
-                showMessage('Error loading trips', 'error');
+                currentTrips = [];
+                showMessage('addTripMessage', 'Error loading trips. Please try again.', 'error');
             }
         }
 
@@ -2717,7 +2806,7 @@
             
             try {
                 await apiCall(`/api/trips/${tripId}/finalize`, {
-                    method: 'POST'
+                    method: 'PATCH'
                 });
                 
                 showMessage('addTripMessage', 'Trip finalized successfully!', 'success');
@@ -2776,9 +2865,9 @@
         function displayAllTrips() {
             const allTripsContainer = document.getElementById('allTrips');
             console.log('Displaying trips. Current trips:', currentTrips);
-            console.log('Number of trips to display:', currentTrips.length);
+            console.log('Number of trips to display:', currentTrips ? currentTrips.length : 'undefined');
             
-            if (!currentTrips || currentTrips.length === 0) {
+            if (!currentTrips || !Array.isArray(currentTrips) || currentTrips.length === 0) {
                 console.log('No trips to display, showing empty state');
                 allTripsContainer.innerHTML = `
                     <div class="empty-state">
@@ -2791,36 +2880,45 @@
             }
             
             console.log('Creating trip cards for', currentTrips.length, 'trips');
-            allTripsContainer.innerHTML = currentTrips.map(trip => createTripCard(trip, true)).join('');
+            const tripCards = currentTrips.map(trip => {
+                console.log('Creating card for trip:', trip);
+                return createTripCard(trip, true);
+            });
+            allTripsContainer.innerHTML = tripCards.join('');
         }
 
         function createTripCard(trip, showActions = false) {
+            // Ensure trip has required fields
+            const tripName = trip.name || 'Unnamed Trip';
+            const startDate = trip.start_date || 'No start date';
+            const endDate = trip.end_date || 'No end date';
+            const description = trip.description || 'No description provided';
             const roleDisplay = trip.role ? `<span class="trip-role ${trip.is_owner ? 'owner' : 'member'}">${trip.role}</span>` : '';
             
             return `
                 <div class="trip-card slide-in-up">
                     <div class="trip-card-header">
                         <div class="trip-title">
-                            ${trip.name}
+                            ${tripName}
                             ${roleDisplay}
                         </div>
                         <div class="trip-dates">
                             <i class="fas fa-calendar"></i>
-                            ${trip.start_date} - ${trip.end_date}
+                            ${startDate} - ${endDate}
                         </div>
                     </div>
                     <div class="trip-card-body">
                         <div class="trip-description">
-                            ${trip.description || 'No description provided'}
+                            ${description}
                         </div>
                         ${showActions ? `
                             <div class="trip-actions">
                                 ${trip.is_owner ? `
-                                    <button class="btn btn-primary btn-sm" onclick="editTrip(${trip.id}, '${trip.name}', '${trip.start_date}', '${trip.end_date}', '${trip.description || ''}')">
+                                    <button class="btn btn-primary btn-sm" onclick="editTrip(${trip.id}, '${tripName.replace(/'/g, "\\'")}', '${startDate.replace(/'/g, "\\'")}', '${endDate.replace(/'/g, "\\'")}', '${description.replace(/'/g, "\\'")}')">
                                         <i class="fas fa-edit"></i>
                                         Edit
                                     </button>
-                                    <button class="btn btn-secondary btn-sm" onclick="openMemberModal(${trip.id}, '${trip.name}')">
+                                    <button class="btn btn-secondary btn-sm" onclick="openMemberModal(${trip.id}, '${tripName.replace(/'/g, "\\'")}')">
                                         <i class="fas fa-users"></i>
                                         Manage Members
                                     </button>
@@ -2829,7 +2927,7 @@
                                         Finalize
                                     </button>
                                 ` : `
-                                    <button class="btn btn-secondary btn-sm" onclick="openMemberModal(${trip.id}, '${trip.name}')">
+                                    <button class="btn btn-secondary btn-sm" onclick="openMemberModal(${trip.id}, '${tripName.replace(/'/g, "\\'")}')">
                                         <i class="fas fa-users"></i>
                                         View Members
                                     </button>
