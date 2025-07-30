@@ -2730,25 +2730,36 @@
             document.getElementById('addMemberForm').addEventListener('submit', async (e) => {
                 e.preventDefault();
                 
-                if (!currentTripId) return;
+                if (!currentTripId) {
+                    console.error('No current trip ID set');
+                    return;
+                }
                 
                 const email = document.getElementById('memberEmail').value.trim();
+                if (!email) {
+                    showMessage('addMemberMessage', 'Please enter an email address.', 'error');
+                    return;
+                }
+                
+                console.log('Adding member with email:', email, 'to trip:', currentTripId);
+                
                 const submitBtn = e.target.querySelector('button[type="submit"]');
                 
                 try {
                     submitBtn.disabled = true;
                     submitBtn.innerHTML = '<span class="loading"></span> Adding...';
                     
-                    await apiCall(`/api/trips/${currentTripId}/members`, {
+                    const response = await apiCall(`/api/trips/${currentTripId}/members`, {
                         method: 'POST',
                         body: JSON.stringify({ email })
                     });
                     
+                    console.log('Member addition response:', response);
                     showMessage('addMemberMessage', 'Member added successfully!', 'success');
                     document.getElementById('memberEmail').value = '';
                     
                     // Reload members list
-                    loadTripMembers(currentTripId);
+                    await loadTripMembers(currentTripId);
                     
                 } catch (error) {
                     console.error('Error adding member:', error);
@@ -2759,6 +2770,8 @@
                         errorMessage = 'No user found with that email. They need to register first.';
                     } else if (error.message.includes('already a member')) {
                         errorMessage = 'This user is already a member of the trip.';
+                    } else if (error.message.includes('unauthorized')) {
+                        errorMessage = 'You are not authorized to add members to this trip.';
                     }
                     showMessage('addMemberMessage', errorMessage, 'error');
                 } finally {
@@ -2791,21 +2804,18 @@
                 const groups = await apiCall(`/api/trips/${trip.id}/groups`);
                 if (groups.length > 0) {
                     currentGalleryGroupId = groups[0].id;
+                    console.log('Using group ID for gallery:', currentGalleryGroupId);
                 } else {
+                    // If no groups exist, create one or use trip ID
+                    console.log('No groups found, using trip ID as fallback');
                     currentGalleryGroupId = trip.id;
                 }
 
                 await loadGalleryPhotos();
             } catch (error) {
                 console.error('Error loading gallery:', error);
-                currentGalleryGroupId = trip.id;
-                
-                try {
-                    await loadGalleryPhotos();
-                } catch (fallbackError) {
-                    console.error('Fallback also failed:', fallbackError);
-                    showMessage('uploadMessage', 'Failed to load gallery. Please try again.', 'error');
-                }
+                // Don't use trip ID as fallback - it won't work for uploads
+                showMessage('uploadMessage', 'Failed to load gallery. Please try again.', 'error');
             }
         }
 
@@ -2865,14 +2875,28 @@
                     return;
                 }
 
+                // Check if we have a valid group ID (not trip ID)
+                if (currentGalleryGroupId === currentTrips[0]?.id) {
+                    showMessage('uploadMessage', 'Please create a trip first to upload photos.', 'error');
+                    return;
+                }
+
+                const photoFile = document.getElementById('photoFile').files[0];
+                if (!photoFile) {
+                    showMessage('uploadMessage', 'Please select a photo to upload.', 'error');
+                    return;
+                }
+
                 const formData = new FormData();
-                formData.append('photo', document.getElementById('photoFile').files[0]);
+                formData.append('photo', photoFile);
                 formData.append('caption', document.getElementById('photoCaption').value.trim());
 
                 try {
                     const submitBtn = e.target.querySelector('button[type="submit"]');
                     submitBtn.disabled = true;
                     submitBtn.innerHTML = '<span class="loading"></span> Uploading...';
+
+                    console.log('Uploading photo to group:', currentGalleryGroupId);
 
                     await apiCall(`/api/groups/${currentGalleryGroupId}/photos`, {
                         method: 'POST',
