@@ -220,6 +220,12 @@
             gap: 0.5rem;
         }
 
+        .header-actions {
+            display: flex;
+            gap: 0.5rem;
+            align-items: center;
+        }
+
         .card-body {
             padding: 2rem;
         }
@@ -386,6 +392,13 @@
         .btn-sm {
             padding: 0.5rem 1rem;
             font-size: 0.85rem;
+        }
+
+        .form-actions {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+            margin-top: 1rem;
         }
 
         /* Trip Cards */
@@ -1585,14 +1598,12 @@
             border-radius: var(--border-radius);
             padding: 1.5rem;
             margin-bottom: 1rem;
-            cursor: pointer;
             transition: var(--transition);
         }
 
         .trip-expense-item:hover {
             box-shadow: var(--shadow-medium);
             border-color: var(--primary-color);
-            transform: translateY(-2px);
         }
 
         .trip-expense-header {
@@ -1665,6 +1676,18 @@
         .total-expense-summary span {
             color: var(--primary-color);
             font-weight: 700;
+        }
+
+        .view-details-btn {
+            width: 100%;
+            margin-top: 0.5rem;
+            padding: 0.75rem 1rem;
+            font-weight: 500;
+        }
+
+        .view-details-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-medium);
         }
 
         .member-item {
@@ -1951,25 +1974,36 @@
                                 <label for="tripDesc">Description</label>
                                 <textarea id="tripDesc" placeholder="Describe your trip..." rows="3"></textarea>
                             </div>
+                                                    <div class="form-actions">
                             <button type="submit" class="btn btn-primary">
                                 <i class="fas fa-plus"></i>
                                 Create Trip
                             </button>
+                            <button type="button" class="btn btn-secondary" onclick="resetTripForm()" style="display: none;" id="cancelEditBtn">
+                                <i class="fas fa-times"></i>
+                                Cancel Edit
+                            </button>
+                        </div>
                             <div id="addTripMessage" class="message" style="display: none;"></div>
                         </form>
                     </div>
                 </div>
 
                 <div class="card">
-                    <div class="card-header">
-                        <h2>
-                            <i class="fas fa-list"></i>
-                            All Trips
-                        </h2>
+                                    <div class="card-header">
+                    <h2>
+                        <i class="fas fa-list"></i>
+                        All Trips
+                    </h2>
+                    <div class="header-actions">
+                        <button class="btn btn-primary btn-sm" onclick="resetTripForm()">
+                            <i class="fas fa-plus"></i> New Trip
+                        </button>
                         <button class="btn btn-secondary btn-sm" onclick="refreshTrips()">
                             <i class="fas fa-sync-alt"></i> Refresh
                         </button>
                     </div>
+                </div>
                     <div class="card-body">
                         <div id="allTrips" class="trips-grid">
                             <!-- All trips will be loaded here -->
@@ -3115,7 +3149,7 @@
             }
 
             const expensesHtml = tripExpenses.map(trip => `
-                <div class="trip-expense-item" onclick="openTripDetailsModal(${trip.tripId})">
+                <div class="trip-expense-item">
                     <div class="trip-expense-header">
                         <div class="trip-info">
                             <h4>${trip.tripName}</h4>
@@ -3132,9 +3166,12 @@
                             </div>
                         </div>
                     </div>
-                    <div class="trip-expense-footer">
-                        <span class="click-hint">Click to view trip details</span>
-                    </div>
+                                    <div class="trip-expense-footer">
+                    <button class="btn btn-primary btn-sm view-details-btn" onclick="openTripDetailsModal(${trip.tripId})">
+                        <i class="fas fa-eye"></i>
+                        View Trip Details
+                    </button>
+                </div>
                 </div>
             `).join('');
 
@@ -3143,6 +3180,27 @@
 
         async function refreshTripExpenses() {
             await loadUserTripExpenses();
+        }
+
+        function resetTripForm() {
+            const form = document.getElementById('addTripForm');
+            form.reset();
+            delete form.dataset.editTripId;
+            
+            const submitBtn = form.querySelector('button[type="submit"]');
+            submitBtn.innerHTML = '<i class="fas fa-plus"></i> Create Trip';
+            
+            // Hide cancel button
+            const cancelBtn = document.getElementById('cancelEditBtn');
+            if (cancelBtn) {
+                cancelBtn.style.display = 'none';
+            }
+            
+            // Clear any messages
+            const messageEl = document.getElementById('addTripMessage');
+            if (messageEl) {
+                messageEl.style.display = 'none';
+            }
         }
 
         function populateDashboardTripSelector() {
@@ -3255,16 +3313,42 @@
         }
 
         async function editTrip(tripId, name, startDate, endDate, description) {
+            // Format dates for HTML date inputs (YYYY-MM-DD)
+            const formatDateForInput = (dateStr) => {
+                if (!dateStr) return '';
+                // If date is already in YYYY-MM-DD format, return as is
+                if (dateStr.match(/^\d{4}-\d{2}-\d{2}$/)) {
+                    return dateStr;
+                }
+                // If date is in DD/MM/YYYY format, convert to YYYY-MM-DD
+                if (dateStr.match(/^\d{2}\/\d{2}\/\d{4}$/)) {
+                    const parts = dateStr.split('/');
+                    return `${parts[2]}-${parts[1].padStart(2, '0')}-${parts[0].padStart(2, '0')}`;
+                }
+                // If date is in MM/DD/YYYY format, convert to YYYY-MM-DD
+                if (dateStr.match(/^\d{2}\/\d{2}\/\d{4}$/)) {
+                    const parts = dateStr.split('/');
+                    return `${parts[2]}-${parts[0].padStart(2, '0')}-${parts[1].padStart(2, '0')}`;
+                }
+                return dateStr; // Return as is if no pattern matches
+            };
+            
             // Populate the add trip form with existing data
             document.getElementById('tripName').value = name;
-            document.getElementById('startDate').value = startDate;
-            document.getElementById('endDate').value = endDate;
+            document.getElementById('startDate').value = formatDateForInput(startDate);
+            document.getElementById('endDate').value = formatDateForInput(endDate);
             document.getElementById('tripDesc').value = description;
             
             // Change form to edit mode
             const form = document.getElementById('addTripForm');
             const submitBtn = form.querySelector('button[type="submit"]');
             submitBtn.innerHTML = '<i class="fas fa-save"></i> Update Trip';
+            
+            // Show cancel button
+            const cancelBtn = document.getElementById('cancelEditBtn');
+            if (cancelBtn) {
+                cancelBtn.style.display = 'inline-block';
+            }
             
             // Store trip ID for update
             form.dataset.editTripId = tripId;
@@ -3603,6 +3687,12 @@
                     
                     showMessage('addTripMessage', 'Trip updated successfully!', 'success');
                     delete e.target.dataset.editTripId;
+                    
+                    // Hide cancel button after successful update
+                    const cancelBtn = document.getElementById('cancelEditBtn');
+                    if (cancelBtn) {
+                        cancelBtn.style.display = 'none';
+                    }
                 } else {
                     // Create new trip
                 await apiCall('/api/trips', {
@@ -3617,6 +3707,12 @@
                 
                 // Reset form to create mode
                 submitBtn.innerHTML = '<i class="fas fa-plus"></i> Create Trip';
+                
+                // Hide cancel button
+                const cancelBtn = document.getElementById('cancelEditBtn');
+                if (cancelBtn) {
+                    cancelBtn.style.display = 'none';
+                }
                 
                 // Reload trips data
                 await loadTrips();
