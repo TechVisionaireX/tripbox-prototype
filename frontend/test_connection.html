@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Connection Test - TripBox</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .success { color: #28a745; }
+        .error { color: #dc3545; }
+        .warning { color: #ffc107; }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        .result {
+            margin-top: 10px;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 5px;
+            white-space: pre-wrap;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 TripBox Connection Test</h1>
+        <p>This page tests the connection between frontend and backend.</p>
+        
+        <div class="test-section">
+            <h3>1. Basic API Connection</h3>
+            <button onclick="testBasicConnection()">Test Basic Connection</button>
+            <div id="basic-result" class="result"></div>
+        </div>
+        
+        <div class="test-section">
+            <h3>2. Registration Test</h3>
+            <button onclick="testRegistration()">Test Registration</button>
+            <div id="register-result" class="result"></div>
+        </div>
+        
+        <div class="test-section">
+            <h3>3. Login Test</h3>
+            <button onclick="testLogin()">Test Login</button>
+            <div id="login-result" class="result"></div>
+        </div>
+        
+        <div class="test-section">
+            <h3>4. Token Validation Test</h3>
+            <button onclick="testTokenValidation()">Test Token Validation</button>
+            <div id="token-result" class="result"></div>
+        </div>
+        
+        <div class="test-section">
+            <h3>5. Run All Tests</h3>
+            <button onclick="runAllTests()">Run All Tests</button>
+            <div id="all-result" class="result"></div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:8080';
+        
+        function showResult(elementId, message, type = 'info') {
+            const element = document.getElementById(elementId);
+            element.innerHTML = message;
+            element.className = `result ${type}`;
+        }
+        
+        async function testBasicConnection() {
+            try {
+                const response = await fetch(`${API_BASE}/api/hello`);
+                const data = await response.json();
+                
+                if (response.ok) {
+                    showResult('basic-result', `✅ Connection successful!\n📝 Response: ${JSON.stringify(data, null, 2)}`, 'success');
+                } else {
+                    showResult('basic-result', `❌ Connection failed: ${response.status}\n📝 Response: ${JSON.stringify(data, null, 2)}`, 'error');
+                }
+            } catch (error) {
+                showResult('basic-result', `❌ Connection error: ${error.message}`, 'error');
+            }
+        }
+        
+        async function testRegistration() {
+            try {
+                const testUser = {
+                    name: "Test User",
+                    email: "test@example.com",
+                    password: "test123"
+                };
+                
+                const response = await fetch(`${API_BASE}/api/register`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(testUser)
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    showResult('register-result', `✅ Registration successful!\n📝 Response: ${JSON.stringify(data, null, 2)}`, 'success');
+                } else if (response.status === 400 && data.error.includes('already exists')) {
+                    showResult('register-result', `⚠️ User already exists (expected)\n📝 Response: ${JSON.stringify(data, null, 2)}`, 'warning');
+                } else {
+                    showResult('register-result', `❌ Registration failed: ${response.status}\n📝 Response: ${JSON.stringify(data, null, 2)}`, 'error');
+                }
+            } catch (error) {
+                showResult('register-result', `❌ Registration error: ${error.message}`, 'error');
+            }
+        }
+        
+        async function testLogin() {
+            try {
+                const loginData = {
+                    email: "test@example.com",
+                    password: "test123"
+                };
+                
+                const response = await fetch(`${API_BASE}/api/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(loginData)
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    const hasToken = data.access_token ? '✅' : '❌';
+                    const hasRefreshToken = data.refresh_token ? '✅' : '❌';
+                    showResult('login-result', `✅ Login successful!\n${hasToken} Access Token: ${data.access_token ? 'Present' : 'Missing'}\n${hasRefreshToken} Refresh Token: ${data.refresh_token ? 'Present' : 'Missing'}\n📝 Response: ${JSON.stringify(data, null, 2)}`, 'success');
+                    
+                    // Store tokens for token validation test
+                    if (data.access_token) {
+                        localStorage.setItem('test_access_token', data.access_token);
+                    }
+                } else {
+                    showResult('login-result', `❌ Login failed: ${response.status}\n📝 Response: ${JSON.stringify(data, null, 2)}`, 'error');
+                }
+            } catch (error) {
+                showResult('login-result', `❌ Login error: ${error.message}`, 'error');
+            }
+        }
+        
+        async function testTokenValidation() {
+            try {
+                const accessToken = localStorage.getItem('test_access_token');
+                
+                if (!accessToken) {
+                    showResult('token-result', `⚠️ No access token available. Please run login test first.`, 'warning');
+                    return;
+                }
+                
+                const response = await fetch(`${API_BASE}/api/validate-token`, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${accessToken}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    showResult('token-result', `✅ Token validation successful!\n📝 Response: ${JSON.stringify(data, null, 2)}`, 'success');
+                } else {
+                    showResult('token-result', `❌ Token validation failed: ${response.status}\n📝 Response: ${JSON.stringify(data, null, 2)}`, 'error');
+                }
+            } catch (error) {
+                showResult('token-result', `❌ Token validation error: ${error.message}`, 'error');
+            }
+        }
+        
+        async function runAllTests() {
+            showResult('all-result', '🔄 Running all tests...\n');
+            
+            // Test 1: Basic Connection
+            await testBasicConnection();
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            
+            // Test 2: Registration
+            await testRegistration();
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            
+            // Test 3: Login
+            await testLogin();
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            
+            // Test 4: Token Validation
+            await testTokenValidation();
+            
+            showResult('all-result', '🎉 All tests completed! Check individual results above.', 'success');
+        }
+        
+        // Auto-run basic connection test on page load
+        window.onload = function() {
+            testBasicConnection();
+        };
+    </script>
+</body>
+</html> 

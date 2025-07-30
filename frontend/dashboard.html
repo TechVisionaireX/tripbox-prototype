@@ -1993,7 +1993,7 @@
 
     <script>
         // API Base URL
-        const API_BASE = 'http://localhost:5000';
+        const API_BASE = 'http://localhost:8080';
         
         // Global State
         let currentUser = null;
@@ -2644,12 +2644,12 @@
                     delete e.target.dataset.editTripId;
                 } else {
                     // Create new trip
-                    await apiCall('/api/trips', {
-                        method: 'POST',
-                        body: JSON.stringify(formData)
-                    });
-                    
-                    showMessage('addTripMessage', 'Trip created successfully!', 'success');
+                await apiCall('/api/trips', {
+                    method: 'POST',
+                    body: JSON.stringify(formData)
+                });
+                
+                showMessage('addTripMessage', 'Trip created successfully!', 'success');
                 }
                 
                 document.getElementById('addTripForm').reset();
