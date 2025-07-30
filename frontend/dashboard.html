@@ -404,11 +404,27 @@
             overflow: hidden;
             transition: var(--transition);
             position: relative;
+            cursor: pointer;
         }
 
         .trip-card:hover {
             transform: translateY(-4px);
             box-shadow: var(--shadow-strong);
+        }
+        
+        .trip-card.selected-trip {
+            border: 2px solid var(--primary-color);
+            box-shadow: var(--shadow-medium);
+            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+        }
+        
+        .selected-indicator {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            color: white;
+            font-size: 1.2rem;
+            z-index: 10;
         }
 
         .trip-card-header {
@@ -1526,9 +1542,15 @@
             <div class="header">
                 <h1>Welcome Back!</h1>
                 <p>Here's what's happening with your trips today</p>
-                <button class="btn btn-primary btn-sm" onclick="refreshAllData()" style="margin-top: 1rem;">
-                    <i class="fas fa-sync-alt"></i> Refresh All Data
-                </button>
+                <div class="trip-selector-container" style="margin-top: 1rem;">
+                    <label for="tripSelector" style="margin-right: 0.5rem; font-weight: 600;">Select Trip:</label>
+                    <select id="tripSelector" onchange="selectTrip(parseInt(this.value))" style="padding: 0.5rem; border-radius: 8px; border: 1px solid #e5e7eb; margin-right: 1rem;">
+                        <option value="">Choose a trip...</option>
+                    </select>
+                    <button class="btn btn-primary btn-sm" onclick="refreshAllData()">
+                        <i class="fas fa-sync-alt"></i> Refresh All Data
+                    </button>
+                </div>
             </div>
             
             <div class="content">
@@ -1749,6 +1771,9 @@
             <div class="header">
                 <h1>Expenses</h1>
                 <p>Track and split your travel costs</p>
+                <div id="currentTripInfo" class="current-trip-info" style="margin-top: 0.5rem; padding: 0.5rem; background: #f3f4f6; border-radius: 8px; display: none;">
+                    <strong>Current Trip:</strong> <span id="currentTripName"></span>
+                </div>
             </div>
             <div class="content">
                 <!-- Expense Summary -->
@@ -1834,6 +1859,9 @@
             <div class="header">
                 <h1>Gallery</h1>
                 <p>Share and preserve your travel memories</p>
+                <div id="currentTripInfoGallery" class="current-trip-info" style="margin-top: 0.5rem; padding: 0.5rem; background: #f3f4f6; border-radius: 8px; display: none;">
+                    <strong>Current Trip:</strong> <span id="currentTripNameGallery"></span>
+                </div>
             </div>
             <div class="content">
                 <!-- Gallery Upload -->
@@ -1874,6 +1902,9 @@
             <div class="header">
                 <h1>Checklists</h1>
                 <p>Stay organized with packing and to-do lists</p>
+                <div id="currentTripInfoChecklist" class="current-trip-info" style="margin-top: 0.5rem; padding: 0.5rem; background: #f3f4f6; border-radius: 8px; display: none;">
+                    <strong>Current Trip:</strong> <span id="currentTripNameChecklist"></span>
+                </div>
             </div>
             <div class="content">
                 <!-- Add Checklist Item -->
@@ -2001,6 +2032,8 @@
         // Global State
         let currentUser = null;
         let currentTrips = [];
+        let currentSelectedTrip = null; // Track the currently selected trip
+        let currentTripGroups = []; // Groups for the selected trip
 
         // Authentication Check
         async function checkAuth() {
@@ -2121,16 +2154,32 @@
                     loadAllTrips();
                     break;
                 case 'groups':
-                    loadGroups();
+                    if (currentSelectedTrip) {
+                        loadTripGroups();
+                    } else {
+                        loadGroups();
+                    }
                     break;
                 case 'expenses':
-                    loadExpenses();
+                    if (currentSelectedTrip) {
+                        loadTripExpenses();
+                    } else {
+                        loadExpenses();
+                    }
                     break;
                 case 'gallery':
-                    loadGallery();
+                    if (currentSelectedTrip) {
+                        loadTripGallery();
+                    } else {
+                        loadGallery();
+                    }
                     break;
                 case 'checklist':
-                    loadChecklists();
+                    if (currentSelectedTrip) {
+                        loadTripChecklists();
+                    } else {
+                        loadChecklists();
+                    }
                     break;
                 // Add cases for other sections as needed
             }
@@ -2210,17 +2259,227 @@
                 // Load trips for dashboard stats
                 await loadTrips();
                 console.log('✅ Trips loaded, updating stats...');
-                updateDashboardStats();
+                await updateDashboardStats();
                 displayRecentTrips();
                 
                 // Always display all trips in the trips section (regardless of visibility)
                 console.log('📋 Displaying all trips...');
                 displayAllTrips();
                 
+                // Auto-select the first trip if available
+                if (currentTrips.length > 0 && !currentSelectedTrip) {
+                    console.log('🎯 Auto-selecting first trip:', currentTrips[0].name);
+                    await selectTrip(currentTrips[0].id);
+                }
+                
                 console.log('✅ Dashboard data loaded successfully');
             } catch (error) {
                 console.error('❌ Error loading dashboard data:', error);
             }
+        }
+
+        // Trip-Specific Data Loading Functions
+        async function loadTripExpenses() {
+            if (!currentSelectedTrip || !currentTripGroups.length) {
+                console.log('❌ No trip selected or no groups available');
+                return;
+            }
+            
+            const groupId = currentTripGroups[0].id;
+            console.log('💰 Loading expenses for trip:', currentSelectedTrip.name, 'group:', groupId);
+            
+            try {
+                // Load expense summary
+                const summary = await apiCall(`/api/groups/${groupId}/expenses/split`);
+                document.getElementById('totalExpenseAmount').textContent = `$${summary.total_expense}`;
+                document.getElementById('memberCount').textContent = summary.member_count;
+                document.getElementById('splitAmount').textContent = `$${summary.split_per_member}`;
+                
+                // Load expenses list
+                const expenses = await apiCall(`/api/groups/${groupId}/expenses`);
+                displayTripExpenses(expenses);
+                
+            } catch (error) {
+                console.error('❌ Error loading trip expenses:', error);
+            }
+        }
+        
+        async function loadTripGallery() {
+            if (!currentSelectedTrip || !currentTripGroups.length) {
+                console.log('❌ No trip selected or no groups available');
+                return;
+            }
+            
+            const groupId = currentTripGroups[0].id;
+            console.log('📸 Loading gallery for trip:', currentSelectedTrip.name, 'group:', groupId);
+            
+            try {
+                const photos = await apiCall(`/api/groups/${groupId}/photos`);
+                displayTripGallery(photos);
+            } catch (error) {
+                console.error('❌ Error loading trip gallery:', error);
+            }
+        }
+        
+        async function loadTripChecklists() {
+            if (!currentSelectedTrip || !currentTripGroups.length) {
+                console.log('❌ No trip selected or no groups available');
+                return;
+            }
+            
+            const groupId = currentTripGroups[0].id;
+            console.log('📋 Loading checklists for trip:', currentSelectedTrip.name, 'group:', groupId);
+            
+            try {
+                const packingItems = await apiCall(`/api/groups/${groupId}/packing-items`);
+                const todoItems = await apiCall(`/api/groups/${groupId}/todo-items`);
+                const reminderItems = await apiCall(`/api/groups/${groupId}/reminder-items`);
+                
+                displayTripChecklists(packingItems, todoItems, reminderItems);
+            } catch (error) {
+                console.error('❌ Error loading trip checklists:', error);
+            }
+        }
+        
+        async function loadTripGroups() {
+            if (!currentSelectedTrip) {
+                console.log('❌ No trip selected');
+                return;
+            }
+            
+            console.log('👥 Loading groups for trip:', currentSelectedTrip.name);
+            
+            try {
+                const groups = await apiCall(`/api/trips/${currentSelectedTrip.id}/groups`);
+                displayTripGroups(groups);
+            } catch (error) {
+                console.error('❌ Error loading trip groups:', error);
+            }
+        }
+        
+        // Display Functions for Trip-Specific Data
+        function displayTripExpenses(expenses) {
+            const expensesList = document.getElementById('expensesList');
+            
+            if (expenses.length === 0) {
+                expensesList.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-receipt"></i>
+                        <h3>No expenses yet</h3>
+                        <p>Add your first expense for this trip!</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            expensesList.innerHTML = expenses.map(expense => `
+                <div class="expense-item">
+                    <div class="expense-header">
+                        <span class="expense-amount">$${expense.amount}</span>
+                        <span class="expense-category">${expense.category}</span>
+                    </div>
+                    <div class="expense-details">
+                        <p>${expense.note}</p>
+                        <small>Added by ${expense.user_name} on ${formatDate(expense.timestamp)}</small>
+                    </div>
+                    ${expense.user_id === currentUser.id ? 
+                        `<button class="btn btn-danger btn-sm" onclick="deleteExpense(${expense.id})">
+                            <i class="fas fa-trash"></i> Delete
+                        </button>` : ''
+                    }
+                </div>
+            `).join('');
+        }
+        
+        function displayTripGallery(photos) {
+            const galleryGrid = document.getElementById('galleryGrid');
+            
+            if (photos.length === 0) {
+                galleryGrid.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-camera"></i>
+                        <h3>No photos yet</h3>
+                        <p>Share your first photo from this trip!</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            galleryGrid.innerHTML = photos.map(photo => `
+                <div class="photo-item">
+                    <img src="${API_BASE}/uploads/${photo.filename}" alt="${photo.caption || 'Photo'}" />
+                    <div class="photo-caption">${photo.caption || 'No caption'}</div>
+                    ${photo.user_id === currentUser.id ? 
+                        `<button class="btn btn-danger btn-sm" onclick="deletePhoto(${photo.id})">
+                            <i class="fas fa-trash"></i>
+                        </button>` : ''
+                    }
+                </div>
+            `).join('');
+        }
+        
+        function displayTripChecklists(packingItems, todoItems, reminderItems) {
+            // Display packing items
+            const packingList = document.getElementById('packingList');
+            packingList.innerHTML = packingItems.map(item => `
+                <div class="checklist-item ${item.is_completed ? 'completed' : ''}">
+                    <input type="checkbox" ${item.is_completed ? 'checked' : ''} 
+                           onchange="togglePackingItem(${item.id})" />
+                    <span>${item.text}</span>
+                    <small>Added by ${item.user_name}</small>
+                </div>
+            `).join('');
+            
+            // Display todo items
+            const todoList = document.getElementById('todoList');
+            todoList.innerHTML = todoItems.map(item => `
+                <div class="checklist-item ${item.is_completed ? 'completed' : ''}">
+                    <input type="checkbox" ${item.is_completed ? 'checked' : ''} 
+                           onchange="toggleTodoItem(${item.id})" />
+                    <span>${item.text}</span>
+                    <small>Added by ${item.user_name}</small>
+                </div>
+            `).join('');
+            
+            // Display reminder items
+            const reminderList = document.getElementById('reminderList');
+            reminderList.innerHTML = reminderItems.map(item => `
+                <div class="checklist-item ${item.is_completed ? 'completed' : ''}">
+                    <input type="checkbox" ${item.is_completed ? 'checked' : ''} 
+                           onchange="toggleReminderItem(${item.id})" />
+                    <span>${item.text}</span>
+                    <small>Added by ${item.user_name}</small>
+                </div>
+            `).join('');
+        }
+        
+        function displayTripGroups(groups) {
+            const groupsList = document.getElementById('groupsList');
+            
+            if (groups.length === 0) {
+                groupsList.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-users"></i>
+                        <h3>No groups yet</h3>
+                        <p>Create your first group for this trip!</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            groupsList.innerHTML = groups.map(group => `
+                <div class="group-item">
+                    <div class="group-header">
+                        <h4>${group.name}</h4>
+                        <span class="member-count">${group.member_count} members</span>
+                    </div>
+                    <div class="group-actions">
+                        <button class="btn btn-primary btn-sm" onclick="openGroupModal(${group.id})">
+                            <i class="fas fa-users"></i> Manage Members
+                        </button>
+                    </div>
+                </div>
+            `).join('');
         }
 
         // Expense Management Functions
@@ -2377,7 +2636,13 @@
             document.getElementById('addExpenseForm').addEventListener('submit', async (e) => {
                 e.preventDefault();
                 
-                if (!currentGroupId) {
+                // Use selected trip's group or fallback to currentGroupId
+                let groupId = null;
+                if (currentSelectedTrip && currentTripGroups.length > 0) {
+                    groupId = currentTripGroups[0].id;
+                } else if (currentGroupId) {
+                    groupId = currentGroupId;
+                } else {
                     showMessage('expenseMessage', 'Please select a trip first.', 'error');
                     return;
                 }
@@ -2396,10 +2661,10 @@
                     return;
                 }
 
-                console.log('Adding expense:', { amount, category, description, groupId: currentGroupId });
+                console.log('Adding expense:', { amount, category, description, groupId, tripName: currentSelectedTrip?.name });
 
                 try {
-                    const response = await apiCall(`/api/groups/${currentGroupId}/expenses`, {
+                    const response = await apiCall(`/api/groups/${groupId}/expenses`, {
                         method: 'POST',
                         body: JSON.stringify({
                             amount: amount,
@@ -2414,9 +2679,13 @@
                     // Clear form
                     document.getElementById('addExpenseForm').reset();
                     
-                    // Reload expenses
-                    await loadExpenseSummary();
-                    await loadExpensesList();
+                    // Reload trip-specific expenses
+                    if (currentSelectedTrip) {
+                        await loadTripExpenses();
+                    } else {
+                        await loadExpenseSummary();
+                        await loadExpensesList();
+                    }
                     
                     // Refresh all data to ensure consistency
                     await refreshAllData();
@@ -2460,12 +2729,43 @@
             }
         }
 
-        function updateDashboardStats() {
+        async function updateDashboardStats() {
             document.getElementById('totalTrips').textContent = currentTrips.length;
-            // Add more stats calculations here
-            document.getElementById('activeGroups').textContent = '0';
-            document.getElementById('totalExpenses').textContent = '$0';
-            document.getElementById('photosCount').textContent = '0';
+            
+            if (currentSelectedTrip && currentTripGroups.length > 0) {
+                // Show trip-specific stats
+                try {
+                    const groupId = currentTripGroups[0].id;
+                    
+                    // Get expense summary
+                    const expenseSummary = await apiCall(`/api/groups/${groupId}/expenses/split`);
+                    document.getElementById('totalExpenses').textContent = `$${expenseSummary.total_expense}`;
+                    document.getElementById('memberCount').textContent = expenseSummary.member_count;
+                    
+                    // Get photo count
+                    const photos = await apiCall(`/api/groups/${groupId}/photos`);
+                    document.getElementById('photosCount').textContent = photos.length;
+                    
+                    // Get checklist count
+                    const packingItems = await apiCall(`/api/groups/${groupId}/packing-items`);
+                    const todoItems = await apiCall(`/api/groups/${groupId}/todo-items`);
+                    const reminderItems = await apiCall(`/api/groups/${groupId}/reminder-items`);
+                    const totalItems = packingItems.length + todoItems.length + reminderItems.length;
+                    document.getElementById('activeGroups').textContent = totalItems;
+                    
+                } catch (error) {
+                    console.error('Error loading trip-specific stats:', error);
+                    // Fallback to default values
+                    document.getElementById('activeGroups').textContent = '0';
+                    document.getElementById('totalExpenses').textContent = '$0';
+                    document.getElementById('photosCount').textContent = '0';
+                }
+            } else {
+                // Show general stats
+                document.getElementById('activeGroups').textContent = '0';
+                document.getElementById('totalExpenses').textContent = '$0';
+                document.getElementById('photosCount').textContent = '0';
+            }
         }
 
         function displayRecentTrips() {
@@ -2579,13 +2879,15 @@
 
         function createTripCard(trip, showActions = false) {
             const roleDisplay = trip.role ? `<span class="trip-role ${trip.is_owner ? 'owner' : 'member'}">${trip.role}</span>` : '';
+            const isSelected = currentSelectedTrip && currentSelectedTrip.id === trip.id;
             
             return `
-                <div class="trip-card slide-in-up">
+                <div class="trip-card slide-in-up ${isSelected ? 'selected-trip' : ''}" data-trip-id="${trip.id}" onclick="selectTrip(${trip.id})">
                     <div class="trip-card-header">
                         <div class="trip-title">
                             ${trip.name}
                             ${roleDisplay}
+                            ${isSelected ? '<span class="selected-indicator"><i class="fas fa-check-circle"></i></span>' : ''}
                         </div>
                         <div class="trip-dates">
                             <i class="fas fa-calendar"></i>
@@ -2599,20 +2901,20 @@
                         ${showActions && trip.is_owner !== false ? `
                             <div class="trip-actions">
                                 ${trip.is_owner ? `
-                                    <button class="btn btn-primary btn-sm" onclick="editTrip(${trip.id}, '${trip.name}', '${trip.start_date}', '${trip.end_date}', '${trip.description || ''}')">
+                                    <button class="btn btn-primary btn-sm" onclick="event.stopPropagation(); editTrip(${trip.id}, '${trip.name}', '${trip.start_date}', '${trip.end_date}', '${trip.description || ''}')">
                                         <i class="fas fa-edit"></i>
                                         Edit
                                     </button>
-                                    <button class="btn btn-secondary btn-sm" onclick="openMemberModal(${trip.id}, '${trip.name}')">
+                                    <button class="btn btn-secondary btn-sm" onclick="event.stopPropagation(); openMemberModal(${trip.id}, '${trip.name}')">
                                         <i class="fas fa-users"></i>
                                         Manage Members
                                     </button>
-                                    <button class="btn btn-success btn-sm" onclick="finalizeTrip(${trip.id})">
+                                    <button class="btn btn-success btn-sm" onclick="event.stopPropagation(); finalizeTrip(${trip.id})">
                                         <i class="fas fa-check"></i>
                                         Finalize
                                     </button>
                                 ` : `
-                                    <button class="btn btn-secondary btn-sm" onclick="openMemberModal(${trip.id}, '${trip.name}')">
+                                    <button class="btn btn-secondary btn-sm" onclick="event.stopPropagation(); openMemberModal(${trip.id}, '${trip.name}')">
                                         <i class="fas fa-users"></i>
                                         View Members
                                     </button>
@@ -2762,6 +3064,115 @@
                     </div>
                 </div>
             `).join('');
+        }
+
+        // Trip Selection and Management
+        async function selectTrip(tripId) {
+            if (!tripId) {
+                console.log('❌ No trip ID provided');
+                return;
+            }
+            
+            console.log('🎯 Selecting trip:', tripId);
+            currentSelectedTrip = currentTrips.find(trip => trip.id === tripId);
+            
+            if (!currentSelectedTrip) {
+                console.error('❌ Trip not found:', tripId);
+                return;
+            }
+            
+            console.log('✅ Selected trip:', currentSelectedTrip.name);
+            
+            // Load trip-specific data
+            await loadTripSpecificData();
+            
+            // Update UI to show selected trip
+            updateTripSelectionUI();
+            
+            // Update dashboard stats for the selected trip
+            await updateDashboardStats();
+        }
+        
+        async function loadTripSpecificData() {
+            if (!currentSelectedTrip) {
+                console.log('❌ No trip selected');
+                return;
+            }
+            
+            console.log('🔄 Loading data for trip:', currentSelectedTrip.name);
+            
+            try {
+                // Load groups for this trip
+                currentTripGroups = await apiCall(`/api/trips/${currentSelectedTrip.id}/groups`);
+                console.log('✅ Loaded groups for trip:', currentTripGroups.length);
+                
+                // Refresh all sections with trip-specific data
+                if (document.getElementById('expensesSection').style.display !== 'none') {
+                    await loadTripExpenses();
+                }
+                
+                if (document.getElementById('gallerySection').style.display !== 'none') {
+                    await loadTripGallery();
+                }
+                
+                if (document.getElementById('checklistSection').style.display !== 'none') {
+                    await loadTripChecklists();
+                }
+                
+                if (document.getElementById('groupsSection').style.display !== 'none') {
+                    await loadTripGroups();
+                }
+                
+                console.log('✅ Trip-specific data loaded successfully');
+            } catch (error) {
+                console.error('❌ Error loading trip-specific data:', error);
+            }
+        }
+        
+        function updateTripSelectionUI() {
+            // Update trip selection indicator
+            document.querySelectorAll('.trip-card').forEach(card => {
+                card.classList.remove('selected-trip');
+            });
+            
+            if (currentSelectedTrip) {
+                const selectedCard = document.querySelector(`[data-trip-id="${currentSelectedTrip.id}"]`);
+                if (selectedCard) {
+                    selectedCard.classList.add('selected-trip');
+                }
+            }
+            
+            // Update trip selector dropdown if it exists
+            const tripSelector = document.getElementById('tripSelector');
+            if (tripSelector) {
+                tripSelector.innerHTML = `
+                    <option value="">Choose a trip...</option>
+                    ${currentTrips.map(trip => 
+                        `<option value="${trip.id}" ${trip.id === currentSelectedTrip?.id ? 'selected' : ''}>
+                            ${trip.name}
+                        </option>`
+                    ).join('')}
+                `;
+            }
+            
+            // Update current trip info display for all sections
+            const tripInfoElements = [
+                { info: 'currentTripInfo', name: 'currentTripName' },
+                { info: 'currentTripInfoGallery', name: 'currentTripNameGallery' },
+                { info: 'currentTripInfoChecklist', name: 'currentTripNameChecklist' }
+            ];
+            
+            tripInfoElements.forEach(({ info, name }) => {
+                const infoElement = document.getElementById(info);
+                const nameElement = document.getElementById(name);
+                
+                if (currentSelectedTrip && infoElement && nameElement) {
+                    nameElement.textContent = currentSelectedTrip.name;
+                    infoElement.style.display = 'block';
+                } else if (infoElement) {
+                    infoElement.style.display = 'none';
+                }
+            });
         }
 
         // Comprehensive data refresh function
@@ -2967,14 +3378,14 @@
             document.getElementById('uploadPhotoForm').addEventListener('submit', async (e) => {
                 e.preventDefault();
                 
-                if (!currentGalleryGroupId) {
-                    showMessage('uploadMessage', 'Please select a trip first.', 'error');
-                    return;
-                }
-
-                // Check if we have a valid group ID
-                if (!currentGalleryGroupId) {
-                    showMessage('uploadMessage', 'Please create a trip first to upload photos.', 'error');
+                // Use selected trip's group or fallback to currentGalleryGroupId
+                let groupId = null;
+                if (currentSelectedTrip && currentTripGroups.length > 0) {
+                    groupId = currentTripGroups[0].id;
+                } else if (currentGalleryGroupId) {
+                    groupId = currentGalleryGroupId;
+                } else {
+                    showMessage('uploadMessage', 'Please select a trip first to upload photos.', 'error');
                     return;
                 }
 
@@ -2993,16 +3404,22 @@
                     submitBtn.disabled = true;
                     submitBtn.innerHTML = '<span class="loading"></span> Uploading...';
 
-                    console.log('Uploading photo to group:', currentGalleryGroupId);
+                    console.log('Uploading photo to group:', groupId, 'for trip:', currentSelectedTrip?.name);
 
-                    await apiCall(`/api/groups/${currentGalleryGroupId}/photos`, {
+                    await apiCall(`/api/groups/${groupId}/photos`, {
                         method: 'POST',
                         body: formData
                     });
 
                     showMessage('uploadMessage', 'Photo uploaded successfully!', 'success');
                     document.getElementById('uploadPhotoForm').reset();
-                    await loadGalleryPhotos();
+                    
+                    // Reload trip-specific gallery
+                    if (currentSelectedTrip) {
+                        await loadTripGallery();
+                    } else {
+                        await loadGalleryPhotos();
+                    }
 
                 } catch (error) {
                     console.error('Error uploading photo:', error);
@@ -3211,11 +3628,17 @@
             `).join('');
         }
 
-        document.addEventListener('DOMContentLoaded', () => {
+                document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('addChecklistItemForm').addEventListener('submit', async (e) => {
                 e.preventDefault();
                 
-                if (!currentGroupId) { // Use currentGroupId for checklist items
+                // Use selected trip's group or fallback to currentGroupId
+                let groupId = null;
+                if (currentSelectedTrip && currentTripGroups.length > 0) {
+                    groupId = currentTripGroups[0].id;
+                } else if (currentGroupId) {
+                    groupId = currentGroupId;
+                } else {
                     showMessage('checklistMessage', 'Please select a trip first.', 'error');
                     return;
                 }
@@ -3229,7 +3652,7 @@
                 }
 
                 try {
-                    const response = await apiCall(`/api/groups/${currentGroupId}/checklist-items`, {
+                    const response = await apiCall(`/api/groups/${groupId}/checklist-items`, {
                         method: 'POST',
                         body: JSON.stringify({
                             type: itemType,
@@ -3240,18 +3663,23 @@
                     showMessage('checklistMessage', 'Item added successfully!', 'success');
                     document.getElementById('addChecklistItemForm').reset();
                     
-                    // Reload items based on category
-                    if (itemType === 'packing') {
-                        await loadPackingItems(currentGroupId);
-                    } else if (itemType === 'todo') {
-                        await loadTodoItems(currentGroupId);
-                    } else if (itemType === 'reminder') {
-                        await loadReminderItems(currentGroupId);
+                    // Reload trip-specific checklists
+                    if (currentSelectedTrip) {
+                        await loadTripChecklists();
+                    } else {
+                        // Reload items based on category
+                        if (itemType === 'packing') {
+                            await loadPackingItems(groupId);
+                        } else if (itemType === 'todo') {
+                            await loadTodoItems(groupId);
+                        } else if (itemType === 'reminder') {
+                            await loadReminderItems(groupId);
+                        }
                     }
                     
                     // Refresh all data to ensure consistency
                     await refreshAllData();
-
+                    
                 } catch (error) {
                     console.error('Error adding checklist item:', error);
                     let errorMessage = 'Failed to add item. Please try again.';
