@@ -3291,49 +3291,117 @@
         let reminderItems = [];
 
         async function loadChecklists() {
-            // First, ensure trips are loaded
-            if (!currentTrips.length) {
-                try {
+            try {
+                console.log('Loading checklists...');
+                
+                // First, ensure trips are loaded
+                if (!currentTrips || currentTrips.length === 0) {
+                    console.log('No trips loaded, loading trips first...');
                     await loadTrips();
-                } catch (error) {
-                    console.error('Error loading trips for checklists:', error);
-                    showMessage('checklistMessage', 'Failed to load trips. Please try again.', 'error');
+                }
+                
+                if (!currentTrips || currentTrips.length === 0) {
+                    console.log('No trips available after loading');
+                    document.getElementById('packingItems').innerHTML = `
+                        <div class="empty-state">
+                            <i class="fas fa-exclamation-triangle"></i>
+                            <h3>No trips available</h3>
+                            <p>Create a trip first to manage checklists.</p>
+                        </div>
+                    `;
+                    document.getElementById('todoItems').innerHTML = `
+                        <div class="empty-state">
+                            <i class="fas fa-exclamation-triangle"></i>
+                            <h3>No trips available</h3>
+                            <p>Create a trip first to manage checklists.</p>
+                        </div>
+                    `;
+                    document.getElementById('reminderItems').innerHTML = `
+                        <div class="empty-state">
+                            <i class="fas fa-exclamation-triangle"></i>
+                            <h3>No trips available</h3>
+                            <p>Create a trip first to manage checklists.</p>
+                        </div>
+                    `;
                     return;
                 }
-            }
-            
-            if (!currentTrips.length) {
-                showMessage('checklistMessage', 'No trips available. Create a trip first.', 'error');
-                return;
-            }
 
-            const trip = currentTrips[0];
-            try {
-                const groups = await apiCall(`/api/trips/${trip.id}/groups`);
-                if (groups.length > 0) {
-                    // Assuming the first group is the main group for checklists
-                    const groupId = groups[0].id;
-                    await loadPackingItems(groupId);
-                    await loadTodoItems(groupId);
-                    await loadReminderItems(groupId);
-                } else {
-                    // Fallback to trip ID if no groups
-                    const groupId = trip.id;
-                    await loadPackingItems(groupId);
-                    await loadTodoItems(groupId);
-                    await loadReminderItems(groupId);
+                console.log('Using first trip for checklists:', currentTrips[0]);
+                const trip = currentTrips[0];
+                
+                try {
+                    const groups = await apiCall(`/api/trips/${trip.id}/groups`);
+                    console.log('Groups for trip:', groups);
+                    
+                    if (groups && groups.length > 0) {
+                        currentGroupId = groups[0].id; // Set currentGroupId for checklist form
+                        console.log('Using group ID for checklists:', currentGroupId);
+                    } else {
+                        currentGroupId = trip.id; // Fallback to trip ID
+                        console.log('Using trip ID as group ID for checklists:', currentGroupId);
+                    }
+                    
+                    await loadPackingItems(currentGroupId);
+                    await loadTodoItems(currentGroupId);
+                    await loadReminderItems(currentGroupId);
+                    
+                } catch (error) {
+                    console.error('Error loading checklists:', error);
+                    currentGroupId = trip.id; // Fallback to trip ID
+                    console.log('Falling back to using trip ID as group ID');
+                    
+                    try {
+                        await loadPackingItems(currentGroupId);
+                        await loadTodoItems(currentGroupId);
+                        await loadReminderItems(currentGroupId);
+                    } catch (fallbackError) {
+                        console.error('Fallback also failed:', fallbackError);
+                        document.getElementById('packingItems').innerHTML = `
+                            <div class="empty-state">
+                                <i class="fas fa-exclamation-triangle"></i>
+                                <h3>Error loading checklists</h3>
+                                <p>Please try again later.</p>
+                            </div>
+                        `;
+                        document.getElementById('todoItems').innerHTML = `
+                            <div class="empty-state">
+                                <i class="fas fa-exclamation-triangle"></i>
+                                <h3>Error loading checklists</h3>
+                                <p>Please try again later.</p>
+                            </div>
+                        `;
+                        document.getElementById('reminderItems').innerHTML = `
+                            <div class="empty-state">
+                                <i class="fas fa-exclamation-triangle"></i>
+                                <h3>Error loading checklists</h3>
+                                <p>Please try again later.</p>
+                            </div>
+                        `;
+                    }
                 }
             } catch (error) {
-                console.error('Error loading checklists:', error);
-                const groupId = trip.id; // Fallback to trip ID
-                try {
-                    await loadPackingItems(groupId);
-                    await loadTodoItems(groupId);
-                    await loadReminderItems(groupId);
-                } catch (fallbackError) {
-                    console.error('Fallback also failed:', fallbackError);
-                    showMessage('checklistMessage', 'Failed to load checklists. Please try again.', 'error');
-                }
+                console.error('Error in loadChecklists:', error);
+                document.getElementById('packingItems').innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <h3>Error loading checklists</h3>
+                        <p>Please try again later.</p>
+                    </div>
+                `;
+                document.getElementById('todoItems').innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <h3>Error loading checklists</h3>
+                        <p>Please try again later.</p>
+                    </div>
+                `;
+                document.getElementById('reminderItems').innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <h3>Error loading checklists</h3>
+                        <p>Please try again later.</p>
+                    </div>
+                `;
             }
         }
 
