@@ -24,13 +24,11 @@ class Group(db.Model):
     name = db.Column(db.String(100), nullable=False)
     creator_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     trip_id = db.Column(db.Integer, db.ForeignKey('trip.id'), nullable=False)
-    created_date = db.Column(db.DateTime, default=datetime.utcnow)
 
 class GroupMember(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     group_id = db.Column(db.Integer, db.ForeignKey('group.id'), nullable=False)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    joined_date = db.Column(db.DateTime, default=datetime.utcnow)
 
 class ChatMessage(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -63,7 +61,6 @@ class Photo(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     filename = db.Column(db.String(200), nullable=False)
     caption = db.Column(db.String(300))
-    upload_date = db.Column(db.DateTime, default=datetime.utcnow)
 
 class ChecklistItem(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -72,7 +69,6 @@ class ChecklistItem(db.Model):
     item_type = db.Column(db.String(20), nullable=False)  # packing, todo, reminder
     text = db.Column(db.String(255), nullable=False)
     is_completed = db.Column(db.Boolean, default=False)
-    created_date = db.Column(db.DateTime, default=datetime.utcnow)
 
 class BudgetItem(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -80,11 +76,9 @@ class BudgetItem(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     category = db.Column(db.String(100), nullable=False)
     amount = db.Column(db.Float, nullable=False)
-    timestamp = db.Column(db.DateTime, default=datetime.utcnow)
 
 class LocationCheckin(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     group_id = db.Column(db.Integer, db.ForeignKey('group.id'), nullable=False)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     message = db.Column(db.String(255))
-    timestamp = db.Column(db.DateTime, default=datetime.utcnow)
