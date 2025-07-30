@@ -33,8 +33,7 @@ def add_checklist_item(group_id):
             user_id=user_id,
             item_type=item_type,
             text=text,
-            is_completed=False,
-            created_date=datetime.now()
+            is_completed=False
         )
         
         db.session.add(item)
@@ -50,7 +49,6 @@ def add_checklist_item(group_id):
                 'text': item.text,
                 'type': item.item_type,
                 'is_completed': item.is_completed,
-                'created_date': item.created_date.isoformat(),
                 'user_id': item.user_id,
                 'user_name': user.name
             }
@@ -83,7 +81,6 @@ def get_packing_items(group_id):
                 'id': item.id,
                 'text': item.text,
                 'is_completed': item.is_completed,
-                'created_date': item.created_date.isoformat(),
                 'user_id': item.user_id,
                 'user_name': user.name
             })

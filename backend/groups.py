@@ -32,8 +32,7 @@ def get_user_groups():
                 'creator_id': group.creator_id,
                 'creator_name': creator.name,
                 'member_count': member_count,
-                'is_owner': group.creator_id == user_id,
-                'created_date': group.created_date.isoformat() if group.created_date else None
+                'is_owner': group.creator_id == user_id
             })
         
         return jsonify(result)
@@ -82,8 +81,7 @@ def create_group():
         group = Group(
             name=name,
             trip_id=trip_id,
-            creator_id=user_id,
-            created_date=datetime.now()
+            creator_id=user_id
         )
         
         db.session.add(group)
@@ -102,16 +100,14 @@ def create_group():
         creator = User.query.get(user_id)
         
         return jsonify({
-            'message': 'Group created successfully',
+            'message': 'Group created successfully!',
             'group': {
                 'id': group.id,
                 'name': group.name,
                 'trip_id': group.trip_id,
                 'creator_id': group.creator_id,
-                'creator_name': creator.name,
                 'member_count': 1,
-                'is_owner': True,
-                'created_date': group.created_date.isoformat()
+                'is_owner': True
             }
         }), 201
         

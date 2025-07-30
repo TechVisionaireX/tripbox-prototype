@@ -62,8 +62,7 @@ def upload_photo(group_id):
             group_id=group_id,
             user_id=user_id,
             filename=unique_filename,
-            caption=caption,
-            upload_date=datetime.now()
+            caption=caption
         )
         
         db.session.add(photo)
@@ -78,7 +77,6 @@ def upload_photo(group_id):
                 'id': photo.id,
                 'filename': photo.filename,
                 'caption': photo.caption,
-                'upload_date': photo.upload_date.isoformat(),
                 'user_id': photo.user_id,
                 'user_name': user.name,
                 'url': f'/uploads/photos/{unique_filename}'
