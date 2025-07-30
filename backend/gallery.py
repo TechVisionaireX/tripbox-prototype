@@ -25,20 +25,32 @@ def ensure_upload_folder():
 def upload_photo(group_id):
     user_id = int(get_jwt_identity())
     
+    print(f"🔍 Debug: Photo upload attempt for group {group_id} by user {user_id}")
+    print(f"📝 Request files: {list(request.files.keys())}")
+    print(f"📝 Request form: {dict(request.form)}")
+    
     # Check if user is a member of the group
     member = GroupMember.query.filter_by(group_id=group_id, user_id=user_id).first()
     if not member:
+        print(f"❌ User {user_id} is not a member of group {group_id}")
         return jsonify({'error': 'You are not a member of this group'}), 403
+    
+    print(f"✅ User {user_id} is a member of group {group_id}")
     
     # Check if photo file is present
     if 'photo' not in request.files:
+        print(f"❌ No photo file in request")
         return jsonify({'error': 'No photo file provided'}), 400
     
     file = request.files['photo']
     if file.filename == '':
+        print(f"❌ Empty filename")
         return jsonify({'error': 'No file selected'}), 400
     
+    print(f"📝 File: {file.filename}")
+    
     if not allowed_file(file.filename):
+        print(f"❌ Invalid file type: {file.filename}")
         return jsonify({'error': 'Invalid file type. Allowed: PNG, JPG, JPEG, GIF, WEBP'}), 400
     
     try:
@@ -50,6 +62,8 @@ def upload_photo(group_id):
         timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
         unique_filename = f"{user_id}_{timestamp}_{filename}"
         filepath = os.path.join(UPLOAD_FOLDER, unique_filename)
+        
+        print(f"📝 Saving file to: {filepath}")
         
         # Save file
         file.save(filepath)
@@ -68,6 +82,8 @@ def upload_photo(group_id):
         db.session.add(photo)
         db.session.commit()
         
+        print(f"✅ Photo uploaded successfully: {unique_filename}")
+        
         # Get user info for response
         user = User.query.get(user_id)
         
@@ -84,7 +100,7 @@ def upload_photo(group_id):
         }), 201
         
     except Exception as e:
-        print(f"Error uploading photo: {e}")
+        print(f"❌ Error uploading photo: {e}")
         return jsonify({'error': 'Failed to upload photo'}), 500
 
 @gallery_bp.route('/api/groups/<int:group_id>/photos', methods=['GET'])

@@ -161,15 +161,24 @@ def add_trip_member(trip_id):
     user_id = int(get_jwt_identity())
     data = request.get_json()
     
+    print(f"🔍 Debug: Adding member to trip {trip_id} by user {user_id}")
+    print(f"📝 Request data: {data}")
+    
     # Verify trip exists and user is the owner
     trip = Trip.query.filter_by(id=trip_id, user_id=user_id).first()
     if not trip:
+        print(f"❌ Trip {trip_id} not found or user {user_id} is not the owner")
         return jsonify({'error': 'Trip not found or unauthorized'}), 404
+    
+    print(f"✅ Trip {trip_id} found and user {user_id} is the owner")
     
     # Get the default group for this trip
     default_group = Group.query.filter_by(trip_id=trip_id).first()
     if not default_group:
+        print(f"❌ Default group not found for trip {trip_id}")
         return jsonify({'error': 'Default group not found for trip'}), 404
+    
+    print(f"✅ Default group {default_group.id} found for trip {trip_id}")
     
     # Get member email or user_id from request
     member_email = data.get('email')
@@ -180,9 +189,12 @@ def add_trip_member(trip_id):
         from models import User
         member_user = User.query.filter_by(email=member_email).first()
         if not member_user:
+            print(f"❌ User with email {member_email} not found")
             return jsonify({'error': 'User with this email not found'}), 404
         member_user_id = member_user.id
+        print(f"✅ Found user {member_user_id} with email {member_email}")
     elif not member_user_id:
+        print(f"❌ Neither email nor user_id provided")
         return jsonify({'error': 'Either email or user_id is required'}), 400
     
     # Check if already a member
@@ -191,7 +203,10 @@ def add_trip_member(trip_id):
         user_id=member_user_id
     ).first()
     if existing_member:
+        print(f"❌ User {member_user_id} is already a member of group {default_group.id}")
         return jsonify({'error': 'User is already a member of this trip'}), 400
+    
+    print(f"✅ User {member_user_id} is not already a member")
     
     # Add member to the default group
     new_member = GroupMember(
@@ -200,6 +215,8 @@ def add_trip_member(trip_id):
     )
     db.session.add(new_member)
     db.session.commit()
+    
+    print(f"✅ Successfully added user {member_user_id} to group {default_group.id}")
     
     return jsonify({
         'message': 'Member added to trip successfully',

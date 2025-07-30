@@ -2472,6 +2472,46 @@
             }
         }
 
+        async function editTrip(tripId, name, startDate, endDate, description) {
+            // Populate the add trip form with existing data
+            document.getElementById('tripName').value = name;
+            document.getElementById('startDate').value = startDate;
+            document.getElementById('endDate').value = endDate;
+            document.getElementById('tripDesc').value = description;
+            
+            // Change form to edit mode
+            const form = document.getElementById('addTripForm');
+            const submitBtn = form.querySelector('button[type="submit"]');
+            submitBtn.innerHTML = '<i class="fas fa-save"></i> Update Trip';
+            
+            // Store trip ID for update
+            form.dataset.editTripId = tripId;
+            
+            // Scroll to form
+            document.getElementById('addTripForm').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        async function finalizeTrip(tripId) {
+            if (!confirm('Are you sure you want to finalize this trip? This action cannot be undone.')) {
+                return;
+            }
+            
+            try {
+                await apiCall(`/api/trips/${tripId}/finalize`, {
+                    method: 'POST'
+                });
+                
+                showMessage('addTripMessage', 'Trip finalized successfully!', 'success');
+                await loadTrips();
+                if (document.getElementById('tripsSection').style.display !== 'none') {
+                    displayAllTrips();
+                }
+            } catch (error) {
+                console.error('Error finalizing trip:', error);
+                showMessage('addTripMessage', 'Failed to finalize trip. Please try again.', 'error');
+            }
+        }
+
         async function loadAllTrips() {
             try {
                 await loadTrips();
@@ -2520,7 +2560,7 @@
                         ${showActions && trip.is_owner !== false ? `
                             <div class="trip-actions">
                                 ${trip.is_owner ? `
-                                    <button class="btn btn-primary btn-sm">
+                                    <button class="btn btn-primary btn-sm" onclick="editTrip(${trip.id}, '${trip.name}', '${trip.start_date}', '${trip.end_date}', '${trip.description || ''}')">
                                         <i class="fas fa-edit"></i>
                                         Edit
                                     </button>
@@ -2528,7 +2568,7 @@
                                         <i class="fas fa-users"></i>
                                         Manage Members
                                     </button>
-                                    <button class="btn btn-success btn-sm">
+                                    <button class="btn btn-success btn-sm" onclick="finalizeTrip(${trip.id})">
                                         <i class="fas fa-check"></i>
                                         Finalize
                                     </button>
@@ -2556,18 +2596,37 @@
                 description: document.getElementById('tripDesc').value.trim()
             };
             
+            const editTripId = e.target.dataset.editTripId;
+            const isEditMode = !!editTripId;
+            
             try {
                 const submitBtn = e.target.querySelector('button[type="submit"]');
                 submitBtn.disabled = true;
-                submitBtn.innerHTML = '<span class="loading"></span> Creating...';
+                submitBtn.innerHTML = '<span class="loading"></span> ' + (isEditMode ? 'Updating...' : 'Creating...');
                 
-                await apiCall('/api/trips', {
-                    method: 'POST',
-                    body: JSON.stringify(formData)
-                });
+                if (isEditMode) {
+                    // Update existing trip
+                    await apiCall(`/api/trips/${editTripId}`, {
+                        method: 'PUT',
+                        body: JSON.stringify(formData)
+                    });
+                    
+                    showMessage('addTripMessage', 'Trip updated successfully!', 'success');
+                    delete e.target.dataset.editTripId;
+                } else {
+                    // Create new trip
+                    await apiCall('/api/trips', {
+                        method: 'POST',
+                        body: JSON.stringify(formData)
+                    });
+                    
+                    showMessage('addTripMessage', 'Trip created successfully!', 'success');
+                }
                 
-                showMessage('addTripMessage', 'Trip created successfully!', 'success');
                 document.getElementById('addTripForm').reset();
+                
+                // Reset form to create mode
+                submitBtn.innerHTML = '<i class="fas fa-plus"></i> Create Trip';
                 
                 // Reload trips data
                 await loadTrips();
@@ -2580,7 +2639,7 @@
                 }
                 
             } catch (error) {
-                showMessage('addTripMessage', 'Failed to create trip. Please try again.', 'error');
+                showMessage('addTripMessage', `Failed to ${isEditMode ? 'update' : 'create'} trip. Please try again.`, 'error');
             } finally {
                 const submitBtn = e.target.querySelector('button[type="submit"]');
                 submitBtn.disabled = false;
