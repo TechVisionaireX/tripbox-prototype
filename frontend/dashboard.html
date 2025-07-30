@@ -2284,6 +2284,10 @@
                 
             } catch (error) {
                 console.error('Error loading expense summary:', error);
+                // Show fallback values
+                document.getElementById('totalExpenseAmount').textContent = '$0';
+                document.getElementById('memberCount').textContent = '0';
+                document.getElementById('splitAmount').textContent = '$0';
             }
         }
 
@@ -2572,10 +2576,23 @@
                 console.log('Loading all trips...');
                 await loadTrips();
                 console.log('Trips loaded, now displaying...');
+                console.log('Current trips data:', currentTrips);
+                console.log('Number of trips:', currentTrips ? currentTrips.length : 'undefined');
                 displayAllTrips();
             } catch (error) {
                 console.error('Error loading trips:', error);
                 showMessage('addTripMessage', 'Failed to load trips. Please try again.', 'error');
+                // Show empty state if loading fails
+                const allTripsContainer = document.getElementById('allTrips');
+                if (allTripsContainer) {
+                    allTripsContainer.innerHTML = `
+                        <div class="empty-state">
+                            <i class="fas fa-exclamation-triangle"></i>
+                            <h3>Error loading trips</h3>
+                            <p>Please try refreshing the page.</p>
+                        </div>
+                    `;
+                }
             }
         }
 
@@ -2584,7 +2601,7 @@
             console.log('Displaying trips. Current trips:', currentTrips);
             console.log('Number of trips to display:', currentTrips.length);
             
-            if (currentTrips.length === 0) {
+            if (!currentTrips || currentTrips.length === 0) {
                 console.log('No trips to display, showing empty state');
                 allTripsContainer.innerHTML = `
                     <div class="empty-state">
@@ -2873,8 +2890,10 @@
             }
 
             const trip = currentTrips[0];
+            console.log('Loading gallery for trip:', trip);
             try {
                 const groups = await apiCall(`/api/trips/${trip.id}/groups`);
+                console.log('Found groups for trip:', groups);
                 if (groups.length > 0) {
                     currentGalleryGroupId = groups[0].id;
                     console.log('Using group ID for gallery:', currentGalleryGroupId);
@@ -2955,8 +2974,12 @@
 
                 // Check if we have a valid group ID
                 if (!currentGalleryGroupId) {
-                    showMessage('uploadMessage', 'Please create a trip first to upload photos.', 'error');
-                    return;
+                    console.log('No gallery group ID found, trying to load gallery first...');
+                    await loadGallery();
+                    if (!currentGalleryGroupId) {
+                        showMessage('uploadMessage', 'Please create a trip first to upload photos.', 'error');
+                        return;
+                    }
                 }
 
                 const photoFile = document.getElementById('photoFile').files[0];
