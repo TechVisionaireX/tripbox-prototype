@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Real-time Expense Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .success { color: green; }
+        .error { color: red; }
+        .info { color: blue; }
+        .warning { color: orange; }
+        button {
+            padding: 10px 15px;
+            margin: 5px;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        .expense-card {
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 15px;
+            margin: 10px 0;
+            background: white;
+        }
+        .expense-title {
+            font-weight: bold;
+            font-size: 1.1em;
+            margin-bottom: 5px;
+        }
+        .expense-amount {
+            color: #28a745;
+            font-weight: bold;
+        }
+        .expense-category {
+            color: #666;
+            font-size: 0.9em;
+        }
+        .expense-description {
+            margin: 10px 0;
+        }
+        .expense-user {
+            color: #007bff;
+            font-size: 0.9em;
+        }
+        .summary-card {
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 15px;
+            margin: 10px 0;
+        }
+        .summary-icon {
+            font-size: 2em;
+            color: #007bff;
+            text-align: center;
+            margin-bottom: 10px;
+        }
+        .summary-content h3 {
+            margin: 0 0 10px 0;
+            color: #333;
+        }
+        .summary-content p {
+            margin: 5px 0;
+            color: #666;
+        }
+        input, select {
+            padding: 8px;
+            margin: 5px;
+            border: 1px solid #ddd;
+            border-radius: 3px;
+        }
+        pre {
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 3px;
+            overflow-x: auto;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body>
+    <h1>Real-time Expense Test</h1>
+    
+    <div class="test-section">
+        <h2>Step 1: Owner Login & Setup</h2>
+        <button onclick="ownerLogin()">Login as Owner (test@gmail.com)</button>
+        <button onclick="createTestTrip()">Create Test Trip</button>
+        <button onclick="addMember()">Add Member</button>
+        <div id="ownerResult"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>Step 2: Owner Add Expense</h2>
+        <input type="number" id="ownerAmount" placeholder="Amount" value="100">
+        <select id="ownerCategory">
+            <option value="Food">Food</option>
+            <option value="Transport">Transport</option>
+            <option value="Accommodation">Accommodation</option>
+        </select>
+        <input type="text" id="ownerDescription" placeholder="Description" value="Owner's expense">
+        <button onclick="ownerAddExpense()">Owner Add Expense</button>
+        <div id="ownerExpenseResult"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>Step 3: Member Login & Add Expense</h2>
+        <button onclick="memberLogin()">Login as Member (member@gmail.com)</button>
+        <input type="number" id="memberAmount" placeholder="Amount" value="50">
+        <select id="memberCategory">
+            <option value="Food">Food</option>
+            <option value="Transport">Transport</option>
+            <option value="Accommodation">Accommodation</option>
+        </select>
+        <input type="text" id="memberDescription" placeholder="Description" value="Member's expense">
+        <button onclick="memberAddExpense()">Member Add Expense</button>
+        <div id="memberExpenseResult"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>Step 4: Real-time Updates</h2>
+        <button onclick="refreshOwnerView()">Refresh Owner View</button>
+        <button onclick="refreshMemberView()">Refresh Member View</button>
+        <div id="realtimeResult"></div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:8080';
+        let ownerToken = null;
+        let memberToken = null;
+        let currentTrips = [];
+        let currentGroupId = null;
+        let testTripId = null;
+
+        async function apiCall(endpoint, options = {}, token = null) {
+            const url = `${API_BASE}${endpoint}`;
+            const config = {
+                method: options.method || 'GET',
+                headers: {},
+                ...options
+            };
+
+            const authToken = token || ownerToken || memberToken;
+            if (authToken) {
+                config.headers['Authorization'] = `Bearer ${authToken}`;
+            }
+
+            if (!(options.body instanceof FormData)) {
+                config.headers['Content-Type'] = 'application/json';
+            }
+
+            console.log('API Call:', url, config);
+            const response = await fetch(url, config);
+            
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
+            }
+            
+            return await response.json();
+        }
+
+        async function ownerLogin() {
+            const resultDiv = document.getElementById('ownerResult');
+            resultDiv.innerHTML = '<span class="info">Owner logging in...</span>';
+            
+            try {
+                const response = await apiCall('/api/login', {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        email: 'test@gmail.com',
+                        password: 'password123'
+                    })
+                });
+                
+                ownerToken = response.access_token;
+                resultDiv.innerHTML = `
+                    <span class="success">✅ Owner login successful!</span>
+                    <pre>${JSON.stringify(response, null, 2)}</pre>
+                `;
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <span class="error">❌ Owner login failed: ${error.message}</span>
+                `;
+            }
+        }
+
+        async function createTestTrip() {
+            const resultDiv = document.getElementById('ownerResult');
+            resultDiv.innerHTML = '<span class="info">Creating test trip...</span>';
+            
+            try {
+                const response = await apiCall('/api/trips', {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        name: 'Real-time Test Trip',
+                        start_date: '2024-08-01',
+                        end_date: '2024-08-07',
+                        description: 'Testing real-time expense updates'
+                    })
+                }, ownerToken);
+                
+                testTripId = response.trip.id;
+                currentGroupId = response.group.id;
+                
+                resultDiv.innerHTML = `
+                    <span class="success">✅ Test trip created!</span>
+                    <pre>Trip ID: ${testTripId}
+Group ID: ${currentGroupId}
+${JSON.stringify(response, null, 2)}</pre>
+                `;
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <span class="error">❌ Failed to create trip: ${error.message}</span>
+                `;
+            }
+        }
+
+        async function addMember() {
+            const resultDiv = document.getElementById('ownerResult');
+            resultDiv.innerHTML = '<span class="info">Adding member...</span>';
+            
+            try {
+                const response = await apiCall(`/api/trips/${testTripId}/members`, {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        email: 'member@gmail.com'
+                    })
+                }, ownerToken);
+                
+                resultDiv.innerHTML = `
+                    <span class="success">✅ Member added successfully!</span>
+                    <pre>${JSON.stringify(response, null, 2)}</pre>
+                `;
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <span class="error">❌ Failed to add member: ${error.message}</span>
+                `;
+            }
+        }
+
+        async function ownerAddExpense() {
+            const resultDiv = document.getElementById('ownerExpenseResult');
+            const amount = parseFloat(document.getElementById('ownerAmount').value);
+            const category = document.getElementById('ownerCategory').value;
+            const description = document.getElementById('ownerDescription').value;
+            
+            resultDiv.innerHTML = '<span class="info">Owner adding expense...</span>';
+            
+            try {
+                const response = await apiCall(`/api/groups/${currentGroupId}/expenses`, {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        amount: amount,
+                        category: category,
+                        description: description
+                    })
+                }, ownerToken);
+                
+                resultDiv.innerHTML = `
+                    <span class="success">✅ Owner added expense successfully!</span>
+                    <pre>${JSON.stringify(response, null, 2)}</pre>
+                `;
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <span class="error">❌ Owner failed to add expense: ${error.message}</span>
+                `;
+            }
+        }
+
+        async function memberLogin() {
+            const resultDiv = document.getElementById('memberExpenseResult');
+            resultDiv.innerHTML = '<span class="info">Member logging in...</span>';
+            
+            try {
+                const response = await apiCall('/api/login', {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        email: 'member@gmail.com',
+                        password: 'member123'
+                    })
+                });
+                
+                memberToken = response.access_token;
+                resultDiv.innerHTML = `
+                    <span class="success">✅ Member login successful!</span>
+                    <pre>${JSON.stringify(response, null, 2)}</pre>
+                `;
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <span class="error">❌ Member login failed: ${error.message}</span>
+                `;
+            }
+        }
+
+        async function memberAddExpense() {
+            const resultDiv = document.getElementById('memberExpenseResult');
+            const amount = parseFloat(document.getElementById('memberAmount').value);
+            const category = document.getElementById('memberCategory').value;
+            const description = document.getElementById('memberDescription').value;
+            
+            resultDiv.innerHTML = '<span class="info">Member adding expense...</span>';
+            
+            try {
+                const response = await apiCall(`/api/groups/${currentGroupId}/expenses`, {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        amount: amount,
+                        category: category,
+                        description: description
+                    })
+                }, memberToken);
+                
+                resultDiv.innerHTML = `
+                    <span class="success">✅ Member added expense successfully!</span>
+                    <pre>${JSON.stringify(response, null, 2)}</pre>
+                `;
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <span class="error">❌ Member failed to add expense: ${error.message}</span>
+                `;
+            }
+        }
+
+        async function refreshOwnerView() {
+            const resultDiv = document.getElementById('realtimeResult');
+            resultDiv.innerHTML = '<span class="info">Refreshing owner view...</span>';
+            
+            try {
+                // Get expense summary
+                const summary = await apiCall(`/api/groups/${currentGroupId}/expenses/split`, {}, ownerToken);
+                
+                // Get all expenses
+                const expenses = await apiCall(`/api/groups/${currentGroupId}/expenses`, {}, ownerToken);
+                
+                const summaryCard = `
+                    <div class="summary-card">
+                        <div class="summary-icon">
+                            <i class="fas fa-wallet"></i>
+                        </div>
+                        <div class="summary-content">
+                            <h3>Owner's Expense Summary</h3>
+                            <p><strong>Total Expenses:</strong> $${summary.total_expense}</p>
+                            <p><strong>Member Count:</strong> ${summary.member_count}</p>
+                            <p><strong>Split Per Member:</strong> $${summary.split_per_member}</p>
+                            <p><strong>Expense Count:</strong> ${summary.expense_count}</p>
+                        </div>
+                    </div>
+                `;
+                
+                const expensesList = expenses.map(expense => `
+                    <div class="expense-card">
+                        <div class="expense-title">
+                            ${expense.category}
+                            <span class="expense-amount">$${expense.amount}</span>
+                        </div>
+                        <div class="expense-description">
+                            ${expense.note || 'No description'}
+                        </div>
+                        <div class="expense-user">
+                            Added by ${expense.user_name} on ${new Date(expense.timestamp).toLocaleString()}
+                        </div>
+                    </div>
+                `).join('');
+                
+                resultDiv.innerHTML = `
+                    <span class="success">✅ Owner view refreshed!</span>
+                    ${summaryCard}
+                    <h3>All Expenses (${expenses.length}):</h3>
+                    ${expensesList}
+                    <pre>Summary: ${JSON.stringify(summary, null, 2)}</pre>
+                `;
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <span class="error">❌ Failed to refresh owner view: ${error.message}</span>
+                `;
+            }
+        }
+
+        async function refreshMemberView() {
+            const resultDiv = document.getElementById('realtimeResult');
+            resultDiv.innerHTML = '<span class="info">Refreshing member view...</span>';
+            
+            try {
+                // Get expense summary
+                const summary = await apiCall(`/api/groups/${currentGroupId}/expenses/split`, {}, memberToken);
+                
+                // Get all expenses
+                const expenses = await apiCall(`/api/groups/${currentGroupId}/expenses`, {}, memberToken);
+                
+                const summaryCard = `
+                    <div class="summary-card">
+                        <div class="summary-icon">
+                            <i class="fas fa-wallet"></i>
+                        </div>
+                        <div class="summary-content">
+                            <h3>Member's Expense Summary</h3>
+                            <p><strong>Total Expenses:</strong> $${summary.total_expense}</p>
+                            <p><strong>Member Count:</strong> ${summary.member_count}</p>
+                            <p><strong>Split Per Member:</strong> $${summary.split_per_member}</p>
+                            <p><strong>Expense Count:</strong> ${summary.expense_count}</p>
+                        </div>
+                    </div>
+                `;
+                
+                const expensesList = expenses.map(expense => `
+                    <div class="expense-card">
+                        <div class="expense-title">
+                            ${expense.category}
+                            <span class="expense-amount">$${expense.amount}</span>
+                        </div>
+                        <div class="expense-description">
+                            ${expense.note || 'No description'}
+                        </div>
+                        <div class="expense-user">
+                            Added by ${expense.user_name} on ${new Date(expense.timestamp).toLocaleString()}
+                        </div>
+                    </div>
+                `).join('');
+                
+                resultDiv.innerHTML = `
+                    <span class="success">✅ Member view refreshed!</span>
+                    ${summaryCard}
+                    <h3>All Expenses (${expenses.length}):</h3>
+                    ${expensesList}
+                    <pre>Summary: ${JSON.stringify(summary, null, 2)}</pre>
+                `;
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <span class="error">❌ Failed to refresh member view: ${error.message}</span>
+                `;
+            }
+        }
+    </script>
+</body>
+</html> 

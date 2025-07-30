@@ -6,82 +6,126 @@ Simple Test to Check Current Application State
 import requests
 import json
 
-def test_current_state():
-    print("🔍 Testing Current Application State")
-    
-    # Test 1: Login
+BASE_URL = "http://localhost:5000"
+
+def test_api_call(endpoint, method="GET", data=None, headers=None):
+    url = f"{BASE_URL}{endpoint}"
     try:
-        login_data = {
-            "email": "test@gmail.com",
-            "password": "password123"
-        }
-        response = requests.post("http://localhost:8080/api/login", json=login_data)
-        if response.status_code == 200:
-            token = response.json()["access_token"]
-            print("✅ Login successful")
-        else:
-            print(f"❌ Login failed: {response.status_code}")
-            return
+        if method == "GET":
+            response = requests.get(url, headers=headers)
+        elif method == "POST":
+            response = requests.post(url, json=data, headers=headers)
+        elif method == "PUT":
+            response = requests.put(url, json=data, headers=headers)
+        
+        return response
     except Exception as e:
-        print(f"❌ Login error: {e}")
+        print(f"❌ API call failed: {e}")
+        return None
+
+def main():
+    print("🔍 Checking Current Application State")
+    print(f"📍 Testing against: {BASE_URL}")
+    
+    # Test 1: Backend Connection
+    print("\n1. Testing Backend Connection")
+    response = test_api_call("/api/hello")
+    if response and response.status_code == 200:
+        print("✅ Backend is running")
+    else:
+        print("❌ Backend connection failed")
         return
     
-    headers = {"Authorization": f"Bearer {token}"}
-    
-    # Test 2: Check trips
-    try:
-        response = requests.get("http://localhost:8080/api/trips", headers=headers)
-        if response.status_code == 200:
-            trips = response.json()
-            print(f"✅ Found {len(trips)} trips")
-            for i, trip in enumerate(trips):
-                print(f"   Trip {i+1}: {trip['name']} (ID: {trip['id']})")
-                print(f"      Dates: {trip['start_date']} to {trip['end_date']}")
-                print(f"      Description: {trip.get('description', 'No description')}")
-                print(f"      Finalized: {trip.get('finalized', False)}")
-        else:
-            print(f"❌ Failed to get trips: {response.status_code}")
-    except Exception as e:
-        print(f"❌ Error getting trips: {e}")
-    
-    # Test 3: Check groups for each trip
-    if trips:
-        for trip in trips:
-            try:
-                response = requests.get(f"http://localhost:8080/api/trips/{trip['id']}/groups", headers=headers)
-                if response.status_code == 200:
-                    groups = response.json()
-                    print(f"✅ Trip {trip['name']} has {len(groups)} groups")
-                    for group in groups:
-                        print(f"   Group: {group['name']} (ID: {group['id']})")
-                        
-                        # Test 4: Check photos for each group
-                        try:
-                            response = requests.get(f"http://localhost:8080/api/groups/{group['id']}/photos", headers=headers)
-                            if response.status_code == 200:
-                                photos = response.json()
-                                print(f"      Photos: {len(photos)} photos")
-                                for photo in photos:
-                                    print(f"         - {photo['filename']} (ID: {photo['id']})")
-                            else:
-                                print(f"      ❌ Failed to get photos: {response.status_code}")
-                        except Exception as e:
-                            print(f"      ❌ Error getting photos: {e}")
-                else:
-                    print(f"❌ Failed to get groups for trip {trip['name']}: {response.status_code}")
-            except Exception as e:
-                print(f"❌ Error getting groups for trip {trip['name']}: {e}")
-    
-    # Test 5: Check if there are any photos in the uploads/photos directory
-    import os
-    photos_dir = "uploads/photos"
-    if os.path.exists(photos_dir):
-        photos_files = os.listdir(photos_dir)
-        print(f"✅ Found {len(photos_files)} files in uploads/photos directory")
-        for file in photos_files:
-            print(f"   - {file}")
+    # Test 2: Login with existing user
+    print("\n2. Testing Login")
+    login_data = {
+        "email": "kk@gmail.com",
+        "password": "kk123"
+    }
+    response = test_api_call("/api/login", method="POST", data=login_data)
+    if response and response.status_code == 200:
+        print("✅ Login successful")
+        login_response = response.json()
+        token = login_response.get("access_token")
     else:
-        print("❌ uploads/photos directory does not exist")
+        print("❌ Login failed")
+        return
+    
+    headers = {
+        "Authorization": f"Bearer {token}",
+        "Content-Type": "application/json"
+    }
+    
+    # Test 3: Get Trips
+    print("\n3. Testing Get Trips")
+    response = test_api_call("/api/trips", headers=headers)
+    if response and response.status_code == 200:
+        trips = response.json()
+        print(f"✅ Found {len(trips)} trips")
+        for trip in trips:
+            print(f"   - {trip['name']} (ID: {trip['id']}) - Owner: {trip.get('is_owner', False)}")
+    else:
+        print("❌ Failed to get trips")
+        if response:
+            print(f"📝 Error: {response.json()}")
+    
+    # Test 4: Get Trip Groups (for first trip)
+    if trips:
+        trip_id = trips[0]['id']
+        print(f"\n4. Testing Get Trip Groups for Trip {trip_id}")
+        response = test_api_call(f"/api/trips/{trip_id}/groups", headers=headers)
+        if response and response.status_code == 200:
+            groups = response.json()
+            print(f"✅ Found {len(groups)} groups")
+            for group in groups:
+                print(f"   - {group['name']} (ID: {group['id']}) - Members: {group.get('member_count', 0)}")
+        else:
+            print("❌ Failed to get trip groups")
+            if response:
+                print(f"📝 Error: {response.json()}")
+    
+    # Test 5: Test Member Addition (if user is owner)
+    if trips and trips[0].get('is_owner'):
+        trip_id = trips[0]['id']
+        print(f"\n5. Testing Member Addition for Trip {trip_id}")
+        member_data = {
+            "email": "test@example.com"
+        }
+        response = test_api_call(f"/api/trips/{trip_id}/members", method="POST", data=member_data, headers=headers)
+        if response and response.status_code == 200:
+            print("✅ Member addition successful")
+            print(f"📝 Response: {response.json()}")
+        else:
+            print("❌ Member addition failed")
+            if response:
+                print(f"📝 Error: {response.json()}")
+    else:
+        print("\n5. Skipping Member Addition Test (user is not trip owner)")
+    
+    # Test 6: Test Trip Update (if user is owner)
+    if trips and trips[0].get('is_owner'):
+        trip_id = trips[0]['id']
+        print(f"\n6. Testing Trip Update for Trip {trip_id}")
+        update_data = {
+            "name": "Updated Trip Name",
+            "start_date": "2024-08-01",
+            "end_date": "2024-08-07",
+            "description": "Updated description"
+        }
+        response = test_api_call(f"/api/trips/{trip_id}", method="PUT", data=update_data, headers=headers)
+        if response and response.status_code == 200:
+            print("✅ Trip update successful")
+            print(f"📝 Response: {response.json()}")
+        else:
+            print("❌ Trip update failed")
+            if response:
+                print(f"📝 Error: {response.json()}")
+    else:
+        print("\n6. Skipping Trip Update Test (user is not trip owner)")
+    
+    print("\n" + "="*50)
+    print("🎉 CURRENT STATE CHECK COMPLETED!")
+    print("="*50)
 
 if __name__ == "__main__":
-    test_current_state() 
+    main() 

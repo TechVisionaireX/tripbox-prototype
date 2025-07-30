@@ -8,12 +8,12 @@ import json
 
 def test_connection():
     print("🔍 Testing Network Connection")
-    print("📍 Testing against: http://localhost:8080")
+    print("📍 Testing against: http://localhost:5000")
     
     # Test 1: Basic connection
     print("\n1. Testing Basic Connection")
     try:
-        response = requests.get("http://localhost:8080/api/hello", timeout=5)
+        response = requests.get("http://localhost:5000/api/hello", timeout=5)
         if response.status_code == 200:
             print("✅ Backend is accessible")
             print(f"📝 Response: {response.json()}")
@@ -32,7 +32,7 @@ def test_connection():
     # Test 2: CORS preflight
     print("\n2. Testing CORS Preflight")
     try:
-        response = requests.options("http://localhost:8080/api/hello", timeout=5)
+        response = requests.options("http://localhost:5000/api/hello", timeout=5)
         if response.status_code == 200:
             print("✅ CORS preflight successful")
         else:
@@ -43,7 +43,7 @@ def test_connection():
     # Test 3: Login endpoint
     print("\n3. Testing Login Endpoint")
     try:
-        response = requests.post("http://localhost:8080/api/login", 
+        response = requests.post("http://localhost:5000/api/login", 
                                json={"email": "test@example.com", "password": "test123"},
                                timeout=5)
         if response.status_code in [200, 401]:  # 401 is expected for invalid credentials
@@ -57,7 +57,7 @@ def test_connection():
     # Test 4: Register endpoint
     print("\n4. Testing Register Endpoint")
     try:
-        response = requests.post("http://localhost:8080/api/register", 
+        response = requests.post("http://localhost:5000/api/register", 
                                json={"name": "Test User", "email": "test@example.com", "password": "test123"},
                                timeout=5)
         if response.status_code in [200, 400]:  # 400 is expected if user already exists

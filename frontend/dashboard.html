@@ -729,114 +729,6 @@
             max-height: 70vh;
             overflow-y: auto;
         }
-        
-        /* Group Chat Styles */
-        .group-chat-section {
-            margin-top: 20px;
-            border-top: 1px solid #e0e0e0;
-            padding-top: 20px;
-        }
-        
-        .chat-container {
-            border: 1px solid #e0e0e0;
-            border-radius: 8px;
-            background: #f8f9fa;
-            margin-top: 10px;
-        }
-        
-        .chat-messages {
-            height: 300px;
-            overflow-y: auto;
-            padding: 15px;
-            background: white;
-            border-radius: 8px 8px 0 0;
-        }
-        
-        .chat-message {
-            margin-bottom: 10px;
-            padding: 8px 12px;
-            border-radius: 15px;
-            max-width: 80%;
-            word-wrap: break-word;
-        }
-        
-        .chat-message.own {
-            background: #007bff;
-            color: white;
-            margin-left: auto;
-            text-align: right;
-        }
-        
-        .chat-message.other {
-            background: #e9ecef;
-            color: #333;
-        }
-        
-        .chat-message .message-user {
-            font-size: 0.8em;
-            font-weight: bold;
-            margin-bottom: 2px;
-        }
-        
-        .chat-message .message-time {
-            font-size: 0.7em;
-            opacity: 0.7;
-            margin-top: 2px;
-        }
-        
-        .chat-input-container {
-            padding: 15px;
-            background: #f8f9fa;
-            border-radius: 0 0 8px 8px;
-        }
-        
-        .chat-input-form {
-            display: flex;
-            gap: 10px;
-        }
-        
-        .chat-input-row {
-            display: flex;
-            flex: 1;
-            gap: 10px;
-        }
-        
-        .chat-input-row input {
-            flex: 1;
-            padding: 10px;
-            border: 1px solid #ddd;
-            border-radius: 20px;
-            outline: none;
-        }
-        
-        .chat-input-row input:focus {
-            border-color: #007bff;
-        }
-        
-        .chat-input-row button {
-            padding: 10px 15px;
-            border-radius: 20px;
-            border: none;
-            background: #007bff;
-            color: white;
-            cursor: pointer;
-        }
-        
-        .chat-input-row button:hover {
-            background: #0056b3;
-        }
-        
-        .chat-loading {
-            text-align: center;
-            color: #666;
-            padding: 20px;
-        }
-        
-        .chat-empty {
-            text-align: center;
-            color: #666;
-            padding: 20px;
-        }
 
         .add-member-section, .current-members-section {
             margin-bottom: 2rem;
@@ -1095,17 +987,6 @@
         /* Gallery Styles */
         .gallery-upload-section, .gallery-grid-section {
             margin-bottom: 2rem;
-        }
-
-        .section-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 1rem;
-        }
-
-        .section-header h3 {
-            margin: 0;
         }
 
         .upload-form {
@@ -1855,30 +1736,6 @@
                                 </form>
                                 <div id="addMemberMessage" class="message" style="display: none;"></div>
                             </div>
-                            
-                            <!-- Group Chat Section -->
-                            <div class="group-chat-section">
-                                <h4><i class="fas fa-comments"></i> Group Chat</h4>
-                                <div class="chat-container">
-                                    <div class="chat-messages" id="groupChatMessages">
-                                        <div class="chat-loading">
-                                            <i class="fas fa-spinner fa-spin"></i>
-                                            Loading messages...
-                                        </div>
-                                    </div>
-                                    <div class="chat-input-container">
-                                        <form id="groupChatForm" class="chat-input-form">
-                                            <div class="chat-input-row">
-                                                <input type="text" id="groupChatInput" placeholder="Type your message..." maxlength="500">
-                                                <button type="submit" class="btn btn-primary">
-                                                    <i class="fas fa-paper-plane"></i>
-                                                </button>
-                                            </div>
-                                        </form>
-                                    </div>
-                                </div>
-                                <div id="chatMessage" class="message" style="display: none;"></div>
-                            </div>
                         </div>
                     </div>
                 </div>
@@ -1998,12 +1855,7 @@
 
                 <!-- Gallery Grid -->
                 <div class="gallery-grid-section">
-                    <div class="section-header">
-                        <h3><i class="fas fa-images"></i> Photo Gallery</h3>
-                        <button class="btn btn-secondary btn-sm" onclick="refreshGallery()">
-                            <i class="fas fa-sync-alt"></i> Refresh
-                        </button>
-                    </div>
+                    <h3><i class="fas fa-images"></i> Photo Gallery</h3>
                     <div id="galleryGrid">
                         <div class="empty-state">
                             <i class="fas fa-camera"></i>
@@ -2141,7 +1993,7 @@
 
     <script>
         // API Base URL
-        const API_BASE = 'http://localhost:8080';
+        const API_BASE = 'http://localhost:5000';
         
         // Global State
         let currentUser = null;
@@ -2263,7 +2115,6 @@
                     loadDashboardData();
                     break;
                 case 'trips':
-                    console.log('Loading trips section...');
                     loadAllTrips();
                     break;
                 case 'groups':
@@ -2273,7 +2124,6 @@
                     loadExpenses();
                     break;
                 case 'gallery':
-                    console.log('Loading gallery section...');
                     loadGallery();
                     break;
                 case 'checklist':
@@ -2297,16 +2147,8 @@
 
         async function apiCall(endpoint, options = {}) {
             try {
-                // Handle headers properly for FormData vs JSON
-                let headers = {};
-                
-                // Always include Authorization header
-                const token = localStorage.getItem('access_token');
-                if (token) {
-                    headers['Authorization'] = `Bearer ${token}`;
-                }
-                
-                // Only set Content-Type for non-FormData requests
+                // Don't set Content-Type for FormData (let browser set it with boundary)
+                const headers = { ...getAuthHeaders() };
                 if (!(options.body instanceof FormData)) {
                     headers['Content-Type'] = 'application/json';
                 }
@@ -2363,7 +2205,7 @@
             try {
                 // Load trips for dashboard stats
                 await loadTrips();
-                await updateDashboardStats();
+                updateDashboardStats();
                 displayRecentTrips();
                 
                 // Also display all trips in the trips section
@@ -2379,78 +2221,54 @@
         let currentGroupId = null;
 
         async function loadExpenses() {
-            try {
-                console.log('Loading expenses...');
-                
-                // First, ensure trips are loaded
-                if (!currentTrips || currentTrips.length === 0) {
-                    console.log('No trips loaded, loading trips first...');
+            // First, ensure trips are loaded
+            if (!currentTrips.length) {
+                try {
                     await loadTrips();
-                }
-                
-                if (!currentTrips || currentTrips.length === 0) {
-                    console.log('No trips available after loading');
-                    document.getElementById('expensesList').innerHTML = `
-                        <div class="empty-state">
-                            <i class="fas fa-exclamation-triangle"></i>
-                            <h3>No trips available</h3>
-                            <p>Create a trip first to manage expenses.</p>
-                        </div>
-                    `;
+                } catch (error) {
+                    console.error('Error loading trips for expenses:', error);
+                    showMessage('expenseMessage', 'Failed to load trips. Please try again.', 'error');
                     return;
                 }
+            }
+            
+            if (!currentTrips.length) {
+                showMessage('expenseMessage', 'No trips available. Create a trip first.', 'error');
+                return;
+            }
 
-                console.log('Using first trip for expenses:', currentTrips[0]);
-                // Use the first trip's main group
-                const trip = currentTrips[0];
+            // Use the first trip's main group
+            const trip = currentTrips[0];
+            
+            try {
+                // Get the group for this trip
+                const groups = await apiCall(`/api/trips/${trip.id}/groups`);
+                if (groups.length > 0) {
+                    currentGroupId = groups[0].id; // Use the first group
+                    console.log('Using group ID:', currentGroupId);
+                } else {
+                    // Fallback: try using trip ID as group ID (for backward compatibility)
+                    console.log('No groups found, trying trip ID as group ID');
+                    currentGroupId = trip.id;
+                }
+
+                // Load expense summary
+                await loadExpenseSummary();
+                // Load expenses list
+                await loadExpensesList();
+            } catch (error) {
+                console.error('Error loading expenses:', error);
+                // Fallback: try using trip ID as group ID
+                console.log('Falling back to using trip ID as group ID');
+                currentGroupId = trip.id;
                 
                 try {
-                    // Get the group for this trip
-                    const groups = await apiCall(`/api/trips/${trip.id}/groups`);
-                    console.log('Groups for trip:', groups);
-                    
-                    if (groups && groups.length > 0) {
-                        currentGroupId = groups[0].id; // Use the first group
-                        console.log('Using group ID:', currentGroupId);
-                    } else {
-                        // Fallback: try using trip ID as group ID (for backward compatibility)
-                        console.log('No groups found, trying trip ID as group ID');
-                        currentGroupId = trip.id;
-                    }
-
-                    // Load expense summary
                     await loadExpenseSummary();
-                    // Load expenses list
                     await loadExpensesList();
-                } catch (error) {
-                    console.error('Error loading expenses:', error);
-                    // Fallback: try using trip ID as group ID
-                    console.log('Falling back to using trip ID as group ID');
-                    currentGroupId = trip.id;
-                    
-                    try {
-                        await loadExpenseSummary();
-                        await loadExpensesList();
-                    } catch (fallbackError) {
-                        console.error('Fallback also failed:', fallbackError);
-                        document.getElementById('expensesList').innerHTML = `
-                            <div class="empty-state">
-                                <i class="fas fa-exclamation-triangle"></i>
-                                <h3>Error loading expenses</h3>
-                                <p>Please try again later.</p>
-                            </div>
-                        `;
-                    }
+                } catch (fallbackError) {
+                    console.error('Fallback also failed:', fallbackError);
+                    showMessage('expenseMessage', 'Failed to load expenses. Please try again.', 'error');
                 }
-            } catch (error) {
-                console.error('Error in loadExpenses:', error);
-                document.getElementById('expensesList').innerHTML = `
-                    <div class="empty-state">
-                        <i class="fas fa-exclamation-triangle"></i>
-                        <h3>Error loading expenses</h3>
-                        <p>Please try again later.</p>
-                    </div>
-                `;
             }
         }
 
@@ -2460,16 +2278,12 @@
                 const response = await apiCall(`/api/groups/${currentGroupId}/expenses/split`);
                 console.log('Expense summary response:', response);
                 
-                document.getElementById('totalExpenseAmount').textContent = `$${response.total_expense || 0}`;
-                document.getElementById('memberCount').textContent = response.member_count || 0;
-                document.getElementById('splitAmount').textContent = `$${response.split_per_member || 0}`;
+                document.getElementById('totalExpenseAmount').textContent = `$${response.total_expense}`;
+                document.getElementById('memberCount').textContent = response.member_count;
+                document.getElementById('splitAmount').textContent = `$${response.split_per_member}`;
                 
             } catch (error) {
                 console.error('Error loading expense summary:', error);
-                // Show fallback values
-                document.getElementById('totalExpenseAmount').textContent = '$0';
-                document.getElementById('memberCount').textContent = '0';
-                document.getElementById('splitAmount').textContent = '$0';
             }
         }
 
@@ -2505,7 +2319,7 @@
                         </div>
                         <div class="trip-card-body">
                             <div class="trip-description">
-                                ${expense.note || expense.description || 'No description'}
+                                ${expense.note}
                             </div>
                             <div class="trip-actions">
                                 <span class="btn btn-success btn-sm">
@@ -2637,45 +2451,12 @@
             }
         }
 
-        async function updateDashboardStats() {
+        function updateDashboardStats() {
             document.getElementById('totalTrips').textContent = currentTrips.length;
-            
-            // Calculate real stats
-            let totalExpenses = 0;
-            let totalPhotos = 0;
-            let activeGroups = 0;
-            
-            try {
-                // Calculate expenses and groups for each trip
-                for (const trip of currentTrips) {
-                    const groups = await apiCall(`/api/trips/${trip.id}/groups`);
-                    activeGroups += groups.length;
-                    
-                    for (const group of groups) {
-                        try {
-                            // Get expenses for this group
-                            const expenses = await apiCall(`/api/groups/${group.id}/expenses`);
-                            totalExpenses += expenses.reduce((sum, expense) => sum + expense.amount, 0);
-                            
-                            // Get photos for this group
-                            const photos = await apiCall(`/api/groups/${group.id}/photos`);
-                            totalPhotos += photos.length;
-                        } catch (error) {
-                            console.error(`Error getting stats for group ${group.id}:`, error);
-                        }
-                    }
-                }
-                
-                document.getElementById('activeGroups').textContent = activeGroups;
-                document.getElementById('totalExpenses').textContent = `$${totalExpenses.toFixed(2)}`;
-                document.getElementById('photosCount').textContent = totalPhotos;
-            } catch (error) {
-                console.error('Error updating dashboard stats:', error);
-                // Fallback to basic stats
-                document.getElementById('activeGroups').textContent = '0';
-                document.getElementById('totalExpenses').textContent = '$0';
-                document.getElementById('photosCount').textContent = '0';
-            }
+            // Add more stats calculations here
+            document.getElementById('activeGroups').textContent = '0';
+            document.getElementById('totalExpenses').textContent = '$0';
+            document.getElementById('photosCount').textContent = '0';
         }
 
         function displayRecentTrips() {
@@ -2758,40 +2539,10 @@
                 console.log('Loading all trips...');
                 await loadTrips();
                 console.log('Trips loaded, now displaying...');
-                console.log('Current trips data:', currentTrips);
-                console.log('Number of trips:', currentTrips ? currentTrips.length : 'undefined');
                 displayAllTrips();
             } catch (error) {
                 console.error('Error loading trips:', error);
                 showMessage('addTripMessage', 'Failed to load trips. Please try again.', 'error');
-                // Show empty state if loading fails
-                const allTripsContainer = document.getElementById('allTrips');
-                if (allTripsContainer) {
-                    allTripsContainer.innerHTML = `
-                        <div class="empty-state">
-                            <i class="fas fa-exclamation-triangle"></i>
-                            <h3>Error loading trips</h3>
-                            <p>Please try refreshing the page.</p>
-                        </div>
-                    `;
-                }
-            }
-        }
-
-        async function refreshTrips() {
-            console.log('Forcing trip refresh...');
-            try {
-                await loadTrips();
-                console.log('Trips refreshed:', currentTrips);
-                if (document.getElementById('tripsSection').style.display !== 'none') {
-                    displayAllTrips();
-                }
-                if (document.getElementById('dashboardSection').style.display !== 'none') {
-                    displayRecentTrips();
-                    await updateDashboardStats();
-                }
-            } catch (error) {
-                console.error('Error refreshing trips:', error);
             }
         }
 
@@ -2800,7 +2551,7 @@
             console.log('Displaying trips. Current trips:', currentTrips);
             console.log('Number of trips to display:', currentTrips.length);
             
-            if (!currentTrips || currentTrips.length === 0) {
+            if (currentTrips.length === 0) {
                 console.log('No trips to display, showing empty state');
                 allTripsContainer.innerHTML = `
                     <div class="empty-state">
@@ -2835,7 +2586,7 @@
                         <div class="trip-description">
                             ${trip.description || 'No description provided'}
                         </div>
-                        ${showActions ? `
+                        ${showActions && trip.is_owner !== false ? `
                             <div class="trip-actions">
                                 ${trip.is_owner ? `
                                     <button class="btn btn-primary btn-sm" onclick="editTrip(${trip.id}, '${trip.name}', '${trip.start_date}', '${trip.end_date}', '${trip.description || ''}')">
@@ -2912,7 +2663,7 @@
                     displayAllTrips();
                 }
                 if (document.getElementById('dashboardSection').style.display !== 'none') {
-                    await updateDashboardStats();
+                    updateDashboardStats();
                     displayRecentTrips();
                 }
                 
@@ -3072,10 +2823,8 @@
         let galleryPhotos = [];
 
         async function loadGallery() {
-            console.log('Loading gallery...');
             // First, ensure trips are loaded
             if (!currentTrips.length) {
-                console.log('No trips loaded, loading trips first...');
                 try {
                     await loadTrips();
                 } catch (error) {
@@ -3086,16 +2835,13 @@
             }
             
             if (!currentTrips.length) {
-                console.log('No trips available');
                 showMessage('uploadMessage', 'No trips available. Create a trip first.', 'error');
                 return;
             }
 
             const trip = currentTrips[0];
-            console.log('Loading gallery for trip:', trip);
             try {
                 const groups = await apiCall(`/api/trips/${trip.id}/groups`);
-                console.log('Found groups for trip:', groups);
                 if (groups.length > 0) {
                     currentGalleryGroupId = groups[0].id;
                     console.log('Using group ID for gallery:', currentGalleryGroupId);
@@ -3118,29 +2864,12 @@
             }
         }
 
-        async function refreshGallery() {
-            console.log('Forcing gallery refresh...');
-            try {
-                if (currentGalleryGroupId) {
-                    await loadGalleryPhotos();
-                    console.log('Gallery refreshed successfully');
-                } else {
-                    console.log('No gallery group ID, loading gallery first...');
-                    await loadGallery();
-                }
-            } catch (error) {
-                console.error('Error refreshing gallery:', error);
-            }
-        }
-
         async function loadGalleryPhotos() {
-            console.log('Loading gallery photos for group:', currentGalleryGroupId);
             const galleryGrid = document.getElementById('galleryGrid');
             galleryGrid.innerHTML = '<div class="loading-spinner">Loading photos...</div>';
 
             try {
                 const photos = await apiCall(`/api/groups/${currentGalleryGroupId}/photos`);
-                console.log('Loaded photos:', photos);
                 galleryPhotos = photos;
                 displayGalleryPhotos();
             } catch (error) {
@@ -3193,30 +2922,13 @@
 
                 // Check if we have a valid group ID
                 if (!currentGalleryGroupId) {
-                    console.log('No gallery group ID found, trying to load gallery first...');
-                    await loadGallery();
-                    if (!currentGalleryGroupId) {
-                        showMessage('uploadMessage', 'Please create a trip first to upload photos.', 'error');
-                        return;
-                    }
+                    showMessage('uploadMessage', 'Please create a trip first to upload photos.', 'error');
+                    return;
                 }
 
                 const photoFile = document.getElementById('photoFile').files[0];
                 if (!photoFile) {
                     showMessage('uploadMessage', 'Please select a photo to upload.', 'error');
-                    return;
-                }
-                
-                // Check file type
-                const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
-                if (!allowedTypes.includes(photoFile.type)) {
-                    showMessage('uploadMessage', 'Invalid file type. Please select a JPEG, PNG, GIF, or WEBP image.', 'error');
-                    return;
-                }
-                
-                // Check file size (max 5MB)
-                if (photoFile.size > 5 * 1024 * 1024) {
-                    showMessage('uploadMessage', 'File too large. Please select an image smaller than 5MB.', 'error');
                     return;
                 }
 
@@ -3230,25 +2942,18 @@
                     submitBtn.innerHTML = '<span class="loading"></span> Uploading...';
 
                     console.log('Uploading photo to group:', currentGalleryGroupId);
-                    console.log('Photo file:', photoFile);
-                    console.log('FormData contents:');
-                    for (let [key, value] of formData.entries()) {
-                        console.log(key, value);
-                    }
 
-                    const response = await apiCall(`/api/groups/${currentGalleryGroupId}/photos`, {
+                    await apiCall(`/api/groups/${currentGalleryGroupId}/photos`, {
                         method: 'POST',
                         body: formData
                     });
 
-                    console.log('Upload response:', response);
                     showMessage('uploadMessage', 'Photo uploaded successfully!', 'success');
                     document.getElementById('uploadPhotoForm').reset();
-                    await refreshGallery();
+                    await loadGalleryPhotos();
 
                 } catch (error) {
                     console.error('Error uploading photo:', error);
-                    console.error('Error details:', error.message);
                     let errorMessage = 'Failed to upload photo. Please try again.';
                     if (error.message.includes('403')) {
                         errorMessage = 'You are not a member of this group.';
@@ -3291,117 +2996,49 @@
         let reminderItems = [];
 
         async function loadChecklists() {
-            try {
-                console.log('Loading checklists...');
-                
-                // First, ensure trips are loaded
-                if (!currentTrips || currentTrips.length === 0) {
-                    console.log('No trips loaded, loading trips first...');
+            // First, ensure trips are loaded
+            if (!currentTrips.length) {
+                try {
                     await loadTrips();
-                }
-                
-                if (!currentTrips || currentTrips.length === 0) {
-                    console.log('No trips available after loading');
-                    document.getElementById('packingItems').innerHTML = `
-                        <div class="empty-state">
-                            <i class="fas fa-exclamation-triangle"></i>
-                            <h3>No trips available</h3>
-                            <p>Create a trip first to manage checklists.</p>
-                        </div>
-                    `;
-                    document.getElementById('todoItems').innerHTML = `
-                        <div class="empty-state">
-                            <i class="fas fa-exclamation-triangle"></i>
-                            <h3>No trips available</h3>
-                            <p>Create a trip first to manage checklists.</p>
-                        </div>
-                    `;
-                    document.getElementById('reminderItems').innerHTML = `
-                        <div class="empty-state">
-                            <i class="fas fa-exclamation-triangle"></i>
-                            <h3>No trips available</h3>
-                            <p>Create a trip first to manage checklists.</p>
-                        </div>
-                    `;
+                } catch (error) {
+                    console.error('Error loading trips for checklists:', error);
+                    showMessage('checklistMessage', 'Failed to load trips. Please try again.', 'error');
                     return;
                 }
+            }
+            
+            if (!currentTrips.length) {
+                showMessage('checklistMessage', 'No trips available. Create a trip first.', 'error');
+                return;
+            }
 
-                console.log('Using first trip for checklists:', currentTrips[0]);
-                const trip = currentTrips[0];
-                
-                try {
-                    const groups = await apiCall(`/api/trips/${trip.id}/groups`);
-                    console.log('Groups for trip:', groups);
-                    
-                    if (groups && groups.length > 0) {
-                        currentGroupId = groups[0].id; // Set currentGroupId for checklist form
-                        console.log('Using group ID for checklists:', currentGroupId);
-                    } else {
-                        currentGroupId = trip.id; // Fallback to trip ID
-                        console.log('Using trip ID as group ID for checklists:', currentGroupId);
-                    }
-                    
-                    await loadPackingItems(currentGroupId);
-                    await loadTodoItems(currentGroupId);
-                    await loadReminderItems(currentGroupId);
-                    
-                } catch (error) {
-                    console.error('Error loading checklists:', error);
-                    currentGroupId = trip.id; // Fallback to trip ID
-                    console.log('Falling back to using trip ID as group ID');
-                    
-                    try {
-                        await loadPackingItems(currentGroupId);
-                        await loadTodoItems(currentGroupId);
-                        await loadReminderItems(currentGroupId);
-                    } catch (fallbackError) {
-                        console.error('Fallback also failed:', fallbackError);
-                        document.getElementById('packingItems').innerHTML = `
-                            <div class="empty-state">
-                                <i class="fas fa-exclamation-triangle"></i>
-                                <h3>Error loading checklists</h3>
-                                <p>Please try again later.</p>
-                            </div>
-                        `;
-                        document.getElementById('todoItems').innerHTML = `
-                            <div class="empty-state">
-                                <i class="fas fa-exclamation-triangle"></i>
-                                <h3>Error loading checklists</h3>
-                                <p>Please try again later.</p>
-                            </div>
-                        `;
-                        document.getElementById('reminderItems').innerHTML = `
-                            <div class="empty-state">
-                                <i class="fas fa-exclamation-triangle"></i>
-                                <h3>Error loading checklists</h3>
-                                <p>Please try again later.</p>
-                            </div>
-                        `;
-                    }
+            const trip = currentTrips[0];
+            try {
+                const groups = await apiCall(`/api/trips/${trip.id}/groups`);
+                if (groups.length > 0) {
+                    // Assuming the first group is the main group for checklists
+                    const groupId = groups[0].id;
+                    await loadPackingItems(groupId);
+                    await loadTodoItems(groupId);
+                    await loadReminderItems(groupId);
+                } else {
+                    // Fallback to trip ID if no groups
+                    const groupId = trip.id;
+                    await loadPackingItems(groupId);
+                    await loadTodoItems(groupId);
+                    await loadReminderItems(groupId);
                 }
             } catch (error) {
-                console.error('Error in loadChecklists:', error);
-                document.getElementById('packingItems').innerHTML = `
-                    <div class="empty-state">
-                        <i class="fas fa-exclamation-triangle"></i>
-                        <h3>Error loading checklists</h3>
-                        <p>Please try again later.</p>
-                    </div>
-                `;
-                document.getElementById('todoItems').innerHTML = `
-                    <div class="empty-state">
-                        <i class="fas fa-exclamation-triangle"></i>
-                        <h3>Error loading checklists</h3>
-                        <p>Please try again later.</p>
-                    </div>
-                `;
-                document.getElementById('reminderItems').innerHTML = `
-                    <div class="empty-state">
-                        <i class="fas fa-exclamation-triangle"></i>
-                        <h3>Error loading checklists</h3>
-                        <p>Please try again later.</p>
-                    </div>
-                `;
+                console.error('Error loading checklists:', error);
+                const groupId = trip.id; // Fallback to trip ID
+                try {
+                    await loadPackingItems(groupId);
+                    await loadTodoItems(groupId);
+                    await loadReminderItems(groupId);
+                } catch (fallbackError) {
+                    console.error('Fallback also failed:', fallbackError);
+                    showMessage('checklistMessage', 'Failed to load checklists. Please try again.', 'error');
+                }
             }
         }
 
@@ -3657,14 +3294,6 @@
         // Initialize App
         document.addEventListener('DOMContentLoaded', async () => {
             if (await checkAuth()) {
-                // Load trips first
-                try {
-                    await loadTrips();
-                    console.log('Trips loaded during initialization:', currentTrips);
-                } catch (error) {
-                    console.error('Error loading trips during initialization:', error);
-                }
-                
                 // Show dashboard section initially
                 showSection('dashboard');
                 
@@ -3865,9 +3494,6 @@
                 // Store current group ID for adding members
                 currentGroupId = groupId;
                 
-                // Load chat messages
-                await loadGroupChat(groupId);
-                
                 // Show modal
                 document.getElementById('groupModal').style.display = 'flex';
                 
@@ -3965,86 +3591,6 @@
             }
         }
 
-        // Group Chat Functions
-        async function loadGroupChat(groupId) {
-            try {
-                const messages = await apiCall(`/api/groups/${groupId}/chat`);
-                displayGroupChat(messages);
-            } catch (error) {
-                console.error('Error loading chat messages:', error);
-                displayGroupChat([]);
-            }
-        }
-
-        function displayGroupChat(messages) {
-            const chatContainer = document.getElementById('groupChatMessages');
-            
-            if (messages.length === 0) {
-                chatContainer.innerHTML = `
-                    <div class="chat-empty">
-                        <i class="fas fa-comments"></i>
-                        <p>No messages yet</p>
-                        <p>Start the conversation!</p>
-                    </div>
-                `;
-                return;
-            }
-
-            chatContainer.innerHTML = messages.map(message => {
-                const isOwn = message.user_id === currentUser.id;
-                const messageTime = new Date(message.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-                
-                return `
-                    <div class="chat-message ${isOwn ? 'own' : 'other'}">
-                        <div class="message-user">${isOwn ? 'You' : 'Member'}</div>
-                        <div class="message-text">${message.message}</div>
-                        <div class="message-time">${messageTime}</div>
-                    </div>
-                `;
-            }).join('');
-
-            // Scroll to bottom
-            chatContainer.scrollTop = chatContainer.scrollHeight;
-        }
-
-        // Add chat form handler
-        document.addEventListener('DOMContentLoaded', () => {
-            document.getElementById('groupChatForm').addEventListener('submit', async (e) => {
-                e.preventDefault();
-                
-                if (!currentGroupId) {
-                    showMessage('chatMessage', 'No group selected.', 'error');
-                    return;
-                }
-
-                const messageInput = document.getElementById('groupChatInput');
-                const message = messageInput.value.trim();
-
-                if (!message) {
-                    return;
-                }
-
-                try {
-                    await apiCall(`/api/groups/${currentGroupId}/chat`, {
-                        method: 'POST',
-                        body: JSON.stringify({
-                            message: message
-                        })
-                    });
-
-                    // Clear input
-                    messageInput.value = '';
-                    
-                    // Reload chat messages
-                    await loadGroupChat(currentGroupId);
-
-                } catch (error) {
-                    console.error('Error sending message:', error);
-                    showMessage('chatMessage', 'Failed to send message. Please try again.', 'error');
-                }
-            });
-        });
-
         // Update showSection function to include groups
         function showSection(sectionName) {
             // Hide all sections
@@ -4064,7 +3610,7 @@
             // Load section-specific data
             switch (sectionName) {
                 case 'dashboard':
-                    loadDashboardData();
+                    loadDashboard();
                     break;
                 case 'trips':
                     loadTrips();

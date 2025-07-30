@@ -13,10 +13,10 @@ try:
     from app import app
     print("✅ App imported successfully")
     
-    print("🚀 Starting server on http://localhost:8080")
+    print("🚀 Starting server on http://localhost:5000")
     print("📝 Press Ctrl+C to stop")
     
-    app.run(host='0.0.0.0', port=8080, debug=False)
+    app.run(host='0.0.0.0', port=5000, debug=False)
     
 except Exception as e:
     print(f"❌ Error starting server: {e}")

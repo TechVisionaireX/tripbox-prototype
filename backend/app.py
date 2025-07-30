@@ -101,9 +101,7 @@ app = Flask(__name__)
 CORS(app, origins=[
     "http://localhost:3000",
     "http://localhost:5000",
-    "http://localhost:8080",
     "http://127.0.0.1:5000",
-    "http://127.0.0.1:8080",
     "https://resilient-marshmallow-13df59.netlify.app",
     "https://*.netlify.app"  # Allow any Netlify subdomain
 ])
