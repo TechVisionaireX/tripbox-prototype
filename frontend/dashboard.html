@@ -989,6 +989,17 @@
             margin-bottom: 2rem;
         }
 
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .section-header h3 {
+            margin: 0;
+        }
+
         .upload-form {
             display: flex;
             gap: 1rem;
@@ -1855,7 +1866,12 @@
 
                 <!-- Gallery Grid -->
                 <div class="gallery-grid-section">
-                    <h3><i class="fas fa-images"></i> Photo Gallery</h3>
+                    <div class="section-header">
+                        <h3><i class="fas fa-images"></i> Photo Gallery</h3>
+                        <button class="btn btn-secondary btn-sm" onclick="refreshGallery()">
+                            <i class="fas fa-sync-alt"></i> Refresh
+                        </button>
+                    </div>
                     <div id="galleryGrid">
                         <div class="empty-state">
                             <i class="fas fa-camera"></i>
@@ -2946,6 +2962,21 @@
             }
         }
 
+        async function refreshGallery() {
+            console.log('Forcing gallery refresh...');
+            try {
+                if (currentGalleryGroupId) {
+                    await loadGalleryPhotos();
+                    console.log('Gallery refreshed successfully');
+                } else {
+                    console.log('No gallery group ID, loading gallery first...');
+                    await loadGallery();
+                }
+            } catch (error) {
+                console.error('Error refreshing gallery:', error);
+            }
+        }
+
         async function loadGalleryPhotos() {
             console.log('Loading gallery photos for group:', currentGalleryGroupId);
             const galleryGrid = document.getElementById('galleryGrid');
@@ -3057,7 +3088,7 @@
                     console.log('Upload response:', response);
                     showMessage('uploadMessage', 'Photo uploaded successfully!', 'success');
                     document.getElementById('uploadPhotoForm').reset();
-                    await loadGalleryPhotos();
+                    await refreshGallery();
 
                 } catch (error) {
                     console.error('Error uploading photo:', error);
