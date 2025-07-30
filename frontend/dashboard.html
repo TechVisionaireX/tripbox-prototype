@@ -2204,6 +2204,11 @@
                 await loadTrips();
                 updateDashboardStats();
                 displayRecentTrips();
+                
+                // Also display all trips in the trips section
+                if (document.getElementById('tripsSection').style.display !== 'none') {
+                    displayAllTrips();
+                }
             } catch (error) {
                 console.error('Error loading dashboard data:', error);
             }
@@ -2213,6 +2218,17 @@
         let currentGroupId = null;
 
         async function loadExpenses() {
+            // First, ensure trips are loaded
+            if (!currentTrips.length) {
+                try {
+                    await loadTrips();
+                } catch (error) {
+                    console.error('Error loading trips for expenses:', error);
+                    showMessage('expenseMessage', 'Failed to load trips. Please try again.', 'error');
+                    return;
+                }
+            }
+            
             if (!currentTrips.length) {
                 showMessage('expenseMessage', 'No trips available. Create a trip first.', 'error');
                 return;
@@ -2794,6 +2810,17 @@
         let galleryPhotos = [];
 
         async function loadGallery() {
+            // First, ensure trips are loaded
+            if (!currentTrips.length) {
+                try {
+                    await loadTrips();
+                } catch (error) {
+                    console.error('Error loading trips for gallery:', error);
+                    showMessage('uploadMessage', 'Failed to load trips. Please try again.', 'error');
+                    return;
+                }
+            }
+            
             if (!currentTrips.length) {
                 showMessage('uploadMessage', 'No trips available. Create a trip first.', 'error');
                 return;
@@ -2951,6 +2978,17 @@
         let reminderItems = [];
 
         async function loadChecklists() {
+            // First, ensure trips are loaded
+            if (!currentTrips.length) {
+                try {
+                    await loadTrips();
+                } catch (error) {
+                    console.error('Error loading trips for checklists:', error);
+                    showMessage('checklistMessage', 'Failed to load trips. Please try again.', 'error');
+                    return;
+                }
+            }
+            
             if (!currentTrips.length) {
                 showMessage('checklistMessage', 'No trips available. Create a trip first.', 'error');
                 return;
@@ -3270,6 +3308,17 @@
          let userGroups = [];
 
         async function loadGroups() {
+            // First, ensure trips are loaded
+            if (!currentTrips.length) {
+                try {
+                    await loadTrips();
+                } catch (error) {
+                    console.error('Error loading trips for groups:', error);
+                    showMessage('groupMessage', 'Failed to load trips. Please try again.', 'error');
+                    return;
+                }
+            }
+            
             if (!currentTrips.length) {
                 showMessage('groupMessage', 'No trips available. Create a trip first.', 'error');
                 return;

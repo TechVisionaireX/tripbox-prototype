@@ -122,7 +122,7 @@ def get_group_details(group_id):
     
     try:
         # Get group with trip and creator info
-        group = db.session.query(Group, Trip, User).join(Trip).join(User, Group.creator_id == User.id).filter(
+        group = db.session.query(Group, Trip, User).select_from(Group).join(Trip).join(User, Group.creator_id == User.id).filter(
             Group.id == group_id
         ).first()
         
@@ -144,7 +144,7 @@ def get_group_details(group_id):
             'creator_id': group_obj.creator_id,
             'creator_name': creator.name,
             'is_owner': group_obj.creator_id == user_id,
-            'created_date': group_obj.created_date.isoformat() if group_obj.created_date else None
+            'created_date': None
         })
         
     except Exception as e:
@@ -179,7 +179,7 @@ def get_group_members(group_id):
                 'name': user.name,
                 'email': user.email,
                 'is_owner': member_obj.user_id == group.creator_id,
-                'joined_date': member_obj.joined_date.isoformat() if member_obj.joined_date else None
+                'joined_date': None
             })
         
         return jsonify(result)
