@@ -2304,9 +2304,9 @@
                 const response = await apiCall(`/api/groups/${currentGroupId}/expenses/split`);
                 console.log('Expense summary response:', response);
                 
-                document.getElementById('totalExpenseAmount').textContent = `$${response.total_expense}`;
-                document.getElementById('memberCount').textContent = response.member_count;
-                document.getElementById('splitAmount').textContent = `$${response.split_per_member}`;
+                document.getElementById('totalExpenseAmount').textContent = `$${response.total_expense || 0}`;
+                document.getElementById('memberCount').textContent = response.member_count || 0;
+                document.getElementById('splitAmount').textContent = `$${response.split_per_member || 0}`;
                 
             } catch (error) {
                 console.error('Error loading expense summary:', error);
@@ -2349,7 +2349,7 @@
                         </div>
                         <div class="trip-card-body">
                             <div class="trip-description">
-                                ${expense.note}
+                                ${expense.note || expense.description || 'No description'}
                             </div>
                             <div class="trip-actions">
                                 <span class="btn btn-success btn-sm">

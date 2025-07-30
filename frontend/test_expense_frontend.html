@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Expense Frontend</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .success { color: green; }
+        .error { color: red; }
+        .info { color: blue; }
+        .warning { color: orange; }
+        button {
+            padding: 10px 15px;
+            margin: 5px;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        pre {
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 3px;
+            overflow-x: auto;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .expense-card {
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 15px;
+            margin: 10px 0;
+            background: white;
+        }
+        .expense-title {
+            font-weight: bold;
+            font-size: 1.1em;
+            margin-bottom: 5px;
+        }
+        .expense-amount {
+            color: #28a745;
+            font-weight: bold;
+        }
+        .expense-category {
+            color: #666;
+            font-size: 0.9em;
+        }
+        .expense-description {
+            margin: 10px 0;
+        }
+        .expense-user {
+            color: #007bff;
+            font-size: 0.9em;
+        }
+        .expense-summary {
+            background: #e9ecef;
+            padding: 10px;
+            border-radius: 3px;
+            margin: 10px 0;
+        }
+        input, select {
+            padding: 8px;
+            margin: 5px;
+            border: 1px solid #ddd;
+            border-radius: 3px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Test Expense Frontend</h1>
+    
+    <div class="test-section">
+        <h2>Authentication</h2>
+        <input type="email" id="emailInput" placeholder="Email" value="test@gmail.com" style="padding: 8px; margin: 5px;">
+        <input type="password" id="passwordInput" placeholder="Password" value="password123" style="padding: 8px; margin: 5px;">
+        <button onclick="testLogin()">Login</button>
+        <button onclick="testLogout()">Logout</button>
+        <div id="authResult"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>Create Test Trip</h2>
+        <button onclick="createTestTrip()">Create Test Trip</button>
+        <div id="tripResult"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>Add Member</h2>
+        <input type="email" id="memberEmail" placeholder="Member Email" value="member@gmail.com" style="padding: 8px; margin: 5px;">
+        <button onclick="addMember()">Add Member</button>
+        <div id="memberResult"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>Add Expenses</h2>
+        <input type="number" id="expenseAmount" placeholder="Amount" value="100" style="padding: 8px; margin: 5px;">
+        <select id="expenseCategory" style="padding: 8px; margin: 5px;">
+            <option value="Food">Food</option>
+            <option value="Transport">Transport</option>
+            <option value="Accommodation">Accommodation</option>
+            <option value="Activities">Activities</option>
+            <option value="Shopping">Shopping</option>
+            <option value="Other">Other</option>
+        </select>
+        <input type="text" id="expenseDescription" placeholder="Description" value="Test expense" style="padding: 8px; margin: 5px;">
+        <button onclick="addExpense()">Add Expense</button>
+        <div id="expenseResult"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>Expense Summary</h2>
+        <button onclick="loadExpenseSummary()">Load Summary</button>
+        <div id="summaryResult"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>All Expenses</h2>
+        <button onclick="loadAllExpenses()">Load All Expenses</button>
+        <div id="expensesResult"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>Test Member Login</h2>
+        <button onclick="testMemberLogin()">Login as Member</button>
+        <button onclick="memberAddExpense()">Member Add Expense</button>
+        <button onclick="memberViewExpenses()">Member View Expenses</button>
+        <div id="memberTestResult"></div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:8080';
+        let accessToken = null;
+        let currentTripId = null;
+        let currentGroupId = null;
+        let memberToken = null;
+
+        async function apiCall(endpoint, options = {}) {
+            const url = `${API_BASE}${endpoint}`;
+            const config = {
+                method: options.method || 'GET',
+                headers: {},
+                ...options
+            };
+
+            if (accessToken) {
+                config.headers['Authorization'] = `Bearer ${accessToken}`;
+            }
+
+            if (!(options.body instanceof FormData)) {
+                config.headers['Content-Type'] = 'application/json';
+            }
+
+            console.log('API Call:', url, config);
+            const response = await fetch(url, config);
+            
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
+            }
+            
+            return await response.json();
+        }
+
+        async function testLogin() {
+            const resultDiv = document.getElementById('authResult');
+            const email = document.getElementById('emailInput').value;
+            const password = document.getElementById('passwordInput').value;
+            
+            resultDiv.innerHTML = '<span class="info">Logging in...</span>';
+            
+            try {
+                const response = await apiCall('/api/login', {
+                    method: 'POST',
+                    body: {
+                        email: email,
+                        password: password
+                    }
+                });
+                
+                accessToken = response.access_token;
+                resultDiv.innerHTML = `
+                    <span class="success">✅ Login successful!</span>
+                    <pre>${JSON.stringify(response, null, 2)}</pre>
+                `;
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <span class="error">❌ Login failed: ${error.message}</span>
+                `;
+            }
+        }
+
+        async function testLogout() {
+            accessToken = null;
+            currentTripId = null;
+            currentGroupId = null;
+            memberToken = null;
+            document.getElementById('authResult').innerHTML = '<span class="success">✅ Logged out</span>';
+            document.getElementById('tripResult').innerHTML = '';
+            document.getElementById('memberResult').innerHTML = '';
+            document.getElementById('expenseResult').innerHTML = '';
+            document.getElementById('summaryResult').innerHTML = '';
+            document.getElementById('expensesResult').innerHTML = '';
+            document.getElementById('memberTestResult').innerHTML = '';
+        }
+
+        async function createTestTrip() {
+            const resultDiv = document.getElementById('tripResult');
+            resultDiv.innerHTML = '<span class="info">Creating test trip...</span>';
+            
+            if (!accessToken) {
+                resultDiv.innerHTML = '<span class="error">❌ Please login first</span>';
+                return;
+            }
+            
+            try {
+                const response = await apiCall('/api/trips', {
+                    method: 'POST',
+                    body: {
+                        name: 'Expense Test Trip',
+                        start_date: '2024-08-01',
+                        end_date: '2024-08-07',
+                        description: 'Testing expense functionality'
+                    }
+                });
+                
+                currentTripId = response.trip.id;
+                currentGroupId = response.group.id;
+                
+                resultDiv.innerHTML = `
+                    <span class="success">✅ Created test trip!</span>
+                    <pre>Trip ID: ${currentTripId}
+Group ID: ${currentGroupId}
+${JSON.stringify(response, null, 2)}</pre>
+                `;
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <span class="error">❌ Failed to create trip: ${error.message}</span>
+                `;
+            }
+        }
+
+        async function addMember() {
+            const resultDiv = document.getElementById('memberResult');
+            const memberEmail = document.getElementById('memberEmail').value;
+            
+            if (!currentTripId) {
+                resultDiv.innerHTML = '<span class="error">❌ Please create a trip first</span>';
+                return;
+            }
+            
+            resultDiv.innerHTML = '<span class="info">Adding member...</span>';
+            
+            try {
+                const response = await apiCall(`/api/trips/${currentTripId}/members`, {
+                    method: 'POST',
+                    body: {
+                        email: memberEmail
+                    }
+                });
+                
+                resultDiv.innerHTML = `
+                    <span class="success">✅ Member added successfully!</span>
+                    <pre>${JSON.stringify(response, null, 2)}</pre>
+                `;
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <span class="error">❌ Failed to add member: ${error.message}</span>
+                `;
+            }
+        }
+
+        async function addExpense() {
+            const resultDiv = document.getElementById('expenseResult');
+            const amount = parseFloat(document.getElementById('expenseAmount').value);
+            const category = document.getElementById('expenseCategory').value;
+            const description = document.getElementById('expenseDescription').value;
+            
+            if (!currentGroupId) {
+                resultDiv.innerHTML = '<span class="error">❌ Please create a trip first</span>';
+                return;
+            }
+            
+            resultDiv.innerHTML = '<span class="info">Adding expense...</span>';
+            
+            try {
+                const response = await apiCall(`/api/groups/${currentGroupId}/expenses`, {
+                    method: 'POST',
+                    body: {
+                        amount: amount,
+                        category: category,
+                        description: description
+                    }
+                });
+                
+                resultDiv.innerHTML = `
+                    <span class="success">✅ Expense added successfully!</span>
+                    <pre>${JSON.stringify(response, null, 2)}</pre>
+                `;
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <span class="error">❌ Failed to add expense: ${error.message}</span>
+                `;
+            }
+        }
+
+        async function loadExpenseSummary() {
+            const resultDiv = document.getElementById('summaryResult');
+            
+            if (!currentGroupId) {
+                resultDiv.innerHTML = '<span class="error">❌ Please create a trip first</span>';
+                return;
+            }
+            
+            resultDiv.innerHTML = '<span class="info">Loading expense summary...</span>';
+            
+            try {
+                const response = await apiCall(`/api/groups/${currentGroupId}/expenses/split`);
+                
+                resultDiv.innerHTML = `
+                    <span class="success">✅ Expense summary loaded!</span>
+                    <div class="expense-summary">
+                        <h3>Expense Summary</h3>
+                        <p><strong>Total Expenses:</strong> $${response.total_expense}</p>
+                        <p><strong>Member Count:</strong> ${response.member_count}</p>
+                        <p><strong>Split Per Member:</strong> $${response.split_per_member}</p>
+                        <p><strong>Expense Count:</strong> ${response.expense_count}</p>
+                    </div>
+                    <pre>${JSON.stringify(response, null, 2)}</pre>
+                `;
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <span class="error">❌ Failed to load expense summary: ${error.message}</span>
+                `;
+            }
+        }
+
+        async function loadAllExpenses() {
+            const resultDiv = document.getElementById('expensesResult');
+            
+            if (!currentGroupId) {
+                resultDiv.innerHTML = '<span class="error">❌ Please create a trip first</span>';
+                return;
+            }
+            
+            resultDiv.innerHTML = '<span class="info">Loading all expenses...</span>';
+            
+            try {
+                const expenses = await apiCall(`/api/groups/${currentGroupId}/expenses`);
+                
+                if (expenses.length === 0) {
+                    resultDiv.innerHTML = `
+                        <span class="warning">⚠️ No expenses found</span>
+                    `;
+                    return;
+                }
+                
+                const expenseCards = expenses.map(expense => `
+                    <div class="expense-card">
+                        <div class="expense-title">
+                            ${expense.category}
+                            <span class="expense-amount">$${expense.amount}</span>
+                        </div>
+                        <div class="expense-description">
+                            ${expense.note || 'No description'}
+                        </div>
+                        <div class="expense-user">
+                            Added by ${expense.user_name} on ${new Date(expense.timestamp).toLocaleString()}
+                        </div>
+                    </div>
+                `).join('');
+                
+                resultDiv.innerHTML = `
+                    <span class="success">✅ Loaded ${expenses.length} expenses!</span>
+                    <div style="margin-top: 10px;">
+                        ${expenseCards}
+                    </div>
+                    <pre>${JSON.stringify(expenses, null, 2)}</pre>
+                `;
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <span class="error">❌ Failed to load expenses: ${error.message}</span>
+                `;
+            }
+        }
+
+        async function testMemberLogin() {
+            const resultDiv = document.getElementById('memberTestResult');
+            
+            try {
+                const response = await fetch(`${API_BASE}/api/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        email: 'member@gmail.com',
+                        password: 'member123'
+                    })
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    memberToken = data.access_token;
+                    resultDiv.innerHTML = `
+                        <span class="success">✅ Member login successful!</span>
+                        <pre>${JSON.stringify(data, null, 2)}</pre>
+                    `;
+                } else {
+                    resultDiv.innerHTML = `
+                        <span class="error">❌ Member login failed</span>
+                    `;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <span class="error">❌ Member login error: ${error.message}</span>
+                `;
+            }
+        }
+
+        async function memberAddExpense() {
+            const resultDiv = document.getElementById('memberTestResult');
+            
+            if (!memberToken || !currentGroupId) {
+                resultDiv.innerHTML = '<span class="error">❌ Please login as member and create a trip first</span>';
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${API_BASE}/api/groups/${currentGroupId}/expenses`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${memberToken}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        amount: 75.0,
+                        category: 'Food',
+                        description: 'Member added expense'
+                    })
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    resultDiv.innerHTML = `
+                        <span class="success">✅ Member added expense successfully!</span>
+                        <pre>${JSON.stringify(data, null, 2)}</pre>
+                    `;
+                } else {
+                    resultDiv.innerHTML = `
+                        <span class="error">❌ Member failed to add expense</span>
+                    `;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <span class="error">❌ Member expense error: ${error.message}</span>
+                `;
+            }
+        }
+
+        async function memberViewExpenses() {
+            const resultDiv = document.getElementById('memberTestResult');
+            
+            if (!memberToken || !currentGroupId) {
+                resultDiv.innerHTML = '<span class="error">❌ Please login as member and create a trip first</span>';
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${API_BASE}/api/groups/${currentGroupId}/expenses`, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${memberToken}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                if (response.ok) {
+                    const expenses = await response.json();
+                    resultDiv.innerHTML = `
+                        <span class="success">✅ Member can see ${expenses.length} expenses!</span>
+                        <pre>${JSON.stringify(expenses, null, 2)}</pre>
+                    `;
+                } else {
+                    resultDiv.innerHTML = `
+                        <span class="error">❌ Member failed to view expenses</span>
+                    `;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <span class="error">❌ Member view expenses error: ${error.message}</span>
+                `;
+            }
+        }
+    </script>
+</body>
+</html> 
