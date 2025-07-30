@@ -740,7 +740,14 @@
             const refreshToken = localStorage.getItem('refresh_token');
             const user = localStorage.getItem('user');
             
+            console.log('Checking existing auth:', { 
+                hasAccessToken: !!accessToken, 
+                hasRefreshToken: !!refreshToken, 
+                hasUser: !!user 
+            });
+            
             if (!accessToken || !refreshToken || !user) {
+                console.log('Missing tokens, user needs to login');
                 return false;
             }
             
@@ -754,12 +761,16 @@
                     }
                 });
                 
+                console.log('Token validation response:', { status: response.status });
+                
                 if (response.ok) {
                     // User is already logged in, redirect to dashboard
+                    console.log('Token valid, redirecting to dashboard');
                     window.location.href = 'dashboard.html';
                     return true;
                 } else {
                     // Token might be expired, try to refresh
+                    console.log('Token expired, attempting refresh');
                     const refreshResponse = await fetch(`${API_BASE}/api/refresh`, {
                         method: 'POST',
                         headers: {
@@ -768,17 +779,21 @@
                         }
                     });
                     
+                    console.log('Refresh response:', { status: refreshResponse.status });
+                    
                     if (refreshResponse.ok) {
                         const data = await refreshResponse.json();
                         localStorage.setItem('access_token', data.access_token);
                         if (data.user) {
                             localStorage.setItem('user', JSON.stringify(data.user));
                         }
+                        console.log('Token refreshed, redirecting to dashboard');
                         window.location.href = 'dashboard.html';
                         return true;
                     }
                 }
                 
+                console.log('Authentication failed, user needs to login');
                 return false;
             } catch (error) {
                 console.error('Error checking existing auth:', error);
@@ -834,6 +849,7 @@
             const password = document.getElementById('loginPassword').value;
             const rememberMe = document.getElementById('rememberMe').checked;
             
+            console.log('Login attempt:', { email, rememberMe });
             setLoading('loginForm', true);
             
             try {
@@ -846,6 +862,7 @@
                 });
                 
                 const data = await response.json();
+                console.log('Login response:', { status: response.status, data });
                 
                 if (response.ok) {
                     localStorage.setItem('access_token', data.access_token);
@@ -861,14 +878,17 @@
                         localStorage.removeItem('login_email');
                     }
                     
+                    console.log('Login successful, tokens stored');
                     showMessage('loginMessage', 'Login successful! Redirecting...', 'success');
                     setTimeout(() => {
                         window.location.href = 'dashboard.html';
                     }, 1500);
                 } else {
+                    console.log('Login failed:', data.error);
                     showMessage('loginMessage', data.error || 'Login failed', 'error');
                 }
             } catch (error) {
+                console.error('Login error:', error);
                 showMessage('loginMessage', 'Network error. Please try again.', 'error');
             } finally {
                 setLoading('loginForm', false);
