@@ -1,6 +1,7 @@
 from flask import Blueprint, request, jsonify
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from models import db, Group, GroupMember, Poll, PollVote, User
+from notifications import create_group_notification
 import json
 from datetime import datetime, timedelta
 
@@ -13,39 +14,65 @@ def create_poll(group_id):
     user_id = int(get_jwt_identity())
     data = request.get_json()
     
+    print(f"Creating poll for group {group_id} by user {user_id}")
+    print(f"Request data: {data}")
+    
     # Check if user is a member of the group
     membership = GroupMember.query.filter_by(group_id=group_id, user_id=user_id).first()
     if not membership:
+        print(f"User {user_id} is not a member of group {group_id}")
         return jsonify({'error': 'You are not a member of this group'}), 403
     
     question = data.get('question')
     options = data.get('options', [])
     expires_in_hours = data.get('expires_in_hours', 24)  # Default 24 hours
     
+    print(f"Question: {question}")
+    print(f"Options: {options}")
+    print(f"Expires in hours: {expires_in_hours}")
+    
     if not question or not options or len(options) < 2:
+        print(f"Validation failed: question={question}, options={options}")
         return jsonify({'error': 'Question and at least 2 options are required'}), 400
     
     # Calculate expiration time
     expires_at = datetime.utcnow() + timedelta(hours=expires_in_hours)
     
-    poll = Poll(
-        group_id=group_id,
-        creator_id=user_id,
-        question=question,
-        options=json.dumps(options),
-        expires_at=expires_at
-    )
-    
-    db.session.add(poll)
-    db.session.commit()
-    
-    return jsonify({
-        'message': 'Poll created successfully',
-        'poll_id': poll.id,
-        'question': poll.question,
-        'options': options,
-        'expires_at': poll.expires_at.isoformat()
-    }), 201
+    try:
+        poll = Poll(
+            group_id=group_id,
+            creator_id=user_id,
+            question=question,
+            options=json.dumps(options),
+            expires_at=expires_at
+        )
+        
+        db.session.add(poll)
+        db.session.commit()
+        
+        print(f"Poll created successfully with ID {poll.id}")
+        
+        # Create notifications for all group members
+        create_group_notification(
+            group_id=group_id,
+            notification_type='poll_created',
+            title='New Poll Created',
+            message=f'A new poll "{question}" has been created in your group.',
+            exclude_user_id=user_id
+        )
+        
+        return jsonify({
+            'message': 'Poll created successfully',
+            'poll_id': poll.id,
+            'question': poll.question,
+            'options': options,
+            'expires_at': poll.expires_at.isoformat()
+        }), 201
+        
+    except Exception as e:
+        print(f"Error creating poll: {e}")
+        db.session.rollback()
+        return jsonify({'error': f'Failed to create poll: {str(e)}'}), 500
 
 # GET: Get all polls for a group
 @polls_bp.route('/api/groups/<int:group_id>/polls', methods=['GET'])
@@ -139,6 +166,18 @@ def vote_on_poll(poll_id):
     
     db.session.commit()
     
+    # Create notification for poll creator
+    poll = Poll.query.get(poll_id)
+    if poll and poll.creator_id != user_id:
+        from notifications import create_notification
+        create_notification(
+            user_id=poll.creator_id,
+            group_id=poll.group_id,
+            notification_type='poll_voted',
+            title='New Vote Cast',
+            message=f'Someone voted on your poll "{poll.question}".'
+        )
+    
     return jsonify({'message': 'Vote recorded successfully'}), 200
 
 # GET: Get all active polls for user's trips (dashboard)
@@ -225,6 +264,15 @@ def finalize_poll(poll_id):
     poll.winning_option = winning_option
     
     db.session.commit()
+    
+    # Create notifications for all group members
+    create_group_notification(
+        group_id=poll.group_id,
+        notification_type='poll_finalized',
+        title='Poll Finalized',
+        message=f'The poll "{poll.question}" has been finalized. Winner: {winning_option}',
+        exclude_user_id=user_id
+    )
     
     return jsonify({
         'message': 'Poll finalized successfully',

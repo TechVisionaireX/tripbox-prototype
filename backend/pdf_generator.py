@@ -1,91 +1,125 @@
 from flask import Blueprint, request, jsonify, send_file
 from flask_jwt_extended import jwt_required, get_jwt_identity
-from models import db, Trip, Group, GroupMember, Expense, ChecklistItem, BudgetItem, Recommendation, GalleryImage, ChatMessage
+from models import db, Group, GroupMember, Trip, User, Expense, Photo, ChecklistItem, Poll, PollVote, ChatMessage
+from notifications import create_group_notification
+import json
 from datetime import datetime
+from reportlab.lib.pagesizes import letter, A4
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, PageBreak
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.lib.units import inch
+from reportlab.lib import colors
+from reportlab.lib.enums import TA_CENTER, TA_LEFT, TA_RIGHT
+import io
 import os
-from io import BytesIO
-import base64
 
-pdf_generator_bp = Blueprint('pdf_generator_bp', __name__)
+pdf_bp = Blueprint('pdf_bp', __name__)
 
-try:
-    from reportlab.lib.pagesizes import letter, A4
-    from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Image as RLImage, Table, TableStyle
-    from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
-    from reportlab.lib.units import inch
-    from reportlab.lib import colors
-    from reportlab.lib.enums import TA_CENTER, TA_LEFT
-    REPORTLAB_AVAILABLE = True
-except ImportError:
-    REPORTLAB_AVAILABLE = False
-
-@pdf_generator_bp.route('/api/trips/<int:trip_id>/generate-pdf', methods=['POST'])
+# POST: Finalize group and generate PDF
+@pdf_bp.route('/api/groups/<int:group_id>/finalize', methods=['POST'])
 @jwt_required()
-def generate_trip_pdf(trip_id):
-    if not REPORTLAB_AVAILABLE:
-        return jsonify({'error': 'PDF generation not available. Install reportlab: pip install reportlab'}), 500
-    
+def finalize_group(group_id):
     user_id = int(get_jwt_identity())
-    data = request.get_json()
     
-    # Get trip details
-    trip = Trip.query.filter_by(id=trip_id, user_id=user_id).first()
-    if not trip:
-        return jsonify({'error': 'Trip not found or unauthorized'}), 404
-    
-    # Get group details
-    group = Group.query.filter_by(trip_id=trip_id).first()
+    # Check if user is the group creator
+    group = Group.query.get(group_id)
     if not group:
-        return jsonify({'error': 'No group found for this trip'}), 404
+        return jsonify({'error': 'Group not found'}), 404
     
-    # Generate PDF
+    if group.creator_id != user_id:
+        return jsonify({'error': 'Only the group creator can finalize the group'}), 403
+    
     try:
-        pdf_buffer = create_trip_pdf(trip, group, data.get('include_sections', {}))
+        # Generate PDF
+        pdf_data = generate_trip_itinerary_pdf(group_id)
         
-        # Save PDF temporarily
-        filename = f"trip_report_{trip_id}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf"
-        filepath = os.path.join('uploads', filename)
+        # Save PDF to file (in a real app, you'd save to cloud storage)
+        pdf_filename = f"itinerary_group_{group_id}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf"
+        pdf_path = os.path.join('uploads', pdf_filename)
         
-        with open(filepath, 'wb') as f:
-            f.write(pdf_buffer.getvalue())
+        with open(pdf_path, 'wb') as f:
+            f.write(pdf_data)
+        
+        # Update group status (you could add a finalized field to the Group model)
+        # group.finalized = True
+        # db.session.commit()
+        
+        # Create notifications for all group members
+        create_group_notification(
+            group_id=group_id,
+            notification_type='pdf_generated',
+            title='Itinerary PDF Generated',
+            message=f'Your trip itinerary PDF has been generated and is ready for download.',
+            exclude_user_id=user_id
+        )
         
         return jsonify({
-            'message': 'PDF generated successfully',
-            'filename': filename,
-            'download_url': f'/api/trips/{trip_id}/download-pdf/{filename}',
-            'size_bytes': len(pdf_buffer.getvalue())
-        }), 201
+            'message': 'Group finalized successfully',
+            'pdf_filename': pdf_filename,
+            'pdf_url': f'/api/groups/{group_id}/pdf'
+        }), 200
         
     except Exception as e:
-        return jsonify({'error': f'PDF generation failed: {str(e)}'}), 500
+        print(f"Error finalizing group: {e}")
+        return jsonify({'error': 'Failed to finalize group'}), 500
 
-@pdf_generator_bp.route('/api/trips/<int:trip_id>/download-pdf/<filename>', methods=['GET'])
+# GET: Download PDF itinerary
+@pdf_bp.route('/api/groups/<int:group_id>/pdf', methods=['GET'])
 @jwt_required()
-def download_trip_pdf(trip_id, filename):
+def download_pdf(group_id):
     user_id = int(get_jwt_identity())
     
-    # Verify trip ownership
-    trip = Trip.query.filter_by(id=trip_id, user_id=user_id).first()
-    if not trip:
-        return jsonify({'error': 'Trip not found or unauthorized'}), 404
+    # Check if user is a member of the group
+    membership = GroupMember.query.filter_by(group_id=group_id, user_id=user_id).first()
+    if not membership:
+        return jsonify({'error': 'You are not a member of this group'}), 403
     
-    filepath = os.path.join('uploads', filename)
-    
-    if not os.path.exists(filepath):
-        return jsonify({'error': 'PDF file not found'}), 404
-    
-    return send_file(
-        filepath,
-        as_attachment=True,
-        download_name=f"{trip.name}_Report.pdf",
-        mimetype='application/pdf'
-    )
+    try:
+        # Generate PDF
+        pdf_data = generate_trip_itinerary_pdf(group_id)
+        
+        # Return PDF as file download
+        return send_file(
+            io.BytesIO(pdf_data),
+            mimetype='application/pdf',
+            as_attachment=True,
+            download_name=f'itinerary_group_{group_id}.pdf'
+        )
+        
+    except Exception as e:
+        print(f"Error generating PDF: {e}")
+        return jsonify({'error': 'Failed to generate PDF'}), 500
 
-def create_trip_pdf(trip, group, include_sections):
-    """Create a comprehensive PDF report for the trip"""
+def generate_trip_itinerary_pdf(group_id):
+    """Generate a comprehensive PDF itinerary for a group"""
     
-    buffer = BytesIO()
-    doc = SimpleDocTemplate(buffer, pagesize=A4, topMargin=1*inch)
+    # Get group and trip information
+    group = Group.query.get(group_id)
+    trip = Trip.query.get(group.trip_id)
+    
+    # Get all members
+    members = GroupMember.query.filter_by(group_id=group_id).all()
+    member_users = [User.query.get(member.user_id) for member in members]
+    
+    # Get expenses
+    expenses = Expense.query.filter_by(group_id=group_id).all()
+    
+    # Get photos
+    photos = Photo.query.filter_by(group_id=group_id).all()
+    
+    # Get checklist items
+    checklist_items = ChecklistItem.query.filter_by(group_id=group_id).all()
+    
+    # Get polls
+    polls = Poll.query.filter_by(group_id=group_id).all()
+    
+    # Get recent chat messages
+    chat_messages = ChatMessage.query.filter_by(group_id=group_id).order_by(ChatMessage.timestamp.desc()).limit(10).all()
+    
+    # Create PDF
+    buffer = io.BytesIO()
+    doc = SimpleDocTemplate(buffer, pagesize=A4)
+    story = []
     
     # Get styles
     styles = getSampleStyleSheet()
@@ -95,284 +129,166 @@ def create_trip_pdf(trip, group, include_sections):
         fontSize=24,
         spaceAfter=30,
         alignment=TA_CENTER,
-        textColor=colors.HexColor('#6366f1')
+        textColor=colors.darkblue
     )
-    
     heading_style = ParagraphStyle(
         'CustomHeading',
         parent=styles['Heading2'],
         fontSize=16,
-        spaceBefore=20,
-        spaceAfter=10,
-        textColor=colors.HexColor('#4f46e5')
+        spaceAfter=12,
+        textColor=colors.darkblue
     )
+    normal_style = styles['Normal']
     
-    # Build content
-    content = []
+    # Cover page
+    story.append(Paragraph(f"Trip Itinerary", title_style))
+    story.append(Spacer(1, 20))
+    story.append(Paragraph(f"Group: {group.name}", heading_style))
+    story.append(Paragraph(f"Trip: {trip.name}", heading_style))
+    story.append(Paragraph(f"Dates: {trip.start_date} to {trip.end_date}", normal_style))
+    if trip.description:
+        story.append(Paragraph(f"Description: {trip.description}", normal_style))
+    story.append(PageBreak())
     
-    # Title Page
-    content.append(Paragraph(f"Trip Report: {trip.name}", title_style))
-    content.append(Spacer(1, 20))
-    
-    # Trip Overview
-    content.append(Paragraph("Trip Overview", heading_style))
-    
-    trip_data = [
-        ['Trip Name:', trip.name],
-        ['Start Date:', trip.start_date],
-        ['End Date:', trip.end_date],
-        ['Description:', trip.description or 'No description provided'],
-        ['Status:', 'Finalized' if trip.finalized else 'In Planning'],
-        ['Generated:', datetime.now().strftime('%Y-%m-%d %H:%M:%S')]
+    # Trip Information
+    story.append(Paragraph("Trip Information", heading_style))
+    trip_info = [
+        ['Trip Name', trip.name],
+        ['Start Date', trip.start_date],
+        ['End Date', trip.end_date],
+        ['Status', 'Finalized' if trip.finalized else 'Planning'],
     ]
+    if trip.description:
+        trip_info.append(['Description', trip.description])
     
-    trip_table = Table(trip_data, colWidths=[2*inch, 4*inch])
+    trip_table = Table(trip_info, colWidths=[2*inch, 4*inch])
     trip_table.setStyle(TableStyle([
-        ('BACKGROUND', (0, 0), (0, -1), colors.HexColor('#f3f4f6')),
-        ('TEXTCOLOR', (0, 0), (-1, -1), colors.black),
+        ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
+        ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
         ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
-        ('FONTNAME', (0, 0), (0, -1), 'Helvetica-Bold'),
-        ('FONTSIZE', (0, 0), (-1, -1), 10),
-        ('GRID', (0, 0), (-1, -1), 1, colors.HexColor('#e5e7eb')),
-        ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+        ('FONTSIZE', (0, 0), (-1, 0), 12),
+        ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+        ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
+        ('GRID', (0, 0), (-1, -1), 1, colors.black)
     ]))
+    story.append(trip_table)
+    story.append(Spacer(1, 20))
     
-    content.append(trip_table)
-    content.append(Spacer(1, 20))
+    # Members
+    story.append(Paragraph("Group Members", heading_style))
+    member_data = [['Name', 'Email']]
+    for user in member_users:
+        if user:
+            member_data.append([user.name, user.email])
     
-    # Group Members
-    members = GroupMember.query.filter_by(group_id=group.id).all()
-    if members or include_sections.get('members', True):
-        content.append(Paragraph("Group Members", heading_style))
-        
-        member_data = [['Member ID', 'Join Date']]
-        for member in members:
-            member_data.append([
-                str(member.user_id),
-                'N/A'  # You could add a join_date field to GroupMember
-            ])
-        
-        if len(member_data) > 1:
-            member_table = Table(member_data, colWidths=[2*inch, 2*inch])
-            member_table.setStyle(TableStyle([
-                ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#6366f1')),
-                ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
-                ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
-                ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-                ('FONTSIZE', (0, 0), (-1, -1), 10),
-                ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
-                ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
-                ('GRID', (0, 0), (-1, -1), 1, colors.black)
-            ]))
-            content.append(member_table)
-        else:
-            content.append(Paragraph("No members found.", styles['Normal']))
-        
-        content.append(Spacer(1, 20))
+    member_table = Table(member_data, colWidths=[2*inch, 4*inch])
+    member_table.setStyle(TableStyle([
+        ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
+        ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+        ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+        ('FONTSIZE', (0, 0), (-1, 0), 12),
+        ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+        ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
+        ('GRID', (0, 0), (-1, -1), 1, colors.black)
+    ]))
+    story.append(member_table)
+    story.append(Spacer(1, 20))
     
-    # Budget Summary
-    if include_sections.get('budget', True):
-        content.append(Paragraph("Budget Summary", heading_style))
+    # Expenses
+    if expenses:
+        story.append(Paragraph("Expenses", heading_style))
+        expense_data = [['Category', 'Amount', 'Note', 'Added By']]
+        total_amount = 0
         
-        budget_items = BudgetItem.query.filter_by(group_id=group.id).all()
-        expenses = Expense.query.filter_by(group_id=group.id).all()
-        
-        total_budget = sum(item.amount for item in budget_items)
-        total_expenses = sum(expense.amount for expense in expenses)
-        remaining = total_budget - total_expenses
-        
-        budget_summary = [
-            ['Total Budget:', f'${total_budget:.2f}'],
-            ['Total Expenses:', f'${total_expenses:.2f}'],
-            ['Remaining:', f'${remaining:.2f}'],
-            ['Budget Status:', 'Over Budget' if remaining < 0 else 'Within Budget']
-        ]
-        
-        budget_table = Table(budget_summary, colWidths=[2*inch, 2*inch])
-        budget_table.setStyle(TableStyle([
-            ('BACKGROUND', (0, 0), (0, -1), colors.HexColor('#f3f4f6')),
-            ('TEXTCOLOR', (0, 0), (-1, -1), colors.black),
-            ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
-            ('FONTNAME', (0, 0), (0, -1), 'Helvetica-Bold'),
-            ('FONTSIZE', (0, 0), (-1, -1), 10),
-            ('GRID', (0, 0), (-1, -1), 1, colors.HexColor('#e5e7eb')),
-        ]))
-        
-        content.append(budget_table)
-        content.append(Spacer(1, 20))
-    
-    # Detailed Expenses
-    if include_sections.get('expenses', True) and expenses:
-        content.append(Paragraph("Detailed Expenses", heading_style))
-        
-        expense_data = [['Date', 'Category', 'Amount', 'Note']]
         for expense in expenses:
+            user = User.query.get(expense.user_id)
+            user_name = user.name if user else 'Unknown'
             expense_data.append([
-                expense.timestamp.strftime('%Y-%m-%d'),
-                expense.category or 'Uncategorized',
-                f'${expense.amount:.2f}',
-                expense.note or 'No note'
+                expense.category or 'General',
+                f"${expense.amount:.2f}",
+                expense.note or '',
+                user_name
+            ])
+            total_amount += expense.amount
+        
+        expense_data.append(['TOTAL', f"${total_amount:.2f}", '', ''])
+        
+        expense_table = Table(expense_data, colWidths=[1.5*inch, 1*inch, 2.5*inch, 1*inch])
+        expense_table.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+            ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 0), (-1, 0), 12),
+            ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+            ('BACKGROUND', (0, 1), (-1, -2), colors.beige),
+            ('BACKGROUND', (0, -1), (-1, -1), colors.lightblue),
+            ('FONTNAME', (0, -1), (-1, -1), 'Helvetica-Bold'),
+            ('GRID', (0, 0), (-1, -1), 1, colors.black)
+        ]))
+        story.append(expense_table)
+        story.append(Spacer(1, 20))
+    
+    # Checklist
+    if checklist_items:
+        story.append(Paragraph("Checklist & Packing List", heading_style))
+        checklist_data = [['Type', 'Item', 'Status']]
+        
+        for item in checklist_items:
+            status = 'Completed' if item.is_completed else 'Pending'
+            checklist_data.append([
+                item.item_type.title(),
+                item.text,
+                status
             ])
         
-        expense_table = Table(expense_data, colWidths=[1.5*inch, 1.5*inch, 1*inch, 2*inch])
-        expense_table.setStyle(TableStyle([
-            ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#f59e0b')),
+        checklist_table = Table(checklist_data, colWidths=[1.5*inch, 3.5*inch, 1*inch])
+        checklist_table.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
             ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
-            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+            ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
             ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-            ('FONTSIZE', (0, 0), (-1, -1), 9),
+            ('FONTSIZE', (0, 0), (-1, 0), 12),
             ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
             ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
             ('GRID', (0, 0), (-1, -1), 1, colors.black)
         ]))
+        story.append(checklist_table)
+        story.append(Spacer(1, 20))
+    
+    # Polls
+    if polls:
+        story.append(Paragraph("Group Decisions (Polls)", heading_style))
         
-        content.append(expense_table)
-        content.append(Spacer(1, 20))
+        for poll in polls:
+            story.append(Paragraph(f"Q: {poll.question}", normal_style))
+            
+            if poll.is_finalized:
+                story.append(Paragraph(f"Winner: {poll.winning_option}", normal_style))
+            else:
+                options = json.loads(poll.options)
+                for option in options:
+                    vote_count = PollVote.query.filter_by(poll_id=poll.id, selected_option=option).count()
+                    story.append(Paragraph(f"• {option}: {vote_count} votes", normal_style))
+            
+            story.append(Spacer(1, 10))
+        story.append(Spacer(1, 20))
     
-    # Checklist Items
-    if include_sections.get('checklist', True):
-        checklist_items = ChecklistItem.query.filter_by(group_id=group.id).all()
-        if checklist_items:
-            content.append(Paragraph("Checklist Items", heading_style))
+    # Recent Chat Summary
+    if chat_messages:
+        story.append(Paragraph("Recent Group Chat", heading_style))
+        
+        for message in reversed(chat_messages):  # Show in chronological order
+            user = User.query.get(message.user_id)
+            user_name = user.name if user else 'Unknown'
+            message_time = message.timestamp.strftime('%Y-%m-%d %H:%M')
             
-            checklist_data = [['Item', 'Type', 'Status', 'Added Date']]
-            for item in checklist_items:
-                checklist_data.append([
-                    item.text,
-                    item.type.title(),
-                    '✓ Completed' if item.completed else '○ Pending',
-                    item.timestamp.strftime('%Y-%m-%d')
-                ])
-            
-            checklist_table = Table(checklist_data, colWidths=[2.5*inch, 1*inch, 1*inch, 1.5*inch])
-            checklist_table.setStyle(TableStyle([
-                ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#10b981')),
-                ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
-                ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
-                ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-                ('FONTSIZE', (0, 0), (-1, -1), 9),
-                ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
-                ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
-                ('GRID', (0, 0), (-1, -1), 1, colors.black)
-            ]))
-            
-            content.append(checklist_table)
-            content.append(Spacer(1, 20))
-    
-    # Recommendations
-    if include_sections.get('recommendations', True):
-        recommendations = Recommendation.query.filter_by(group_id=group.id).all()
-        if recommendations:
-            content.append(Paragraph("Recommendations", heading_style))
-            
-            rec_data = [['Title', 'Type', 'Comment', 'Date']]
-            for rec in recommendations:
-                rec_data.append([
-                    rec.title,
-                    rec.type or 'General',
-                    rec.comment or 'No comment',
-                    rec.timestamp.strftime('%Y-%m-%d')
-                ])
-            
-            rec_table = Table(rec_data, colWidths=[2*inch, 1*inch, 2*inch, 1*inch])
-            rec_table.setStyle(TableStyle([
-                ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#8b5cf6')),
-                ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
-                ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
-                ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-                ('FONTSIZE', (0, 0), (-1, -1), 9),
-                ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
-                ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
-                ('GRID', (0, 0), (-1, -1), 1, colors.black)
-            ]))
-            
-            content.append(rec_table)
-            content.append(Spacer(1, 20))
-    
-    # Chat Summary
-    if include_sections.get('chat', False):
-        messages = ChatMessage.query.filter_by(group_id=group.id).order_by(ChatMessage.timestamp.desc()).limit(10).all()
-        if messages:
-            content.append(Paragraph("Recent Chat Messages (Last 10)", heading_style))
-            
-            for msg in reversed(messages):  # Show oldest first
-                msg_text = f"User {msg.user_id}: {msg.message}"
-                content.append(Paragraph(msg_text, styles['Normal']))
-                content.append(Spacer(1, 6))
-    
-    # Footer
-    content.append(Spacer(1, 30))
-    footer_style = ParagraphStyle(
-        'Footer',
-        parent=styles['Normal'],
-        fontSize=8,
-        alignment=TA_CENTER,
-        textColor=colors.grey
-    )
-    content.append(Paragraph("Generated by TripBox - Smart Travel Planning", footer_style))
+            story.append(Paragraph(f"{user_name} ({message_time}): {message.message}", normal_style))
+            story.append(Spacer(1, 5))
     
     # Build PDF
-    doc.build(content)
+    doc.build(story)
     buffer.seek(0)
-    
-    return buffer
-
-@pdf_generator_bp.route('/api/trips/<int:trip_id>/pdf-preview', methods=['POST'])
-@jwt_required()
-def preview_pdf_content(trip_id):
-    """Get a preview of what will be included in the PDF"""
-    user_id = int(get_jwt_identity())
-    
-    # Get trip details
-    trip = Trip.query.filter_by(id=trip_id, user_id=user_id).first()
-    if not trip:
-        return jsonify({'error': 'Trip not found or unauthorized'}), 404
-    
-    # Get group details
-    group = Group.query.filter_by(trip_id=trip_id).first()
-    if not group:
-        return jsonify({'error': 'No group found for this trip'}), 404
-    
-    # Collect all data for preview
-    members = GroupMember.query.filter_by(group_id=group.id).all()
-    budget_items = BudgetItem.query.filter_by(group_id=group.id).all()
-    expenses = Expense.query.filter_by(group_id=group.id).all()
-    checklist_items = ChecklistItem.query.filter_by(group_id=group.id).all()
-    recommendations = Recommendation.query.filter_by(group_id=group.id).all()
-    messages = ChatMessage.query.filter_by(group_id=group.id).count()
-    photos = GalleryImage.query.filter_by(group_id=group.id).count()
-    
-    preview = {
-        'trip_info': {
-            'name': trip.name,
-            'dates': f"{trip.start_date} to {trip.end_date}",
-            'description': trip.description,
-            'status': 'Finalized' if trip.finalized else 'In Planning'
-        },
-        'statistics': {
-            'members_count': len(members),
-            'budget_items_count': len(budget_items),
-            'expenses_count': len(expenses),
-            'checklist_items_count': len(checklist_items),
-            'recommendations_count': len(recommendations),
-            'chat_messages_count': messages,
-            'photos_count': photos
-        },
-        'financial_summary': {
-            'total_budget': sum(item.amount for item in budget_items),
-            'total_expenses': sum(expense.amount for expense in expenses),
-            'remaining_budget': sum(item.amount for item in budget_items) - sum(expense.amount for expense in expenses)
-        },
-        'sections_available': {
-            'trip_overview': True,
-            'members': len(members) > 0,
-            'budget_summary': len(budget_items) > 0 or len(expenses) > 0,
-            'detailed_expenses': len(expenses) > 0,
-            'checklist': len(checklist_items) > 0,
-            'recommendations': len(recommendations) > 0,
-            'chat_summary': messages > 0,
-            'photo_gallery': photos > 0
-        }
-    }
-    
-    return jsonify(preview) 
+    return buffer.getvalue() 

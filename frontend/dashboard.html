@@ -2009,6 +2009,67 @@
             color: var(--text-light);
         }
 
+        /* Notifications Styles */
+        .notifications-list {
+            margin-top: 1rem;
+        }
+
+        .notification-item {
+            background: white;
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius);
+            padding: 1rem;
+            margin-bottom: 1rem;
+            transition: var(--transition);
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+        }
+
+        .notification-item.unread {
+            border-left: 4px solid var(--primary-color);
+            background: var(--bg-secondary);
+        }
+
+        .notification-item:hover {
+            box-shadow: var(--shadow-soft);
+        }
+
+        .notification-content {
+            flex: 1;
+        }
+
+        .notification-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.5rem;
+        }
+
+        .notification-title {
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .notification-time {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+        }
+
+        .notification-message {
+            color: var(--text-secondary);
+            margin-bottom: 0.5rem;
+        }
+
+        .notification-type {
+            font-size: 0.8rem;
+            color: var(--text-light);
+        }
+
+        .notification-actions {
+            margin-left: 1rem;
+        }
+
         .member-item {
             display: flex;
             justify-content: space-between;
@@ -2139,6 +2200,12 @@
                     Checklists
                 </a>
             </div>
+            <div class="nav-item">
+                <a href="#" class="nav-link" onclick="showSection('polls')">
+                    <i class="fas fa-poll"></i>
+                    Polls
+                </a>
+            </div>
         </nav>
         
         <button class="logout-btn" onclick="logout()">
@@ -2243,23 +2310,31 @@
                     </div>
                 </div>
 
-                <!-- Recent Check-ins Section -->
+                <!-- Notifications Section -->
                 <div class="card">
                     <div class="card-header">
                         <h2>
-                            <i class="fas fa-map-marker-alt"></i>
-                            Recent Check-ins
+                            <i class="fas fa-bell"></i>
+                            Notifications
+                            <span id="notificationCount" class="notification-badge" style="display: none;">0</span>
                         </h2>
-                        <button class="btn btn-secondary btn-sm" onclick="refreshRecentCheckins()">
-                            <i class="fas fa-sync-alt"></i> Refresh
-                        </button>
+                        <div class="header-actions">
+                            <button class="btn btn-secondary btn-sm" onclick="markAllNotificationsRead()">
+                                <i class="fas fa-check-double"></i> Mark All Read
+                            </button>
+                            <button class="btn btn-secondary btn-sm" onclick="refreshNotifications()">
+                                <i class="fas fa-sync-alt"></i> Refresh
+                            </button>
+                        </div>
                     </div>
                     <div class="card-body">
-                        <div id="recentCheckinsList" class="checkins-list">
-                            <div class="loading-spinner">Loading check-ins...</div>
+                        <div id="notificationsList" class="notifications-list">
+                            <div class="loading-spinner">Loading notifications...</div>
                         </div>
                     </div>
                 </div>
+
+
 
                 <!-- Chat Notifications Section -->
                 <div class="card">
@@ -2739,6 +2814,72 @@
                 </div>
             </div>
         </section>
+
+        <!-- Polls Section -->
+        <section id="pollsSection" class="section" style="display: none;">
+            <div class="header">
+                <h1><i class="fas fa-poll"></i> Polls & Voting</h1>
+                <p>Create polls and vote on group decisions</p>
+            </div>
+            
+            <div class="content">
+                <!-- Create Poll Section -->
+                <div class="card">
+                    <div class="card-header">
+                        <h2><i class="fas fa-plus"></i> Create New Poll</h2>
+                    </div>
+                    <div class="card-body">
+                        <form id="createPollForm" class="poll-form">
+                            <div class="form-group">
+                                <label for="pollQuestion">Question</label>
+                                <input type="text" id="pollQuestion" placeholder="What would you like to ask?" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="pollOptions">Options (one per line)</label>
+                                <textarea id="pollOptions" placeholder="Option 1&#10;Option 2&#10;Option 3" rows="4" required></textarea>
+                            </div>
+                            <div class="form-group">
+                                <label for="pollExpires">Expires in (hours)</label>
+                                <select id="pollExpires">
+                                    <option value="1">1 hour</option>
+                                    <option value="6">6 hours</option>
+                                    <option value="12">12 hours</option>
+                                    <option value="24" selected>24 hours</option>
+                                    <option value="48">48 hours</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="pollGroup">Select Group</label>
+                                <select id="pollGroup" required>
+                                    <option value="">Select a group...</option>
+                                </select>
+                            </div>
+                            <div class="form-actions">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-plus"></i> Create Poll
+                                </button>
+                            </div>
+                        </form>
+                        <div id="createPollMessage" class="message" style="display: none;"></div>
+                    </div>
+                </div>
+
+                <!-- Active Polls Section -->
+                <div class="card">
+                    <div class="card-header">
+                        <h2><i class="fas fa-poll"></i> Active Polls</h2>
+                        <button class="btn btn-secondary btn-sm" onclick="refreshPolls()">
+                            <i class="fas fa-sync-alt"></i> Refresh
+                        </button>
+                    </div>
+                    <div class="card-body">
+                        <div id="pollsList" class="polls-list">
+                            <div class="loading-spinner">Loading polls...</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
     </main>
 
     <!-- Trip Details Modal -->
@@ -3038,7 +3179,6 @@
                     loadUserTripExpenses();
                     loadChatNotifications();
                     loadActivePolls();
-                    loadRecentCheckins();
                     break;
                 case 'trips':
                     console.log('Loading trips section...');
@@ -3890,54 +4030,69 @@
         }
 
         function displayActivePolls(polls) {
-            const container = document.getElementById('activePollsList');
+            const dashboardContainer = document.getElementById('activePollsList');
+            const pollsContainer = document.getElementById('pollsList');
             const pollCount = document.getElementById('pollCount');
             
-            if (!polls || polls.length === 0) {
-                container.innerHTML = `
-                    <div class="empty-state">
-                        <i class="fas fa-poll"></i>
-                        <h3>No active polls</h3>
-                        <p>Create a poll to start voting!</p>
-                    </div>
-                `;
-                if (pollCount) {
-                    pollCount.style.display = 'none';
+            // Function to display polls in a container
+            const displayPollsInContainer = (container, polls) => {
+                if (!polls || polls.length === 0) {
+                    container.innerHTML = `
+                        <div class="empty-state">
+                            <i class="fas fa-poll"></i>
+                            <h3>No active polls</h3>
+                            <p>Create a poll to start voting!</p>
+                        </div>
+                    `;
+                    return;
                 }
-                return;
+
+                const pollsHtml = polls.map(poll => `
+                    <div class="poll-item">
+                        <div class="poll-header">
+                            <h4>${poll.question}</h4>
+                            <span class="poll-group">in ${poll.group_name}</span>
+                        </div>
+                        <div class="poll-options">
+                            ${poll.options.map(option => `
+                                <div class="poll-option ${poll.user_vote === option ? 'selected' : ''}">
+                                    <button class="vote-btn" onclick="voteOnPoll(${poll.id}, '${option}')">
+                                        <i class="fas fa-check"></i>
+                                    </button>
+                                    <span class="option-text">${option}</span>
+                                    <span class="vote-count">${poll.vote_counts[option] || 0} votes</span>
+                                </div>
+                            `).join('')}
+                        </div>
+                        <div class="poll-footer">
+                            <span class="poll-creator">Created by ${poll.creator_name}</span>
+                            <span class="poll-expires">Expires: ${formatPollTime(poll.expires_at)}</span>
+                        </div>
+                    </div>
+                `).join('');
+
+                container.innerHTML = pollsHtml;
+            };
+            
+            // Display in dashboard if container exists
+            if (dashboardContainer) {
+                displayPollsInContainer(dashboardContainer, polls);
+                
+                // Show poll count
+                if (pollCount) {
+                    if (polls && polls.length > 0) {
+                        pollCount.textContent = polls.length;
+                        pollCount.style.display = 'inline-block';
+                    } else {
+                        pollCount.style.display = 'none';
+                    }
+                }
             }
             
-            // Show poll count
-            if (pollCount) {
-                pollCount.textContent = polls.length;
-                pollCount.style.display = 'inline-block';
+            // Display in polls section if container exists
+            if (pollsContainer) {
+                displayPollsInContainer(pollsContainer, polls);
             }
-
-            const pollsHtml = polls.map(poll => `
-                <div class="poll-item">
-                    <div class="poll-header">
-                        <h4>${poll.question}</h4>
-                        <span class="poll-group">in ${poll.group_name}</span>
-                    </div>
-                    <div class="poll-options">
-                        ${poll.options.map(option => `
-                            <div class="poll-option ${poll.user_vote === option ? 'selected' : ''}">
-                                <button class="vote-btn" onclick="voteOnPoll(${poll.id}, '${option}')">
-                                    <i class="fas fa-check"></i>
-                                </button>
-                                <span class="option-text">${option}</span>
-                                <span class="vote-count">${poll.vote_counts[option] || 0} votes</span>
-                            </div>
-                        `).join('')}
-                    </div>
-                    <div class="poll-footer">
-                        <span class="poll-creator">Created by ${poll.creator_name}</span>
-                        <span class="poll-expires">Expires: ${formatPollTime(poll.expires_at)}</span>
-                    </div>
-                </div>
-            `).join('');
-
-            container.innerHTML = pollsHtml;
         }
 
         async function voteOnPoll(pollId, selectedOption) {
@@ -4094,6 +4249,124 @@
 
         async function refreshRecentCheckins() {
             await loadRecentCheckins();
+        }
+
+        // Notifications Functions
+        let notifications = [];
+
+        async function loadNotifications() {
+            try {
+                const response = await apiCall('/api/notifications');
+                notifications = response;
+                displayNotifications(response);
+            } catch (error) {
+                console.error('Error loading notifications:', error);
+                document.getElementById('notificationsList').innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-bell"></i>
+                        <h3>No notifications</h3>
+                        <p>You're all caught up!</p>
+                    </div>
+                `;
+            }
+        }
+
+        function displayNotifications(notifications) {
+            const container = document.getElementById('notificationsList');
+            const notificationCount = document.getElementById('notificationCount');
+            
+            if (!notifications || notifications.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-bell"></i>
+                        <h3>No notifications</h3>
+                        <p>You're all caught up!</p>
+                    </div>
+                `;
+                if (notificationCount) {
+                    notificationCount.style.display = 'none';
+                }
+                return;
+            }
+            
+            // Show notification count
+            if (notificationCount) {
+                const unreadCount = notifications.filter(n => !n.is_read).length;
+                if (unreadCount > 0) {
+                    notificationCount.textContent = unreadCount;
+                    notificationCount.style.display = 'inline-block';
+                } else {
+                    notificationCount.style.display = 'none';
+                }
+            }
+
+            const notificationsHtml = notifications.map(notification => `
+                <div class="notification-item ${notification.is_read ? 'read' : 'unread'}">
+                    <div class="notification-content">
+                        <div class="notification-header">
+                            <span class="notification-title">${notification.title}</span>
+                            <span class="notification-time">${formatNotificationTime(notification.created_at)}</span>
+                        </div>
+                        <div class="notification-message">
+                            ${notification.message}
+                        </div>
+                        <div class="notification-type">
+                            ${getNotificationIcon(notification.type)} ${notification.type.replace('_', ' ').title()}
+                        </div>
+                    </div>
+                    <div class="notification-actions">
+                        ${!notification.is_read ? `
+                            <button class="btn btn-primary btn-sm" onclick="markNotificationRead(${notification.id})">
+                                <i class="fas fa-check"></i> Mark Read
+                            </button>
+                        ` : ''}
+                    </div>
+                </div>
+            `).join('');
+
+            container.innerHTML = notificationsHtml;
+        }
+
+        function getNotificationIcon(type) {
+            const icons = {
+                'poll_created': '<i class="fas fa-poll"></i>',
+                'poll_voted': '<i class="fas fa-vote-yea"></i>',
+                'poll_finalized': '<i class="fas fa-trophy"></i>',
+                'checkin': '<i class="fas fa-map-marker-alt"></i>',
+                'pdf_generated': '<i class="fas fa-file-pdf"></i>'
+            };
+            return icons[type] || '<i class="fas fa-bell"></i>';
+        }
+
+        function formatNotificationTime(timestamp) {
+            const date = new Date(timestamp);
+            return date.toLocaleString();
+        }
+
+        async function markNotificationRead(notificationId) {
+            try {
+                await apiCall(`/api/notifications/${notificationId}/read`, {
+                    method: 'POST'
+                });
+                await loadNotifications();
+            } catch (error) {
+                console.error('Error marking notification as read:', error);
+            }
+        }
+
+        async function markAllNotificationsRead() {
+            try {
+                await apiCall('/api/notifications/read-all', {
+                    method: 'POST'
+                });
+                await loadNotifications();
+            } catch (error) {
+                console.error('Error marking all notifications as read:', error);
+            }
+        }
+
+        async function refreshNotifications() {
+            await loadNotifications();
         }
 
         function resetTripForm() {
@@ -5500,8 +5773,8 @@
                 // Load active polls
                 await loadActivePolls();
                 
-                // Load recent check-ins
-                await loadRecentCheckins();
+                // Load notifications
+                await loadNotifications();
                 
                 // Set up periodic token validation
                 setInterval(async () => {
@@ -5603,11 +5876,19 @@
                                 <i class="fas fa-eye"></i>
                                 View Details
                             </button>
-                                                                <button class="btn btn-success btn-sm" onclick="console.log('Chat button clicked for group:', ${group.id}); openGroupChat(${group.id}, '${group.name}')">
-                                        <i class="fas fa-comments"></i>
-                                        Chat
-                                    </button>
+                                                                                            <button class="btn btn-success btn-sm" onclick="console.log('Chat button clicked for group:', ${group.id}); openGroupChat(${group.id}, '${group.name}')">
+                                <i class="fas fa-comments"></i>
+                                Chat
+                            </button>
                             ${group.is_owner ? `
+                                <button class="btn btn-warning btn-sm" onclick="finalizeGroup(${group.id}, '${group.name}')">
+                                    <i class="fas fa-check"></i>
+                                    Finalize
+                                </button>
+                                <button class="btn btn-info btn-sm" onclick="downloadGroupPDF(${group.id}, '${group.name}')">
+                                    <i class="fas fa-download"></i>
+                                    PDF
+                                </button>
                                 <button class="btn btn-danger btn-sm" onclick="deleteGroup(${group.id})">
                                     <i class="fas fa-trash"></i>
                                     Delete Group
@@ -5808,6 +6089,48 @@
             } catch (error) {
                 console.error('Error deleting group:', error);
                 showMessage('groupMessage', 'Failed to delete group. Please try again.', 'error');
+            }
+        }
+
+        async function finalizeGroup(groupId, groupName) {
+            if (!confirm(`Are you sure you want to finalize the group "${groupName}"? This will generate a PDF itinerary for all members.`)) {
+                return;
+            }
+            
+            try {
+                const response = await apiCall(`/api/groups/${groupId}/finalize`, {
+                    method: 'POST'
+                });
+                
+                showMessage('groupMessage', 'Group finalized successfully! PDF itinerary has been generated and shared with all members.', 'success');
+                await loadGroups();
+            } catch (error) {
+                console.error('Error finalizing group:', error);
+                showMessage('groupMessage', 'Failed to finalize group. Please try again.', 'error');
+            }
+        }
+
+        async function downloadGroupPDF(groupId, groupName) {
+            try {
+                const response = await apiCall(`/api/groups/${groupId}/pdf`, {
+                    method: 'GET'
+                });
+                
+                // Create a download link for the PDF
+                const blob = new Blob([response], { type: 'application/pdf' });
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `${groupName}-itinerary.pdf`;
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(url);
+                document.body.removeChild(a);
+                
+                showMessage('groupMessage', 'PDF downloaded successfully!', 'success');
+            } catch (error) {
+                console.error('Error downloading PDF:', error);
+                showMessage('groupMessage', 'Failed to download PDF. Please try again.', 'error');
             }
         }
 

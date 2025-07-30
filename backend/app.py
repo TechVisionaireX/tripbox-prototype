@@ -31,6 +31,18 @@ except Exception as e:
     print("FAILED to import polls_bp:", e)
 
 try:
+    from pdf_generator import pdf_bp
+    print("Imported pdf_bp successfully!")
+except Exception as e:
+    print("FAILED to import pdf_bp:", e)
+
+try:
+    from notifications import notifications_bp
+    print("Imported notifications_bp successfully!")
+except Exception as e:
+    print("FAILED to import notifications_bp:", e)
+
+try:
     from recommend import recommend_bp
     print("Imported recommend_bp successfully!")
 except Exception as e:
@@ -135,6 +147,8 @@ app.register_blueprint(trips_bp)
 app.register_blueprint(groups_bp)
 app.register_blueprint(chat_bp)
 app.register_blueprint(polls_bp)
+app.register_blueprint(pdf_bp)
+app.register_blueprint(notifications_bp)
 app.register_blueprint(recommend_bp)
 app.register_blueprint(expense_bp)
 app.register_blueprint(gallery_bp)
