@@ -209,10 +209,18 @@ def add_group_member(group_id):
         if not member:
             return jsonify({'error': 'You are not a member of this group'}), 403
         
+        # Check if user is the group owner
+        group = Group.query.get(group_id)
+        if not group:
+            return jsonify({'error': 'Group not found'}), 404
+        
+        if group.creator_id != user_id:
+            return jsonify({'error': 'Only group owners can add members'}), 403
+        
         # Find user by email
         user_to_add = User.query.filter_by(email=email).first()
         if not user_to_add:
-            return jsonify({'error': 'User not found'}), 404
+            return jsonify({'error': 'User not found with this email'}), 404
         
         # Check if user is already a member
         existing_member = GroupMember.query.filter_by(group_id=group_id, user_id=user_to_add.id).first()
@@ -222,8 +230,7 @@ def add_group_member(group_id):
         # Add user to group
         new_member = GroupMember(
             group_id=group_id,
-            user_id=user_to_add.id,
-            joined_date=datetime.now()
+            user_id=user_to_add.id
         )
         
         db.session.add(new_member)
@@ -256,20 +263,19 @@ def remove_group_member(group_id, member_id):
         if group.creator_id != user_id:
             return jsonify({'error': 'Only group owners can remove members'}), 403
         
-        # Check if member exists
-        member = GroupMember.query.filter_by(group_id=group_id, user_id=member_id).first()
-        if not member:
-            return jsonify({'error': 'Member not found'}), 404
-        
-        # Prevent removing the owner
+        # Check if trying to remove the owner
         if member_id == group.creator_id:
             return jsonify({'error': 'Cannot remove the group owner'}), 400
         
         # Remove member
+        member = GroupMember.query.filter_by(group_id=group_id, user_id=member_id).first()
+        if not member:
+            return jsonify({'error': 'Member not found in this group'}), 404
+        
         db.session.delete(member)
         db.session.commit()
         
-        return jsonify({'message': 'Member removed successfully'})
+        return jsonify({'message': 'Member removed successfully'}), 200
         
     except Exception as e:
         print(f"Error removing group member: {e}")
@@ -281,12 +287,11 @@ def delete_group(group_id):
     user_id = int(get_jwt_identity())
     
     try:
-        # Get group
+        # Check if user is the group owner
         group = Group.query.get(group_id)
         if not group:
             return jsonify({'error': 'Group not found'}), 404
         
-        # Check if user is the group owner
         if group.creator_id != user_id:
             return jsonify({'error': 'Only group owners can delete groups'}), 403
         
@@ -297,7 +302,7 @@ def delete_group(group_id):
         db.session.delete(group)
         db.session.commit()
         
-        return jsonify({'message': 'Group deleted successfully'})
+        return jsonify({'message': 'Group deleted successfully'}), 200
         
     except Exception as e:
         print(f"Error deleting group: {e}")
