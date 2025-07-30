@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gallery Upload Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .success { color: green; }
+        .error { color: red; }
+        .info { color: blue; }
+        .warning { color: orange; }
+        button {
+            padding: 10px 15px;
+            margin: 5px;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        pre {
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 3px;
+            overflow-x: auto;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .upload-form {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .upload-form input, .upload-form textarea {
+            width: 100%;
+            padding: 8px;
+            margin: 5px 0;
+            border: 1px solid #ddd;
+            border-radius: 3px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Gallery Upload Test</h1>
+    
+    <div class="test-section">
+        <h2>Authentication</h2>
+        <button onclick="testLogin()">Login</button>
+        <button onclick="testLogout()">Logout</button>
+        <div id="authResult"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>Setup</h2>
+        <button onclick="testLoadTrips()">Load Trips</button>
+        <button onclick="testLoadGallery()">Load Gallery</button>
+        <div id="setupResult"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>Gallery Upload Test</h2>
+        <div class="upload-form">
+            <label for="photoFile">Select Photo:</label>
+            <input type="file" id="photoFile" accept="image/*" />
+            <br>
+            <label for="photoCaption">Caption:</label>
+            <textarea id="photoCaption" placeholder="Enter caption..."></textarea>
+            <br>
+            <button onclick="testUploadPhoto()">Upload Photo</button>
+        </div>
+        <div id="uploadResult"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>Gallery Photos</h2>
+        <button onclick="testLoadPhotos()">Load Photos</button>
+        <div id="photosResult"></div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:8080';
+        let accessToken = null;
+        let currentTrips = [];
+        let currentGalleryGroupId = null;
+
+        async function apiCall(endpoint, options = {}) {
+            const url = `${API_BASE}${endpoint}`;
+            const config = {
+                method: options.method || 'GET',
+                headers: {},
+                ...options
+            };
+
+            // Handle headers properly for FormData vs JSON
+            if (accessToken) {
+                config.headers['Authorization'] = `Bearer ${accessToken}`;
+            }
+
+            // Only set Content-Type for non-FormData requests
+            if (!(options.body instanceof FormData)) {
+                config.headers['Content-Type'] = 'application/json';
+            }
+
+            console.log('API Call:', url, config);
+            const response = await fetch(url, config);
+            
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
+            }
+            
+            return await response.json();
+        }
+
+        async function testLogin() {
+            const resultDiv = document.getElementById('authResult');
+            resultDiv.innerHTML = '<span class="info">Logging in...</span>';
+            
+            try {
+                const response = await apiCall('/api/login', {
+                    method: 'POST',
+                    body: {
+                        email: 'test@gmail.com',
+                        password: 'password123'
+                    }
+                });
+                
+                accessToken = response.access_token;
+                resultDiv.innerHTML = `
+                    <span class="success">✅ Login successful!</span>
+                    <pre>${JSON.stringify(response, null, 2)}</pre>
+                `;
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <span class="error">❌ Login failed: ${error.message}</span>
+                `;
+            }
+        }
+
+        async function testLogout() {
+            accessToken = null;
+            currentTrips = [];
+            currentGalleryGroupId = null;
+            document.getElementById('authResult').innerHTML = '<span class="success">✅ Logged out</span>';
+            document.getElementById('setupResult').innerHTML = '';
+            document.getElementById('uploadResult').innerHTML = '';
+            document.getElementById('photosResult').innerHTML = '';
+        }
+
+        async function testLoadTrips() {
+            const resultDiv = document.getElementById('setupResult');
+            resultDiv.innerHTML = '<span class="info">Loading trips...</span>';
+            
+            if (!accessToken) {
+                resultDiv.innerHTML = '<span class="error">❌ Please login first</span>';
+                return;
+            }
+            
+            try {
+                currentTrips = await apiCall('/api/trips');
+                resultDiv.innerHTML = `
+                    <span class="success">✅ Found ${currentTrips.length} trips</span>
+                    <pre>${JSON.stringify(currentTrips, null, 2)}</pre>
+                `;
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <span class="error">❌ Failed to load trips: ${error.message}</span>
+                `;
+            }
+        }
+
+        async function testLoadGallery() {
+            const resultDiv = document.getElementById('setupResult');
+            resultDiv.innerHTML = '<span class="info">Loading gallery...</span>';
+            
+            if (!accessToken || !currentTrips.length) {
+                resultDiv.innerHTML = '<span class="error">❌ Please login and load trips first</span>';
+                return;
+            }
+            
+            try {
+                const trip = currentTrips[0];
+                console.log('Loading gallery for trip:', trip);
+                
+                const groups = await apiCall(`/api/trips/${trip.id}/groups`);
+                console.log('Found groups for trip:', groups);
+                
+                if (groups.length === 0) {
+                    resultDiv.innerHTML = '<span class="warning">⚠️ No groups found for this trip</span>';
+                    return;
+                }
+                
+                currentGalleryGroupId = groups[0].id;
+                resultDiv.innerHTML = `
+                    <span class="success">✅ Gallery loaded! Group ID: ${currentGalleryGroupId}</span>
+                    <pre>Groups: ${JSON.stringify(groups, null, 2)}</pre>
+                `;
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <span class="error">❌ Failed to load gallery: ${error.message}</span>
+                `;
+            }
+        }
+
+        async function testUploadPhoto() {
+            const resultDiv = document.getElementById('uploadResult');
+            resultDiv.innerHTML = '<span class="info">Uploading photo...</span>';
+            
+            if (!accessToken || !currentGalleryGroupId) {
+                resultDiv.innerHTML = '<span class="error">❌ Please login and load gallery first</span>';
+                return;
+            }
+            
+            const photoFile = document.getElementById('photoFile').files[0];
+            if (!photoFile) {
+                resultDiv.innerHTML = '<span class="error">❌ Please select a photo to upload</span>';
+                return;
+            }
+            
+            try {
+                const formData = new FormData();
+                formData.append('photo', photoFile);
+                formData.append('caption', document.getElementById('photoCaption').value.trim());
+                
+                console.log('Uploading photo to group:', currentGalleryGroupId);
+                console.log('Photo file:', photoFile);
+                console.log('FormData contents:');
+                for (let [key, value] of formData.entries()) {
+                    console.log(key, value);
+                }
+                
+                const response = await apiCall(`/api/groups/${currentGalleryGroupId}/photos`, {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                console.log('Upload response:', response);
+                resultDiv.innerHTML = `
+                    <span class="success">✅ Photo uploaded successfully!</span>
+                    <pre>${JSON.stringify(response, null, 2)}</pre>
+                `;
+            } catch (error) {
+                console.error('Upload error:', error);
+                resultDiv.innerHTML = `
+                    <span class="error">❌ Upload failed: ${error.message}</span>
+                `;
+            }
+        }
+
+        async function testLoadPhotos() {
+            const resultDiv = document.getElementById('photosResult');
+            resultDiv.innerHTML = '<span class="info">Loading photos...</span>';
+            
+            if (!accessToken || !currentGalleryGroupId) {
+                resultDiv.innerHTML = '<span class="error">❌ Please login and load gallery first</span>';
+                return;
+            }
+            
+            try {
+                const photos = await apiCall(`/api/groups/${currentGalleryGroupId}/photos`);
+                resultDiv.innerHTML = `
+                    <span class="success">✅ Found ${photos.length} photos</span>
+                    <pre>${JSON.stringify(photos, null, 2)}</pre>
+                `;
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <span class="error">❌ Failed to load photos: ${error.message}</span>
+                `;
+            }
+        }
+    </script>
+</body>
+</html> 
