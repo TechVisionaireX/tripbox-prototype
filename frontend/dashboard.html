@@ -2205,7 +2205,7 @@
             try {
                 // Load trips for dashboard stats
                 await loadTrips();
-                updateDashboardStats();
+                await updateDashboardStats();
                 displayRecentTrips();
                 
                 // Also display all trips in the trips section
@@ -2451,12 +2451,45 @@
             }
         }
 
-        function updateDashboardStats() {
+        async function updateDashboardStats() {
             document.getElementById('totalTrips').textContent = currentTrips.length;
-            // Add more stats calculations here
-            document.getElementById('activeGroups').textContent = '0';
-            document.getElementById('totalExpenses').textContent = '$0';
-            document.getElementById('photosCount').textContent = '0';
+            
+            // Calculate real stats
+            let totalExpenses = 0;
+            let totalPhotos = 0;
+            let activeGroups = 0;
+            
+            try {
+                // Calculate expenses and groups for each trip
+                for (const trip of currentTrips) {
+                    const groups = await apiCall(`/api/trips/${trip.id}/groups`);
+                    activeGroups += groups.length;
+                    
+                    for (const group of groups) {
+                        try {
+                            // Get expenses for this group
+                            const expenses = await apiCall(`/api/groups/${group.id}/expenses`);
+                            totalExpenses += expenses.reduce((sum, expense) => sum + expense.amount, 0);
+                            
+                            // Get photos for this group
+                            const photos = await apiCall(`/api/groups/${group.id}/photos`);
+                            totalPhotos += photos.length;
+                        } catch (error) {
+                            console.error(`Error getting stats for group ${group.id}:`, error);
+                        }
+                    }
+                }
+                
+                document.getElementById('activeGroups').textContent = activeGroups;
+                document.getElementById('totalExpenses').textContent = `$${totalExpenses.toFixed(2)}`;
+                document.getElementById('photosCount').textContent = totalPhotos;
+            } catch (error) {
+                console.error('Error updating dashboard stats:', error);
+                // Fallback to basic stats
+                document.getElementById('activeGroups').textContent = '0';
+                document.getElementById('totalExpenses').textContent = '$0';
+                document.getElementById('photosCount').textContent = '0';
+            }
         }
 
         function displayRecentTrips() {
@@ -2663,7 +2696,7 @@
                     displayAllTrips();
                 }
                 if (document.getElementById('dashboardSection').style.display !== 'none') {
-                    updateDashboardStats();
+                    await updateDashboardStats();
                     displayRecentTrips();
                 }
                 

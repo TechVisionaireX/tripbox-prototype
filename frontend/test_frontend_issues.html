@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Frontend Issues Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .success { color: green; }
+        .error { color: red; }
+        .info { color: blue; }
+        .warning { color: orange; }
+        button {
+            padding: 10px 15px;
+            margin: 5px;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        pre {
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 3px;
+            overflow-x: auto;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+        .stat-card {
+            background: white;
+            padding: 15px;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+            text-align: center;
+        }
+        .stat-value {
+            font-size: 2em;
+            font-weight: bold;
+            color: #007bff;
+        }
+        .stat-label {
+            color: #666;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Frontend Issues Test</h1>
+    
+    <div class="test-section">
+        <h2>Authentication Test</h2>
+        <button onclick="testLogin()">Test Login</button>
+        <button onclick="testLogout()">Test Logout</button>
+        <div id="authResult"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>Trips Test</h2>
+        <button onclick="testGetTrips()">Get Trips</button>
+        <button onclick="testCreateTrip()">Create Trip</button>
+        <div id="tripsResult"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>Expenses Test</h2>
+        <button onclick="testGetExpenses()">Get Expenses</button>
+        <button onclick="testAddExpense()">Add Expense</button>
+        <button onclick="testExpenseSplit()">Test Expense Split</button>
+        <div id="expensesResult"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>Gallery Test</h2>
+        <button onclick="testGetPhotos()">Get Photos</button>
+        <button onclick="testUploadPhoto()">Upload Photo</button>
+        <div id="galleryResult"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>Dashboard Stats</h2>
+        <button onclick="testDashboardStats()">Calculate Stats</button>
+        <div id="statsResult"></div>
+        <div id="statsGrid" class="stats-grid"></div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:8080';
+        let accessToken = null;
+        let currentTrips = [];
+        let currentGroups = [];
+
+        async function apiCall(endpoint, options = {}) {
+            const url = `${API_BASE}${endpoint}`;
+            const config = {
+                method: options.method || 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    ...options.headers
+                },
+                ...options
+            };
+
+            if (accessToken) {
+                config.headers['Authorization'] = `Bearer ${accessToken}`;
+            }
+
+            if (options.body && typeof options.body === 'object') {
+                config.body = JSON.stringify(options.body);
+            }
+
+            const response = await fetch(url, config);
+            
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
+            }
+            
+            return await response.json();
+        }
+
+        async function testLogin() {
+            const resultDiv = document.getElementById('authResult');
+            resultDiv.innerHTML = '<span class="info">Testing login...</span>';
+            
+            try {
+                const response = await apiCall('/api/login', {
+                    method: 'POST',
+                    body: {
+                        email: 'test@gmail.com',
+                        password: 'password123'
+                    }
+                });
+                
+                accessToken = response.access_token;
+                resultDiv.innerHTML = `
+                    <span class="success">✅ Login successful!</span>
+                    <pre>${JSON.stringify(response, null, 2)}</pre>
+                `;
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <span class="error">❌ Login failed: ${error.message}</span>
+                `;
+            }
+        }
+
+        async function testLogout() {
+            accessToken = null;
+            currentTrips = [];
+            currentGroups = [];
+            document.getElementById('authResult').innerHTML = '<span class="success">✅ Logged out</span>';
+        }
+
+        async function testGetTrips() {
+            const resultDiv = document.getElementById('tripsResult');
+            resultDiv.innerHTML = '<span class="info">Loading trips...</span>';
+            
+            if (!accessToken) {
+                resultDiv.innerHTML = '<span class="error">❌ Please login first</span>';
+                return;
+            }
+            
+            try {
+                currentTrips = await apiCall('/api/trips');
+                resultDiv.innerHTML = `
+                    <span class="success">✅ Found ${currentTrips.length} trips</span>
+                    <pre>${JSON.stringify(currentTrips, null, 2)}</pre>
+                `;
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <span class="error">❌ Failed to get trips: ${error.message}</span>
+                `;
+            }
+        }
+
+        async function testCreateTrip() {
+            const resultDiv = document.getElementById('tripsResult');
+            resultDiv.innerHTML = '<span class="info">Creating trip...</span>';
+            
+            if (!accessToken) {
+                resultDiv.innerHTML = '<span class="error">❌ Please login first</span>';
+                return;
+            }
+            
+            try {
+                const tripData = {
+                    name: "Test Trip " + Date.now(),
+                    start_date: "2024-08-01",
+                    end_date: "2024-08-07",
+                    description: "Test trip created from frontend test"
+                };
+                
+                const response = await apiCall('/api/trips', {
+                    method: 'POST',
+                    body: tripData
+                });
+                
+                resultDiv.innerHTML = `
+                    <span class="success">✅ Trip created successfully!</span>
+                    <pre>${JSON.stringify(response, null, 2)}</pre>
+                `;
+                
+                // Refresh trips list
+                await testGetTrips();
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <span class="error">❌ Failed to create trip: ${error.message}</span>
+                `;
+            }
+        }
+
+        async function testGetExpenses() {
+            const resultDiv = document.getElementById('expensesResult');
+            resultDiv.innerHTML = '<span class="info">Loading expenses...</span>';
+            
+            if (!accessToken || !currentTrips.length) {
+                resultDiv.innerHTML = '<span class="error">❌ Please login and load trips first</span>';
+                return;
+            }
+            
+            try {
+                // Get groups for first trip
+                const groups = await apiCall(`/api/trips/${currentTrips[0].id}/groups`);
+                if (groups.length === 0) {
+                    resultDiv.innerHTML = '<span class="warning">⚠️ No groups found for this trip</span>';
+                    return;
+                }
+                
+                const expenses = await apiCall(`/api/groups/${groups[0].id}/expenses`);
+                resultDiv.innerHTML = `
+                    <span class="success">✅ Found ${expenses.length} expenses</span>
+                    <pre>${JSON.stringify(expenses, null, 2)}</pre>
+                `;
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <span class="error">❌ Failed to get expenses: ${error.message}</span>
+                `;
+            }
+        }
+
+        async function testAddExpense() {
+            const resultDiv = document.getElementById('expensesResult');
+            resultDiv.innerHTML = '<span class="info">Adding expense...</span>';
+            
+            if (!accessToken || !currentTrips.length) {
+                resultDiv.innerHTML = '<span class="error">❌ Please login and load trips first</span>';
+                return;
+            }
+            
+            try {
+                // Get groups for first trip
+                const groups = await apiCall(`/api/trips/${currentTrips[0].id}/groups`);
+                if (groups.length === 0) {
+                    resultDiv.innerHTML = '<span class="warning">⚠️ No groups found for this trip</span>';
+                    return;
+                }
+                
+                const expenseData = {
+                    amount: 50.00,
+                    description: "Test expense from frontend",
+                    category: "Food"
+                };
+                
+                const response = await apiCall(`/api/groups/${groups[0].id}/expenses`, {
+                    method: 'POST',
+                    body: expenseData
+                });
+                
+                resultDiv.innerHTML = `
+                    <span class="success">✅ Expense added successfully!</span>
+                    <pre>${JSON.stringify(response, null, 2)}</pre>
+                `;
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <span class="error">❌ Failed to add expense: ${error.message}</span>
+                `;
+            }
+        }
+
+        async function testExpenseSplit() {
+            const resultDiv = document.getElementById('expensesResult');
+            resultDiv.innerHTML = '<span class="info">Testing expense split...</span>';
+            
+            if (!accessToken || !currentTrips.length) {
+                resultDiv.innerHTML = '<span class="error">❌ Please login and load trips first</span>';
+                return;
+            }
+            
+            try {
+                // Get groups for first trip
+                const groups = await apiCall(`/api/trips/${currentTrips[0].id}/groups`);
+                if (groups.length === 0) {
+                    resultDiv.innerHTML = '<span class="warning">⚠️ No groups found for this trip</span>';
+                    return;
+                }
+                
+                const splitData = await apiCall(`/api/groups/${groups[0].id}/expenses/split`);
+                resultDiv.innerHTML = `
+                    <span class="success">✅ Expense split calculated!</span>
+                    <pre>${JSON.stringify(splitData, null, 2)}</pre>
+                `;
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <span class="error">❌ Failed to calculate expense split: ${error.message}</span>
+                `;
+            }
+        }
+
+        async function testGetPhotos() {
+            const resultDiv = document.getElementById('galleryResult');
+            resultDiv.innerHTML = '<span class="info">Loading photos...</span>';
+            
+            if (!accessToken || !currentTrips.length) {
+                resultDiv.innerHTML = '<span class="error">❌ Please login and load trips first</span>';
+                return;
+            }
+            
+            try {
+                // Get groups for first trip
+                const groups = await apiCall(`/api/trips/${currentTrips[0].id}/groups`);
+                if (groups.length === 0) {
+                    resultDiv.innerHTML = '<span class="warning">⚠️ No groups found for this trip</span>';
+                    return;
+                }
+                
+                const photos = await apiCall(`/api/groups/${groups[0].id}/photos`);
+                resultDiv.innerHTML = `
+                    <span class="success">✅ Found ${photos.length} photos</span>
+                    <pre>${JSON.stringify(photos, null, 2)}</pre>
+                `;
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <span class="error">❌ Failed to get photos: ${error.message}</span>
+                `;
+            }
+        }
+
+        async function testUploadPhoto() {
+            const resultDiv = document.getElementById('galleryResult');
+            resultDiv.innerHTML = '<span class="info">Testing photo upload...</span>';
+            
+            if (!accessToken || !currentTrips.length) {
+                resultDiv.innerHTML = '<span class="error">❌ Please login and load trips first</span>';
+                return;
+            }
+            
+            try {
+                // Get groups for first trip
+                const groups = await apiCall(`/api/trips/${currentTrips[0].id}/groups`);
+                if (groups.length === 0) {
+                    resultDiv.innerHTML = '<span class="warning">⚠️ No groups found for this trip</span>';
+                    return;
+                }
+                
+                // Create a simple test image (base64)
+                const canvas = document.createElement('canvas');
+                canvas.width = 100;
+                canvas.height = 100;
+                const ctx = canvas.getContext('2d');
+                ctx.fillStyle = 'red';
+                ctx.fillRect(0, 0, 100, 100);
+                ctx.fillStyle = 'white';
+                ctx.font = '20px Arial';
+                ctx.fillText('TEST', 20, 60);
+                
+                canvas.toBlob(async (blob) => {
+                    const formData = new FormData();
+                    formData.append('photo', blob, 'test.png');
+                    formData.append('caption', 'Test upload from frontend');
+                    
+                    const response = await fetch(`${API_BASE}/api/groups/${groups[0].id}/photos`, {
+                        method: 'POST',
+                        headers: {
+                            'Authorization': `Bearer ${accessToken}`
+                        },
+                        body: formData
+                    });
+                    
+                    if (response.ok) {
+                        const result = await response.json();
+                        resultDiv.innerHTML = `
+                            <span class="success">✅ Photo uploaded successfully!</span>
+                            <pre>${JSON.stringify(result, null, 2)}</pre>
+                        `;
+                    } else {
+                        const error = await response.json();
+                        resultDiv.innerHTML = `
+                            <span class="error">❌ Photo upload failed: ${error.error}</span>
+                        `;
+                    }
+                });
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <span class="error">❌ Failed to upload photo: ${error.message}</span>
+                `;
+            }
+        }
+
+        async function testDashboardStats() {
+            const resultDiv = document.getElementById('statsResult');
+            const statsGrid = document.getElementById('statsGrid');
+            resultDiv.innerHTML = '<span class="info">Calculating dashboard stats...</span>';
+            
+            if (!accessToken || !currentTrips.length) {
+                resultDiv.innerHTML = '<span class="error">❌ Please login and load trips first</span>';
+                return;
+            }
+            
+            try {
+                let totalExpenses = 0;
+                let totalPhotos = 0;
+                let activeGroups = 0;
+                
+                // Calculate stats for each trip
+                for (const trip of currentTrips) {
+                    const groups = await apiCall(`/api/trips/${trip.id}/groups`);
+                    activeGroups += groups.length;
+                    
+                    for (const group of groups) {
+                        try {
+                            // Get expenses for this group
+                            const expenses = await apiCall(`/api/groups/${group.id}/expenses`);
+                            totalExpenses += expenses.reduce((sum, expense) => sum + expense.amount, 0);
+                            
+                            // Get photos for this group
+                            const photos = await apiCall(`/api/groups/${group.id}/photos`);
+                            totalPhotos += photos.length;
+                        } catch (error) {
+                            console.error(`Error getting stats for group ${group.id}:`, error);
+                        }
+                    }
+                }
+                
+                resultDiv.innerHTML = `
+                    <span class="success">✅ Dashboard stats calculated!</span>
+                    <pre>Total Trips: ${currentTrips.length}
+Active Groups: ${activeGroups}
+Total Expenses: $${totalExpenses.toFixed(2)}
+Total Photos: ${totalPhotos}</pre>
+                `;
+                
+                // Display stats in grid
+                statsGrid.innerHTML = `
+                    <div class="stat-card">
+                        <div class="stat-value">${currentTrips.length}</div>
+                        <div class="stat-label">Total Trips</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">${activeGroups}</div>
+                        <div class="stat-label">Active Groups</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">$${totalExpenses.toFixed(2)}</div>
+                        <div class="stat-label">Total Expenses</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">${totalPhotos}</div>
+                        <div class="stat-label">Photos Shared</div>
+                    </div>
+                `;
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <span class="error">❌ Failed to calculate stats: ${error.message}</span>
+                `;
+            }
+        }
+    </script>
+</body>
+</html> 
