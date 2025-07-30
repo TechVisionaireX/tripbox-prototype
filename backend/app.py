@@ -25,6 +25,12 @@ except Exception as e:
     print("FAILED to import chat_bp:", e)
 
 try:
+    from polls import polls_bp
+    print("Imported polls_bp successfully!")
+except Exception as e:
+    print("FAILED to import polls_bp:", e)
+
+try:
     from recommend import recommend_bp
     print("Imported recommend_bp successfully!")
 except Exception as e:
@@ -128,6 +134,7 @@ app.register_blueprint(auth_bp)
 app.register_blueprint(trips_bp)
 app.register_blueprint(groups_bp)
 app.register_blueprint(chat_bp)
+app.register_blueprint(polls_bp)
 app.register_blueprint(recommend_bp)
 app.register_blueprint(expense_bp)
 app.register_blueprint(gallery_bp)

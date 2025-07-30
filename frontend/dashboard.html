@@ -1838,6 +1838,177 @@
             display: inline-block;
         }
 
+        /* Polls Styles */
+        .polls-list {
+            margin-top: 1rem;
+        }
+
+        .poll-item {
+            background: white;
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius);
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            transition: var(--transition);
+        }
+
+        .poll-item:hover {
+            box-shadow: var(--shadow-soft);
+            border-color: var(--primary-color);
+        }
+
+        .poll-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .poll-header h4 {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 0;
+        }
+
+        .poll-group {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            background: var(--bg-secondary);
+            padding: 0.25rem 0.5rem;
+            border-radius: var(--border-radius);
+        }
+
+        .poll-options {
+            margin-bottom: 1rem;
+        }
+
+        .poll-option {
+            display: flex;
+            align-items: center;
+            padding: 0.75rem;
+            margin-bottom: 0.5rem;
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius);
+            transition: var(--transition);
+        }
+
+        .poll-option:hover {
+            background: var(--bg-secondary);
+        }
+
+        .poll-option.selected {
+            background: var(--primary-color);
+            color: white;
+            border-color: var(--primary-color);
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid var(--border-color);
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            margin-right: 0.75rem;
+            cursor: pointer;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .poll-option.selected .vote-btn {
+            background: white;
+            color: var(--primary-color);
+        }
+
+        .option-text {
+            flex: 1;
+            font-weight: 500;
+        }
+
+        .vote-count {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+        }
+
+        .poll-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+        }
+
+        /* Check-ins Styles */
+        .checkins-list {
+            margin-top: 1rem;
+        }
+
+        .checkin-item {
+            background: white;
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius);
+            padding: 1rem;
+            margin-bottom: 1rem;
+            transition: var(--transition);
+        }
+
+        .checkin-item:hover {
+            box-shadow: var(--shadow-soft);
+            border-color: var(--accent-color);
+        }
+
+        .checkin-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.5rem;
+        }
+
+        .checkin-user {
+            font-weight: 600;
+            color: var(--primary-color);
+        }
+
+        .checkin-time {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+        }
+
+        .checkin-location {
+            display: flex;
+            align-items: center;
+            margin-bottom: 0.5rem;
+        }
+
+        .checkin-location i {
+            color: var(--accent-color);
+            margin-right: 0.5rem;
+        }
+
+        .location-name {
+            font-weight: 500;
+            color: var(--text-primary);
+        }
+
+        .checkin-address {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            margin-bottom: 0.5rem;
+        }
+
+        .checkin-message {
+            font-style: italic;
+            color: var(--text-secondary);
+            margin-bottom: 0.5rem;
+        }
+
+        .checkin-group {
+            font-size: 0.8rem;
+            color: var(--text-light);
+        }
+
         .member-item {
             display: flex;
             justify-content: space-between;
@@ -2048,18 +2219,60 @@
                     </div>
                 </div>
 
+                                <!-- Active Polls Section -->
+                <div class="card">
+                    <div class="card-header">
+                        <h2>
+                            <i class="fas fa-poll"></i>
+                            Active Polls
+                            <span id="pollCount" class="notification-badge" style="display: none;">0</span>
+                        </h2>
+                        <div class="header-actions">
+                            <button class="btn btn-primary btn-sm" onclick="openCreatePollModal()">
+                                <i class="fas fa-plus"></i> Create Poll
+                            </button>
+                            <button class="btn btn-secondary btn-sm" onclick="refreshActivePolls()">
+                                <i class="fas fa-sync-alt"></i> Refresh
+                            </button>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div id="activePollsList" class="polls-list">
+                            <div class="loading-spinner">Loading polls...</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recent Check-ins Section -->
+                <div class="card">
+                    <div class="card-header">
+                        <h2>
+                            <i class="fas fa-map-marker-alt"></i>
+                            Recent Check-ins
+                        </h2>
+                        <button class="btn btn-secondary btn-sm" onclick="refreshRecentCheckins()">
+                            <i class="fas fa-sync-alt"></i> Refresh
+                        </button>
+                    </div>
+                    <div class="card-body">
+                        <div id="recentCheckinsList" class="checkins-list">
+                            <div class="loading-spinner">Loading check-ins...</div>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Chat Notifications Section -->
                 <div class="card">
-                                    <div class="card-header">
-                    <h2>
-                        <i class="fas fa-bell"></i>
-                        Chat Notifications
-                        <span id="notificationCount" class="notification-badge" style="display: none;">0</span>
-                    </h2>
-                    <button class="btn btn-secondary btn-sm" onclick="refreshChatNotifications()">
-                        <i class="fas fa-sync-alt"></i> Refresh
-                    </button>
-                </div>
+                    <div class="card-header">
+                        <h2>
+                            <i class="fas fa-bell"></i>
+                            Chat Notifications
+                            <span id="notificationCount" class="notification-badge" style="display: none;">0</span>
+                        </h2>
+                        <button class="btn btn-secondary btn-sm" onclick="refreshChatNotifications()">
+                            <i class="fas fa-sync-alt"></i> Refresh
+                        </button>
+                    </div>
                     <div class="card-body">
                         <div id="chatNotificationsList" class="chat-notifications-list">
                             <div class="loading-spinner">Loading notifications...</div>
@@ -2632,7 +2845,7 @@
         </div>
     </div>
 
-    <!-- Group Chat Modal -->
+        <!-- Group Chat Modal -->
     <div id="groupChatModal" class="modal" style="display: none;">
         <div class="modal-content chat-modal">
             <div class="modal-header">
@@ -2644,17 +2857,58 @@
                     <div id="chatMessages" class="chat-messages">
                         <!-- Messages will be loaded here -->
                     </div>
-                                            <div class="chat-input-container">
-                            <form id="chatMessageForm" class="chat-form">
-                                <input type="text" id="chatMessageInput" placeholder="Type your message..." required>
-                                <button type="submit" class="btn btn-primary">
-                                    <i class="fas fa-paper-plane"></i>
-                                    Send
-                                </button>
-                            </form>
-                            <div id="chatMessage" class="message" style="display: none;"></div>
-                        </div>
+                    <div class="chat-input-container">
+                        <form id="chatMessageForm" class="chat-form">
+                            <input type="text" id="chatMessageInput" placeholder="Type your message..." required>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-paper-plane"></i>
+                                Send
+                            </button>
+                        </form>
+                        <div id="chatMessage" class="message" style="display: none;"></div>
+                    </div>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Create Poll Modal -->
+    <div id="createPollModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Create New Poll</h3>
+                <span class="close" onclick="closeCreatePollModal()">&times;</span>
+            </div>
+            <div class="modal-body">
+                <form id="createPollForm" class="poll-form">
+                    <div class="form-group">
+                        <label for="pollQuestion">Question</label>
+                        <input type="text" id="pollQuestion" placeholder="What would you like to ask?" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="pollOptions">Options (one per line)</label>
+                        <textarea id="pollOptions" placeholder="Option 1&#10;Option 2&#10;Option 3" rows="4" required></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="pollExpires">Expires in (hours)</label>
+                        <select id="pollExpires">
+                            <option value="1">1 hour</option>
+                            <option value="6">6 hours</option>
+                            <option value="12">12 hours</option>
+                            <option value="24" selected>24 hours</option>
+                            <option value="48">48 hours</option>
+                        </select>
+                    </div>
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-plus"></i> Create Poll
+                        </button>
+                        <button type="button" class="btn btn-secondary" onclick="closeCreatePollModal()">
+                            Cancel
+                        </button>
+                    </div>
+                </form>
+                <div id="createPollMessage" class="message" style="display: none;"></div>
             </div>
         </div>
     </div>
@@ -2783,6 +3037,8 @@
                     loadDashboardData();
                     loadUserTripExpenses();
                     loadChatNotifications();
+                    loadActivePolls();
+                    loadRecentCheckins();
                     break;
                 case 'trips':
                     console.log('Loading trips section...');
@@ -3585,6 +3841,234 @@
             setTimeout(() => {
                 loadChatNotifications();
             }, 1000);
+        }
+
+        // Polls Functions
+        let activePolls = [];
+        let currentPollGroupId = null;
+
+        async function loadActivePolls() {
+            try {
+                const polls = await apiCall('/api/polls/active');
+                activePolls = polls;
+                displayActivePolls(polls);
+            } catch (error) {
+                console.error('Error loading active polls:', error);
+                document.getElementById('activePollsList').innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-poll"></i>
+                        <h3>No active polls</h3>
+                        <p>Create a poll to start voting!</p>
+                    </div>
+                `;
+            }
+        }
+
+        function displayActivePolls(polls) {
+            const container = document.getElementById('activePollsList');
+            const pollCount = document.getElementById('pollCount');
+            
+            if (!polls || polls.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-poll"></i>
+                        <h3>No active polls</h3>
+                        <p>Create a poll to start voting!</p>
+                    </div>
+                `;
+                if (pollCount) {
+                    pollCount.style.display = 'none';
+                }
+                return;
+            }
+            
+            // Show poll count
+            if (pollCount) {
+                pollCount.textContent = polls.length;
+                pollCount.style.display = 'inline-block';
+            }
+
+            const pollsHtml = polls.map(poll => `
+                <div class="poll-item">
+                    <div class="poll-header">
+                        <h4>${poll.question}</h4>
+                        <span class="poll-group">in ${poll.group_name}</span>
+                    </div>
+                    <div class="poll-options">
+                        ${poll.options.map(option => `
+                            <div class="poll-option ${poll.user_vote === option ? 'selected' : ''}">
+                                <button class="vote-btn" onclick="voteOnPoll(${poll.id}, '${option}')">
+                                    <i class="fas fa-check"></i>
+                                </button>
+                                <span class="option-text">${option}</span>
+                                <span class="vote-count">${poll.vote_counts[option] || 0} votes</span>
+                            </div>
+                        `).join('')}
+                    </div>
+                    <div class="poll-footer">
+                        <span class="poll-creator">Created by ${poll.creator_name}</span>
+                        <span class="poll-expires">Expires: ${formatPollTime(poll.expires_at)}</span>
+                    </div>
+                </div>
+            `).join('');
+
+            container.innerHTML = pollsHtml;
+        }
+
+        async function voteOnPoll(pollId, selectedOption) {
+            try {
+                await apiCall(`/api/polls/${pollId}/vote`, {
+                    method: 'POST',
+                    body: JSON.stringify({ selected_option: selectedOption })
+                });
+                
+                showMessage('createPollMessage', 'Vote recorded successfully!', 'success');
+                await loadActivePolls();
+            } catch (error) {
+                console.error('Error voting on poll:', error);
+                showMessage('createPollMessage', 'Failed to record vote. Please try again.', 'error');
+            }
+        }
+
+        function formatPollTime(timestamp) {
+            if (!timestamp) return 'No expiration';
+            const date = new Date(timestamp);
+            return date.toLocaleString();
+        }
+
+        function openCreatePollModal() {
+            document.getElementById('createPollModal').style.display = 'block';
+            setupCreatePollForm();
+        }
+
+        function closeCreatePollModal() {
+            document.getElementById('createPollModal').style.display = 'none';
+            document.getElementById('createPollForm').reset();
+        }
+
+        function setupCreatePollForm() {
+            const form = document.getElementById('createPollForm');
+            
+            form.onsubmit = async (e) => {
+                e.preventDefault();
+                
+                const question = document.getElementById('pollQuestion').value.trim();
+                const optionsText = document.getElementById('pollOptions').value.trim();
+                const expiresInHours = parseInt(document.getElementById('pollExpires').value);
+                
+                if (!question || !optionsText) {
+                    showMessage('createPollMessage', 'Please fill in all fields.', 'error');
+                    return;
+                }
+                
+                const options = optionsText.split('\n').filter(option => option.trim());
+                if (options.length < 2) {
+                    showMessage('createPollMessage', 'Please provide at least 2 options.', 'error');
+                    return;
+                }
+                
+                // Use the first available group for now
+                if (!currentTrips || currentTrips.length === 0) {
+                    showMessage('createPollMessage', 'Please create a trip first.', 'error');
+                    return;
+                }
+                
+                try {
+                    // Get the first group from the first trip
+                    const groups = await apiCall(`/api/trips/${currentTrips[0].id}/groups`);
+                    if (!groups || groups.length === 0) {
+                        showMessage('createPollMessage', 'No groups available. Please create a group first.', 'error');
+                        return;
+                    }
+                    
+                    const groupId = groups[0].id;
+                    
+                    await apiCall(`/api/groups/${groupId}/polls`, {
+                        method: 'POST',
+                        body: JSON.stringify({
+                            question: question,
+                            options: options,
+                            expires_in_hours: expiresInHours
+                        })
+                    });
+                    
+                    showMessage('createPollMessage', 'Poll created successfully!', 'success');
+                    closeCreatePollModal();
+                    await loadActivePolls();
+                    
+                } catch (error) {
+                    console.error('Error creating poll:', error);
+                    showMessage('createPollMessage', 'Failed to create poll. Please try again.', 'error');
+                }
+            };
+        }
+
+        async function refreshActivePolls() {
+            await loadActivePolls();
+        }
+
+        // Location Check-in Functions
+        let recentCheckins = [];
+
+        async function loadRecentCheckins() {
+            try {
+                const checkins = await apiCall('/api/checkins/recent');
+                recentCheckins = checkins;
+                displayRecentCheckins(checkins);
+            } catch (error) {
+                console.error('Error loading recent check-ins:', error);
+                document.getElementById('recentCheckinsList').innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-map-marker-alt"></i>
+                        <h3>No check-ins yet</h3>
+                        <p>Check in to share your location!</p>
+                    </div>
+                `;
+            }
+        }
+
+        function displayRecentCheckins(checkins) {
+            const container = document.getElementById('recentCheckinsList');
+            
+            if (!checkins || checkins.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-map-marker-alt"></i>
+                        <h3>No check-ins yet</h3>
+                        <p>Check in to share your location!</p>
+                    </div>
+                `;
+                return;
+            }
+
+            const checkinsHtml = checkins.map(checkin => `
+                <div class="checkin-item">
+                    <div class="checkin-header">
+                        <span class="checkin-user">${checkin.user_name}</span>
+                        <span class="checkin-time">${formatCheckinTime(checkin.checkin_time)}</span>
+                    </div>
+                    <div class="checkin-location">
+                        <i class="fas fa-map-marker-alt"></i>
+                        <span class="location-name">${checkin.location_name}</span>
+                    </div>
+                    ${checkin.address ? `<div class="checkin-address">${checkin.address}</div>` : ''}
+                    ${checkin.message ? `<div class="checkin-message">"${checkin.message}"</div>` : ''}
+                    <div class="checkin-group">
+                        in ${checkin.group_name}
+                    </div>
+                </div>
+            `).join('');
+
+            container.innerHTML = checkinsHtml;
+        }
+
+        function formatCheckinTime(timestamp) {
+            const date = new Date(timestamp);
+            return date.toLocaleString();
+        }
+
+        async function refreshRecentCheckins() {
+            await loadRecentCheckins();
         }
 
         function resetTripForm() {
@@ -4983,6 +5467,12 @@
                 
                 // Load chat notifications
                 await loadChatNotifications();
+                
+                // Load active polls
+                await loadActivePolls();
+                
+                // Load recent check-ins
+                await loadRecentCheckins();
                 
                 // Set up periodic token validation
                 setInterval(async () => {
