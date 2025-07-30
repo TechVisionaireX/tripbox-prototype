@@ -1476,7 +1476,7 @@
         
         <nav class="nav-menu">
             <div class="nav-item">
-                <a href="#" class="nav-link active" onclick="showSection('dashboard')">
+                <a href="#" class="nav-link" onclick="showSection('dashboard')">
                     <i class="fas fa-home"></i>
                     Dashboard
                 </a>
@@ -1522,7 +1522,7 @@
     <!-- Main Content -->
     <main class="main-content">
         <!-- Dashboard Section -->
-        <section id="dashboardSection" class="section active">
+        <section id="dashboardSection" class="section" style="display: block;">
             <div class="header">
                 <h1>Welcome Back!</h1>
                 <p>Here's what's happening with your trips today</p>
@@ -2116,6 +2116,9 @@
                     break;
                 case 'trips':
                     loadAllTrips();
+                    break;
+                case 'groups':
+                    loadGroups();
                     break;
                 case 'expenses':
                     loadExpenses();
@@ -2842,16 +2845,21 @@
                 if (groups.length > 0) {
                     currentGalleryGroupId = groups[0].id;
                     console.log('Using group ID for gallery:', currentGalleryGroupId);
+                    await loadGalleryPhotos();
                 } else {
-                    // If no groups exist, create one or use trip ID
-                    console.log('No groups found, using trip ID as fallback');
-                    currentGalleryGroupId = trip.id;
+                    // If no groups exist, show message to create a group first
+                    console.log('No groups found for gallery');
+                    showMessage('uploadMessage', 'Please create a group first to upload photos.', 'error');
+                    document.getElementById('galleryGrid').innerHTML = `
+                        <div class="empty-state">
+                            <i class="fas fa-users"></i>
+                            <h3>No groups available</h3>
+                            <p>Create a group first to upload photos!</p>
+                        </div>
+                    `;
                 }
-
-                await loadGalleryPhotos();
             } catch (error) {
                 console.error('Error loading gallery:', error);
-                // Don't use trip ID as fallback - it won't work for uploads
                 showMessage('uploadMessage', 'Failed to load gallery. Please try again.', 'error');
             }
         }
@@ -2912,8 +2920,8 @@
                     return;
                 }
 
-                // Check if we have a valid group ID (not trip ID)
-                if (!currentGalleryGroupId || currentGalleryGroupId === currentTrips[0]?.id) {
+                // Check if we have a valid group ID
+                if (!currentGalleryGroupId) {
                     showMessage('uploadMessage', 'Please create a trip first to upload photos.', 'error');
                     return;
                 }
@@ -3286,7 +3294,8 @@
         // Initialize App
         document.addEventListener('DOMContentLoaded', async () => {
             if (await checkAuth()) {
-                loadDashboardData();
+                // Show dashboard section initially
+                showSection('dashboard');
                 
                 // Set up periodic token validation
                 setInterval(async () => {
