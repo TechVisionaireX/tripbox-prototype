@@ -13,7 +13,7 @@ def get_user_groups():
     
     try:
         # Get groups where user is a member or owner
-        groups = db.session.query(Group, Trip, User).join(Trip).join(User, Group.creator_id == User.id).filter(
+        groups = db.session.query(Group, Trip, User).select_from(Group).join(Trip).join(User, Group.creator_id == User.id).filter(
             Group.id.in_(
                 db.session.query(GroupMember.group_id).filter(GroupMember.user_id == user_id)
             )

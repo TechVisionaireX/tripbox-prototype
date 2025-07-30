@@ -2144,10 +2144,16 @@
 
         async function apiCall(endpoint, options = {}) {
             try {
+                // Don't set Content-Type for FormData (let browser set it with boundary)
+                const headers = { ...getAuthHeaders() };
+                if (!(options.body instanceof FormData)) {
+                    headers['Content-Type'] = 'application/json';
+                }
+                
                 const response = await fetch(`${API_BASE}${endpoint}`, {
                     ...options,
                     headers: {
-                        ...getAuthHeaders(),
+                        ...headers,
                         ...options.headers
                     }
                 });
@@ -2163,7 +2169,7 @@
                             const retryResponse = await fetch(`${API_BASE}${endpoint}`, {
                                 ...options,
                                 headers: {
-                                    ...getAuthHeaders(),
+                                    ...headers,
                                     ...options.headers
                                 }
                             });
