@@ -983,6 +983,476 @@
         .expenses-list-section .trip-card .trip-actions .btn-success:hover {
             background: #047857;
         }
+
+        /* Gallery Styles */
+        .gallery-upload-section, .gallery-grid-section {
+            margin-bottom: 2rem;
+        }
+
+        .upload-form {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .upload-form .form-group {
+            flex: 1;
+        }
+
+        .gallery-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .gallery-grid .empty-state {
+            grid-column: 1 / -1; /* Span across all columns */
+        }
+
+        .gallery-item {
+            position: relative;
+            border-radius: var(--border-radius);
+            overflow: hidden;
+            box-shadow: var(--shadow-soft);
+            border: 1px solid var(--border-color);
+        }
+
+        .gallery-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .gallery-item .caption {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            color: white;
+            padding: 0.5rem 0.75rem;
+            font-size: 0.85rem;
+            font-weight: 500;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
+        }
+
+        .gallery-item .actions {
+            position: absolute;
+            top: 0.5rem;
+            right: 0.5rem;
+            display: flex;
+            gap: 0.5rem;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .gallery-item:hover .actions {
+            opacity: 1;
+        }
+
+        .gallery-item .actions button {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+
+        .gallery-item .actions button:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .gallery-item .actions .delete-btn {
+            color: var(--error-color);
+        }
+
+        .gallery-item .actions .delete-btn:hover {
+            background: rgba(220, 38, 38, 0.2);
+        }
+
+        /* Checklist Styles */
+        .checklist-add-section {
+            margin-bottom: 2rem;
+        }
+
+        .checklist-form {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .checklist-form .form-group {
+            flex: 1;
+        }
+
+        .checklist-form .form-group label {
+            font-size: 0.9rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .checklist-form .form-group select,
+        .checklist-form .form-group input {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border: 2px solid var(--border-color);
+            border-radius: var(--border-radius);
+            font-size: 0.95rem;
+            transition: var(--transition);
+            background: white;
+        }
+
+        .checklist-form .form-group select:focus,
+        .checklist-form .form-group input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+        }
+
+        .checklist-categories {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .category-tabs {
+            display: flex;
+            gap: 1rem;
+            border-bottom: 1px solid var(--border-color);
+            margin-bottom: 1.5rem;
+        }
+
+        .tab-btn {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-bottom: 2px solid transparent;
+            background: none;
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .tab-btn.active {
+            color: var(--primary-color);
+            border-bottom-color: var(--primary-color);
+        }
+
+        .checklist-category {
+            display: none;
+            background: var(--bg-secondary);
+            border-radius: var(--border-radius-lg);
+            box-shadow: var(--shadow-soft);
+            border: 1px solid var(--border-color);
+            padding: 2rem;
+        }
+
+        .checklist-category.active {
+            display: block;
+        }
+
+        .checklist-items {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+            margin-top: 1rem;
+        }
+
+        .checklist-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.75rem 1rem;
+            background: var(--bg-tertiary);
+            border-radius: var(--border-radius);
+            border: 1px solid var(--border-color);
+            transition: var(--transition);
+        }
+
+        .checklist-item:hover {
+            background: var(--bg-primary);
+            box-shadow: var(--shadow-soft);
+        }
+
+        .checklist-item .item-text {
+            flex-grow: 1;
+            font-size: 0.95rem;
+            color: var(--text-primary);
+            word-break: break-word;
+        }
+
+        .checklist-item .item-actions {
+            display: flex;
+            gap: 0.5rem;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .checklist-item:hover .item-actions {
+            opacity: 1;
+        }
+
+        .checklist-item .item-actions button {
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: color 0.2s;
+        }
+
+        .checklist-item .item-actions button:hover {
+            color: var(--primary-color);
+        }
+
+        .checklist-item .item-actions .delete-btn {
+            color: var(--error-color);
+        }
+
+        .checklist-item .item-actions .delete-btn:hover {
+            color: #dc2626;
+        }
+
+        .checklist-item .item-actions .complete-btn {
+            color: var(--success-color);
+        }
+
+        .checklist-item .item-actions .complete-btn:hover {
+            color: #047857;
+        }
+
+        /* Groups Styles */
+        .groups-create-section, .groups-list-section {
+            margin-bottom: 2rem;
+        }
+
+        .group-form {
+            background: var(--bg-secondary);
+            border-radius: var(--border-radius-lg);
+            box-shadow: var(--shadow-soft);
+            border: 1px solid var(--border-color);
+            padding: 2rem;
+        }
+
+        .group-form .form-row {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .group-form .form-group {
+            flex: 1;
+        }
+
+        .group-form .form-group label {
+            font-size: 0.9rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .group-form .form-group input,
+        .group-form .form-group select {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border: 2px solid var(--border-color);
+            border-radius: var(--border-radius);
+            font-size: 0.95rem;
+            transition: var(--transition);
+            background: white;
+        }
+
+        .group-form .form-group input:focus,
+        .group-form .form-group select:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+        }
+
+        /* Modal Styles */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: var(--border-radius-lg);
+            box-shadow: var(--shadow-strong);
+            max-width: 600px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1.5rem 2rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .modal-header h3 {
+            margin: 0;
+            font-size: 1.25rem;
+            font-weight: 600;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: var(--text-secondary);
+            transition: color 0.2s;
+        }
+
+        .close-btn:hover {
+            color: var(--text-primary);
+        }
+
+        .modal-body {
+            padding: 2rem;
+        }
+
+        .group-info, .group-members, .add-member-section {
+            margin-bottom: 2rem;
+        }
+
+        .group-info h4, .group-members h4, .add-member-section h4 {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: var(--text-primary);
+        }
+
+        .group-info p {
+            margin-bottom: 0.5rem;
+            color: var(--text-secondary);
+        }
+
+        .group-info strong {
+            color: var(--text-primary);
+        }
+
+        .add-member-form .form-row {
+            display: flex;
+            gap: 1rem;
+            align-items: end;
+        }
+
+        .add-member-form .form-group {
+            flex: 1;
+        }
+
+        .add-member-form .form-group label {
+            font-size: 0.9rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .add-member-form .form-group input {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border: 2px solid var(--border-color);
+            border-radius: var(--border-radius);
+            font-size: 0.95rem;
+            transition: var(--transition);
+        }
+
+        .add-member-form .form-group input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+        }
+
+        .member-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.75rem 1rem;
+            background: var(--bg-tertiary);
+            border-radius: var(--border-radius);
+            border: 1px solid var(--border-color);
+            margin-bottom: 0.5rem;
+        }
+
+        .member-item .member-info {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .member-item .member-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: var(--primary-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        .member-item .member-details h5 {
+            margin: 0;
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .member-item .member-details p {
+            margin: 0;
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+        }
+
+        .member-item .member-role {
+            font-size: 0.8rem;
+            padding: 0.25rem 0.5rem;
+            border-radius: var(--border-radius);
+            background: var(--success-color);
+            color: white;
+            font-weight: 500;
+        }
+
+        .member-item .member-role.owner {
+            background: var(--primary-color);
+        }
+
+        .member-item .member-role.member {
+            background: var(--text-secondary);
+        }
+
+        .member-item .remove-member {
+            background: none;
+            border: none;
+            color: var(--error-color);
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: color 0.2s;
+        }
+
+        .member-item .remove-member:hover {
+            color: #dc2626;
+        }
     </style>
 </head>
 <body>
@@ -1189,17 +1659,85 @@
         <section id="groupsSection" class="section" style="display: none;">
             <div class="header">
                 <h1>Groups</h1>
-                <p>Collaborate with your travel companions</p>
+                <p>Create and manage travel groups</p>
             </div>
             <div class="content">
-                <div class="empty-state">
-                    <i class="fas fa-users"></i>
-                    <h3>Groups Feature</h3>
-                    <p>Create and manage travel groups to collaborate on trip planning.</p>
-                    <button class="btn btn-primary" style="margin-top: 1rem;">
-                        <i class="fas fa-plus"></i>
-                        Create Group
-                    </button>
+                <!-- Create Group -->
+                <div class="groups-create-section">
+                    <h3><i class="fas fa-plus"></i> Create New Group</h3>
+                    <form id="createGroupForm" class="group-form">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="groupName">Group Name</label>
+                                <input type="text" id="groupName" required placeholder="Family Trip, Friends Adventure...">
+                            </div>
+                            <div class="form-group">
+                                <label for="groupTrip">Select Trip</label>
+                                <select id="groupTrip" required>
+                                    <option value="">Choose a trip...</option>
+                                </select>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-plus"></i>
+                            Create Group
+                        </button>
+                    </form>
+                    <div id="groupMessage" class="message" style="display: none;"></div>
+                </div>
+
+                <!-- Groups List -->
+                <div class="groups-list-section">
+                    <h3><i class="fas fa-users"></i> Your Groups</h3>
+                    <div id="groupsList">
+                        <div class="empty-state">
+                            <i class="fas fa-users"></i>
+                            <h3>No groups yet</h3>
+                            <p>Create your first group to start collaborating!</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Group Details Modal -->
+                <div id="groupModal" class="modal" style="display: none;">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h3 id="modalGroupName">Group Details</h3>
+                            <button class="close-btn" onclick="closeGroupModal()">&times;</button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="group-info">
+                                <h4>Group Information</h4>
+                                <p><strong>Trip:</strong> <span id="modalTripName"></span></p>
+                                <p><strong>Created by:</strong> <span id="modalCreatorName"></span></p>
+                                <p><strong>Members:</strong> <span id="modalMemberCount"></span></p>
+                            </div>
+                            
+                            <div class="group-members">
+                                <h4>Members</h4>
+                                <div id="modalMembersList">
+                                    <!-- Members will be loaded here -->
+                                </div>
+                            </div>
+                            
+                            <div class="add-member-section">
+                                <h4>Add Member</h4>
+                                <form id="addMemberForm" class="add-member-form">
+                                    <div class="form-row">
+                                        <div class="form-group">
+                                            <label for="memberEmail">Email</label>
+                                            <input type="email" id="memberEmail" required placeholder="friend@example.com">
+                                        </div>
+                                        <button type="submit" class="btn btn-secondary">
+                                            <i class="fas fa-user-plus"></i>
+                                            Add Member
+                                        </button>
+                                    </div>
+                                </form>
+                                <div id="addMemberMessage" class="message" style="display: none;"></div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </section>
@@ -1295,14 +1833,36 @@
                 <p>Share and preserve your travel memories</p>
             </div>
             <div class="content">
-                <div class="empty-state">
-                    <i class="fas fa-camera"></i>
-                    <h3>Photo Gallery</h3>
-                    <p>Upload and share photos from your adventures with your group.</p>
-                    <button class="btn btn-primary" style="margin-top: 1rem;">
-                        <i class="fas fa-upload"></i>
-                        Upload Photos
-                    </button>
+                <!-- Gallery Upload -->
+                <div class="gallery-upload-section">
+                    <h3><i class="fas fa-upload"></i> Upload Photos</h3>
+                    <form id="uploadPhotoForm" class="upload-form">
+                        <div class="form-group">
+                            <label for="photoFile">Select Photo</label>
+                            <input type="file" id="photoFile" accept="image/*" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="photoCaption">Caption (Optional)</label>
+                            <input type="text" id="photoCaption" placeholder="Describe this moment...">
+                        </div>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-upload"></i>
+                            Upload Photo
+                        </button>
+                    </form>
+                    <div id="uploadMessage" class="message" style="display: none;"></div>
+                </div>
+
+                <!-- Gallery Grid -->
+                <div class="gallery-grid-section">
+                    <h3><i class="fas fa-images"></i> Photo Gallery</h3>
+                    <div id="galleryGrid">
+                        <div class="empty-state">
+                            <i class="fas fa-camera"></i>
+                            <h3>No photos yet</h3>
+                            <p>Upload your first photo to start building your travel memories!</p>
+                        </div>
+                    </div>
                 </div>
             </div>
         </section>
@@ -1313,14 +1873,84 @@
                 <p>Stay organized with packing and to-do lists</p>
             </div>
             <div class="content">
-                <div class="empty-state">
-                    <i class="fas fa-check-square"></i>
-                    <h3>Smart Checklists</h3>
-                    <p>Create packing lists and to-do items to ensure you don't forget anything.</p>
-                    <button class="btn btn-primary" style="margin-top: 1rem;">
-                        <i class="fas fa-plus"></i>
-                        Create Checklist
-                    </button>
+                <!-- Add Checklist Item -->
+                <div class="checklist-add-section">
+                    <h3><i class="fas fa-plus"></i> Add New Item</h3>
+                    <form id="addChecklistItemForm" class="checklist-form">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="itemType">Type</label>
+                                <select id="itemType" required>
+                                    <option value="packing">Packing Item</option>
+                                    <option value="todo">To-Do Item</option>
+                                    <option value="reminder">Reminder</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="itemText">Item Description</label>
+                                <input type="text" id="itemText" required placeholder="Passport, camera, book tickets...">
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-plus"></i>
+                            Add Item
+                        </button>
+                    </form>
+                    <div id="checklistMessage" class="message" style="display: none;"></div>
+                </div>
+
+                <!-- Checklist Categories -->
+                <div class="checklist-categories">
+                    <div class="category-tabs">
+                        <button class="tab-btn active" onclick="showCategory('packing')">
+                            <i class="fas fa-suitcase"></i>
+                            Packing List
+                        </button>
+                        <button class="tab-btn" onclick="showCategory('todo')">
+                            <i class="fas fa-tasks"></i>
+                            To-Do List
+                        </button>
+                        <button class="tab-btn" onclick="showCategory('reminder')">
+                            <i class="fas fa-bell"></i>
+                            Reminders
+                        </button>
+                    </div>
+
+                    <!-- Packing List -->
+                    <div id="packingList" class="checklist-category active">
+                        <h3><i class="fas fa-suitcase"></i> Packing List</h3>
+                        <div id="packingItems" class="checklist-items">
+                            <div class="empty-state">
+                                <i class="fas fa-suitcase"></i>
+                                <h3>No packing items yet</h3>
+                                <p>Add items to your packing list to stay organized!</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- To-Do List -->
+                    <div id="todoList" class="checklist-category">
+                        <h3><i class="fas fa-tasks"></i> To-Do List</h3>
+                        <div id="todoItems" class="checklist-items">
+                            <div class="empty-state">
+                                <i class="fas fa-tasks"></i>
+                                <h3>No to-do items yet</h3>
+                                <p>Add tasks to your to-do list to stay on track!</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Reminders -->
+                    <div id="reminderList" class="checklist-category">
+                        <h3><i class="fas fa-bell"></i> Reminders</h3>
+                        <div id="reminderItems" class="checklist-items">
+                            <div class="empty-state">
+                                <i class="fas fa-bell"></i>
+                                <h3>No reminders yet</h3>
+                                <p>Add reminders to never forget important things!</p>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </section>
@@ -1489,6 +2119,12 @@
                     break;
                 case 'expenses':
                     loadExpenses();
+                    break;
+                case 'gallery':
+                    loadGallery();
+                    break;
+                case 'checklist':
+                    loadChecklists();
                     break;
                 // Add cases for other sections as needed
             }
@@ -2075,6 +2711,441 @@
             }
         });
 
+        // Gallery Functions
+        let currentGalleryGroupId = null;
+        let galleryPhotos = [];
+
+        async function loadGallery() {
+            if (!currentTrips.length) {
+                showMessage('uploadMessage', 'No trips available. Create a trip first.', 'error');
+                return;
+            }
+
+            const trip = currentTrips[0];
+            try {
+                const groups = await apiCall(`/api/trips/${trip.id}/groups`);
+                if (groups.length > 0) {
+                    currentGalleryGroupId = groups[0].id;
+                } else {
+                    currentGalleryGroupId = trip.id;
+                }
+
+                await loadGalleryPhotos();
+            } catch (error) {
+                console.error('Error loading gallery:', error);
+                currentGalleryGroupId = trip.id;
+                
+                try {
+                    await loadGalleryPhotos();
+                } catch (fallbackError) {
+                    console.error('Fallback also failed:', fallbackError);
+                    showMessage('uploadMessage', 'Failed to load gallery. Please try again.', 'error');
+                }
+            }
+        }
+
+        async function loadGalleryPhotos() {
+            const galleryGrid = document.getElementById('galleryGrid');
+            galleryGrid.innerHTML = '<div class="loading-spinner">Loading photos...</div>';
+
+            try {
+                const photos = await apiCall(`/api/groups/${currentGalleryGroupId}/photos`);
+                galleryPhotos = photos;
+                displayGalleryPhotos();
+            } catch (error) {
+                console.error('Error loading gallery photos:', error);
+                galleryGrid.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <h3>Error loading photos</h3>
+                        <p>Please try again later.</p>
+                    </div>
+                `;
+            }
+        }
+
+        function displayGalleryPhotos() {
+            const galleryGrid = document.getElementById('galleryGrid');
+            
+            if (galleryPhotos.length === 0) {
+                galleryGrid.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-camera"></i>
+                        <h3>No photos yet</h3>
+                        <p>Upload your first photo to start building your travel memories!</p>
+                    </div>
+                `;
+                return;
+            }
+
+            galleryGrid.innerHTML = galleryPhotos.map(photo => `
+                <div class="gallery-item">
+                    <img src="${photo.url}" alt="${photo.caption || 'Travel Photo'}" />
+                    <div class="caption">${photo.caption || 'No caption'}</div>
+                    <div class="actions">
+                        <button class="btn btn-secondary btn-sm" onclick="deletePhoto(${photo.id})">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('uploadPhotoForm').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                
+                if (!currentGalleryGroupId) {
+                    showMessage('uploadMessage', 'Please select a trip first.', 'error');
+                    return;
+                }
+
+                const formData = new FormData();
+                formData.append('photo', document.getElementById('photoFile').files[0]);
+                formData.append('caption', document.getElementById('photoCaption').value.trim());
+
+                try {
+                    const submitBtn = e.target.querySelector('button[type="submit"]');
+                    submitBtn.disabled = true;
+                    submitBtn.innerHTML = '<span class="loading"></span> Uploading...';
+
+                    await apiCall(`/api/groups/${currentGalleryGroupId}/photos`, {
+                        method: 'POST',
+                        body: formData
+                    });
+
+                    showMessage('uploadMessage', 'Photo uploaded successfully!', 'success');
+                    document.getElementById('uploadPhotoForm').reset();
+                    await loadGalleryPhotos();
+
+                } catch (error) {
+                    console.error('Error uploading photo:', error);
+                    let errorMessage = 'Failed to upload photo. Please try again.';
+                    if (error.message.includes('403')) {
+                        errorMessage = 'You are not a member of this group.';
+                    } else if (error.message.includes('404')) {
+                        errorMessage = 'Group not found. Please refresh the page.';
+                    } else if (error.message.includes('400')) {
+                        errorMessage = 'Invalid photo data. Please check your file.';
+                    }
+                    showMessage('uploadMessage', errorMessage, 'error');
+                } finally {
+                    const submitBtn = e.target.querySelector('button[type="submit"]');
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = '<i class="fas fa-upload"></i> Upload Photo';
+                }
+            });
+        });
+
+        async function deletePhoto(photoId) {
+            if (!confirm('Are you sure you want to delete this photo?')) {
+                return;
+            }
+
+            try {
+                await apiCall(`/api/photos/${photoId}`, {
+                    method: 'DELETE'
+                });
+
+                showMessage('uploadMessage', 'Photo deleted successfully!', 'success');
+                await loadGalleryPhotos();
+            } catch (error) {
+                console.error('Error deleting photo:', error);
+                showMessage('uploadMessage', 'Failed to delete photo. Please try again.', 'error');
+            }
+        }
+
+        // Checklist Functions
+        let currentChecklistCategory = 'packing'; // Default category
+        let packingItems = [];
+        let todoItems = [];
+        let reminderItems = [];
+
+        async function loadChecklists() {
+            if (!currentTrips.length) {
+                showMessage('checklistMessage', 'No trips available. Create a trip first.', 'error');
+                return;
+            }
+
+            const trip = currentTrips[0];
+            try {
+                const groups = await apiCall(`/api/trips/${trip.id}/groups`);
+                if (groups.length > 0) {
+                    // Assuming the first group is the main group for checklists
+                    const groupId = groups[0].id;
+                    await loadPackingItems(groupId);
+                    await loadTodoItems(groupId);
+                    await loadReminderItems(groupId);
+                } else {
+                    // Fallback to trip ID if no groups
+                    const groupId = trip.id;
+                    await loadPackingItems(groupId);
+                    await loadTodoItems(groupId);
+                    await loadReminderItems(groupId);
+                }
+            } catch (error) {
+                console.error('Error loading checklists:', error);
+                const groupId = trip.id; // Fallback to trip ID
+                try {
+                    await loadPackingItems(groupId);
+                    await loadTodoItems(groupId);
+                    await loadReminderItems(groupId);
+                } catch (fallbackError) {
+                    console.error('Fallback also failed:', fallbackError);
+                    showMessage('checklistMessage', 'Failed to load checklists. Please try again.', 'error');
+                }
+            }
+        }
+
+        async function loadPackingItems(groupId) {
+            const packingItemsList = document.getElementById('packingItems');
+            packingItemsList.innerHTML = '<div class="loading-spinner">Loading packing items...</div>';
+            try {
+                packingItems = await apiCall(`/api/groups/${groupId}/packing-items`);
+                displayPackingItems();
+            } catch (error) {
+                console.error('Error loading packing items:', error);
+                packingItemsList.innerHTML = '<div class="loading-spinner">Error loading packing items</div>';
+            }
+        }
+
+        async function loadTodoItems(groupId) {
+            const todoItemsList = document.getElementById('todoItems');
+            todoItemsList.innerHTML = '<div class="loading-spinner">Loading to-do items...</div>';
+            try {
+                todoItems = await apiCall(`/api/groups/${groupId}/todo-items`);
+                displayTodoItems();
+            } catch (error) {
+                console.error('Error loading to-do items:', error);
+                todoItemsList.innerHTML = '<div class="loading-spinner">Error loading to-do items</div>';
+            }
+        }
+
+        async function loadReminderItems(groupId) {
+            const reminderItemsList = document.getElementById('reminderItems');
+            reminderItemsList.innerHTML = '<div class="loading-spinner">Loading reminders...</div>';
+            try {
+                reminderItems = await apiCall(`/api/groups/${groupId}/reminder-items`);
+                displayReminderItems();
+            } catch (error) {
+                console.error('Error loading reminders:', error);
+                reminderItemsList.innerHTML = '<div class="loading-spinner">Error loading reminders</div>';
+            }
+        }
+
+        function displayPackingItems() {
+            const packingItemsList = document.getElementById('packingItems');
+            if (packingItems.length === 0) {
+                packingItemsList.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-suitcase"></i>
+                        <h3>No packing items yet</h3>
+                        <p>Add items to your packing list to stay organized!</p>
+                    </div>
+                `;
+                return;
+            }
+            packingItemsList.innerHTML = packingItems.map(item => `
+                <div class="checklist-item">
+                    <div class="item-text">${item.text}</div>
+                    <div class="item-actions">
+                        <button class="btn btn-secondary btn-sm" onclick="toggleCompletePackingItem(${item.id})">
+                            <i class="fas fa-${item.is_completed ? 'check-circle' : 'circle'}"></i>
+                        </button>
+                        <button class="btn btn-secondary btn-sm" onclick="deleteChecklistItem(${item.id})">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function displayTodoItems() {
+            const todoItemsList = document.getElementById('todoItems');
+            if (todoItems.length === 0) {
+                todoItemsList.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-tasks"></i>
+                        <h3>No to-do items yet</h3>
+                        <p>Add tasks to your to-do list to stay on track!</p>
+                    </div>
+                `;
+                return;
+            }
+            todoItemsList.innerHTML = todoItems.map(item => `
+                <div class="checklist-item">
+                    <div class="item-text">${item.text}</div>
+                    <div class="item-actions">
+                        <button class="btn btn-secondary btn-sm" onclick="toggleCompleteTodoItem(${item.id})">
+                            <i class="fas fa-${item.is_completed ? 'check-circle' : 'circle'}"></i>
+                        </button>
+                        <button class="btn btn-secondary btn-sm" onclick="deleteChecklistItem(${item.id})">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function displayReminderItems() {
+            const reminderItemsList = document.getElementById('reminderItems');
+            if (reminderItems.length === 0) {
+                reminderItemsList.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-bell"></i>
+                        <h3>No reminders yet</h3>
+                        <p>Add reminders to never forget important things!</p>
+                    </div>
+                `;
+                return;
+            }
+            reminderItemsList.innerHTML = reminderItems.map(item => `
+                <div class="checklist-item">
+                    <div class="item-text">${item.text}</div>
+                    <div class="item-actions">
+                        <button class="btn btn-secondary btn-sm" onclick="toggleCompleteReminderItem(${item.id})">
+                            <i class="fas fa-${item.is_completed ? 'check-circle' : 'circle'}"></i>
+                        </button>
+                        <button class="btn btn-secondary btn-sm" onclick="deleteChecklistItem(${item.id})">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('addChecklistItemForm').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                
+                if (!currentGroupId) { // Use currentGroupId for checklist items
+                    showMessage('checklistMessage', 'Please select a trip first.', 'error');
+                    return;
+                }
+
+                const itemType = document.getElementById('itemType').value;
+                const itemText = document.getElementById('itemText').value.trim();
+
+                if (!itemText) {
+                    showMessage('checklistMessage', 'Item text cannot be empty.', 'error');
+                    return;
+                }
+
+                try {
+                    const response = await apiCall(`/api/groups/${currentGroupId}/checklist-items`, {
+                        method: 'POST',
+                        body: JSON.stringify({
+                            type: itemType,
+                            text: itemText
+                        })
+                    });
+
+                    showMessage('checklistMessage', 'Item added successfully!', 'success');
+                    document.getElementById('addChecklistItemForm').reset();
+                    
+                    // Reload items based on category
+                    if (itemType === 'packing') {
+                        await loadPackingItems(currentGroupId);
+                    } else if (itemType === 'todo') {
+                        await loadTodoItems(currentGroupId);
+                    } else if (itemType === 'reminder') {
+                        await loadReminderItems(currentGroupId);
+                    }
+
+                } catch (error) {
+                    console.error('Error adding checklist item:', error);
+                    let errorMessage = 'Failed to add item. Please try again.';
+                    if (error.message.includes('403')) {
+                        errorMessage = 'You are not a member of this group.';
+                    } else if (error.message.includes('404')) {
+                        errorMessage = 'Group not found. Please refresh the page.';
+                    } else if (error.message.includes('400')) {
+                        errorMessage = 'Invalid item data. Please check your input.';
+                    }
+                    showMessage('checklistMessage', errorMessage, 'error');
+                }
+            });
+        });
+
+        async function deleteChecklistItem(itemId) {
+            if (!confirm('Are you sure you want to delete this item?')) {
+                return;
+            }
+
+            try {
+                await apiCall(`/api/checklist-items/${itemId}`, {
+                    method: 'DELETE'
+                });
+
+                showMessage('checklistMessage', 'Item deleted successfully!', 'success');
+                
+                // Reload items based on category
+                if (currentChecklistCategory === 'packing') {
+                    await loadPackingItems(currentGroupId);
+                } else if (currentChecklistCategory === 'todo') {
+                    await loadTodoItems(currentGroupId);
+                } else if (currentChecklistCategory === 'reminder') {
+                    await loadReminderItems(currentGroupId);
+                }
+
+            } catch (error) {
+                console.error('Error deleting checklist item:', error);
+                showMessage('checklistMessage', 'Failed to delete item. Please try again.', 'error');
+            }
+        }
+
+        async function toggleCompletePackingItem(itemId) {
+            try {
+                const response = await apiCall(`/api/packing-items/${itemId}/toggle-complete`, {
+                    method: 'POST'
+                });
+                packingItems = response.items;
+                displayPackingItems();
+            } catch (error) {
+                console.error('Error toggling packing item:', error);
+                showMessage('checklistMessage', 'Failed to update packing item. Please try again.', 'error');
+            }
+        }
+
+        async function toggleCompleteTodoItem(itemId) {
+            try {
+                const response = await apiCall(`/api/todo-items/${itemId}/toggle-complete`, {
+                    method: 'POST'
+                });
+                todoItems = response.items;
+                displayTodoItems();
+            } catch (error) {
+                console.error('Error toggling todo item:', error);
+                showMessage('checklistMessage', 'Failed to update todo item. Please try again.', 'error');
+            }
+        }
+
+        async function toggleCompleteReminderItem(itemId) {
+            try {
+                const response = await apiCall(`/api/reminder-items/${itemId}/toggle-complete`, {
+                    method: 'POST'
+                });
+                reminderItems = response.items;
+                displayReminderItems();
+            } catch (error) {
+                console.error('Error toggling reminder item:', error);
+                showMessage('checklistMessage', 'Failed to update reminder item. Please try again.', 'error');
+            }
+        }
+
+        function showCategory(category) {
+            currentChecklistCategory = category;
+            document.querySelectorAll('.category-tabs button').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            document.querySelector(`.category-tabs button[onclick="showCategory('${category}')"]`).classList.add('active');
+
+            document.querySelectorAll('.checklist-category').forEach(categoryDiv => {
+                categoryDiv.classList.remove('active');
+            });
+            document.getElementById(`${category}List`).classList.add('active');
+        }
+
         // Initialize App
         document.addEventListener('DOMContentLoaded', async () => {
             if (await checkAuth()) {
@@ -2105,6 +3176,302 @@
                 sidebar.classList.remove('open');
             }
         });
+
+                 // Groups Functions
+         let userGroups = [];
+
+        async function loadGroups() {
+            if (!currentTrips.length) {
+                showMessage('groupMessage', 'No trips available. Create a trip first.', 'error');
+                return;
+            }
+
+            try {
+                // Load user's groups
+                userGroups = await apiCall('/api/groups');
+                displayGroups();
+                
+                // Populate trip dropdown for creating new groups
+                populateTripDropdown();
+            } catch (error) {
+                console.error('Error loading groups:', error);
+                showMessage('groupMessage', 'Failed to load groups. Please try again.', 'error');
+            }
+        }
+
+        function displayGroups() {
+            const groupsList = document.getElementById('groupsList');
+            
+            if (userGroups.length === 0) {
+                groupsList.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-users"></i>
+                        <h3>No groups yet</h3>
+                        <p>Create your first group to start collaborating!</p>
+                    </div>
+                `;
+                return;
+            }
+
+            groupsList.innerHTML = userGroups.map(group => `
+                <div class="trip-card">
+                    <div class="trip-card-header">
+                        <div class="trip-title">
+                            <i class="fas fa-users"></i>
+                            ${group.name}
+                        </div>
+                        <div class="trip-dates">
+                            ${group.member_count} members • Created by ${group.creator_name}
+                        </div>
+                    </div>
+                    <div class="trip-card-body">
+                        <div class="trip-description">
+                            Trip: ${group.trip_name}
+                        </div>
+                        <div class="trip-actions">
+                            <button class="btn btn-primary btn-sm" onclick="openGroupModal(${group.id})">
+                                <i class="fas fa-eye"></i>
+                                View Details
+                            </button>
+                            ${group.is_owner ? `
+                                <button class="btn btn-secondary btn-sm" onclick="deleteGroup(${group.id})">
+                                    <i class="fas fa-trash"></i>
+                                    Delete Group
+                                </button>
+                            ` : ''}
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function populateTripDropdown() {
+            const tripSelect = document.getElementById('groupTrip');
+            tripSelect.innerHTML = '<option value="">Choose a trip...</option>';
+            
+            currentTrips.forEach(trip => {
+                const option = document.createElement('option');
+                option.value = trip.id;
+                option.textContent = trip.name;
+                tripSelect.appendChild(option);
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('createGroupForm').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                
+                const groupName = document.getElementById('groupName').value.trim();
+                const tripId = document.getElementById('groupTrip').value;
+
+                if (!groupName || !tripId) {
+                    showMessage('groupMessage', 'Please fill in all fields.', 'error');
+                    return;
+                }
+
+                try {
+                    const response = await apiCall('/api/groups', {
+                        method: 'POST',
+                        body: JSON.stringify({
+                            name: groupName,
+                            trip_id: parseInt(tripId)
+                        })
+                    });
+
+                    showMessage('groupMessage', 'Group created successfully!', 'success');
+                    document.getElementById('createGroupForm').reset();
+                    await loadGroups();
+
+                } catch (error) {
+                    console.error('Error creating group:', error);
+                    let errorMessage = 'Failed to create group. Please try again.';
+                    
+                    if (error.message.includes('400')) {
+                        errorMessage = 'Invalid group data. Please check your input.';
+                    } else if (error.message.includes('409')) {
+                        errorMessage = 'A group with this name already exists for this trip.';
+                    }
+                    
+                    showMessage('groupMessage', errorMessage, 'error');
+                }
+            });
+        });
+
+        async function openGroupModal(groupId) {
+            try {
+                const group = await apiCall(`/api/groups/${groupId}`);
+                const members = await apiCall(`/api/groups/${groupId}/members`);
+                
+                // Populate modal with group details
+                document.getElementById('modalGroupName').textContent = group.name;
+                document.getElementById('modalTripName').textContent = group.trip_name;
+                document.getElementById('modalCreatorName').textContent = group.creator_name;
+                document.getElementById('modalMemberCount').textContent = members.length;
+                
+                // Display members
+                const membersList = document.getElementById('modalMembersList');
+                membersList.innerHTML = members.map(member => `
+                    <div class="member-item">
+                        <div class="member-info">
+                            <div class="member-avatar">
+                                ${member.name.charAt(0).toUpperCase()}
+                            </div>
+                            <div class="member-details">
+                                <h5>${member.name}</h5>
+                                <p>${member.email}</p>
+                            </div>
+                        </div>
+                        <div class="member-actions">
+                            <span class="member-role ${member.is_owner ? 'owner' : 'member'}">
+                                ${member.is_owner ? 'Owner' : 'Member'}
+                            </span>
+                            ${group.is_owner && !member.is_owner ? `
+                                <button class="remove-member" onclick="removeMember(${groupId}, ${member.id})">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            ` : ''}
+                        </div>
+                    </div>
+                `).join('');
+                
+                // Store current group ID for adding members
+                currentGroupId = groupId;
+                
+                // Show modal
+                document.getElementById('groupModal').style.display = 'flex';
+                
+            } catch (error) {
+                console.error('Error loading group details:', error);
+                showMessage('groupMessage', 'Failed to load group details. Please try again.', 'error');
+            }
+        }
+
+        function closeGroupModal() {
+            document.getElementById('groupModal').style.display = 'none';
+            currentGroupId = null;
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('addMemberForm').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                
+                if (!currentGroupId) {
+                    showMessage('addMemberMessage', 'No group selected.', 'error');
+                    return;
+                }
+
+                const memberEmail = document.getElementById('memberEmail').value.trim();
+
+                if (!memberEmail) {
+                    showMessage('addMemberMessage', 'Please enter a valid email address.', 'error');
+                    return;
+                }
+
+                try {
+                    await apiCall(`/api/groups/${currentGroupId}/members`, {
+                        method: 'POST',
+                        body: JSON.stringify({
+                            email: memberEmail
+                        })
+                    });
+
+                    showMessage('addMemberMessage', 'Member added successfully!', 'success');
+                    document.getElementById('addMemberForm').reset();
+                    
+                    // Refresh group details
+                    await openGroupModal(currentGroupId);
+
+                } catch (error) {
+                    console.error('Error adding member:', error);
+                    let errorMessage = 'Failed to add member. Please try again.';
+                    
+                    if (error.message.includes('404')) {
+                        errorMessage = 'User not found. Please check the email address.';
+                    } else if (error.message.includes('409')) {
+                        errorMessage = 'User is already a member of this group.';
+                    }
+                    
+                    showMessage('addMemberMessage', errorMessage, 'error');
+                }
+            });
+        });
+
+        async function removeMember(groupId, memberId) {
+            if (!confirm('Are you sure you want to remove this member from the group?')) {
+                return;
+            }
+
+            try {
+                await apiCall(`/api/groups/${groupId}/members/${memberId}`, {
+                    method: 'DELETE'
+                });
+
+                showMessage('addMemberMessage', 'Member removed successfully!', 'success');
+                await openGroupModal(groupId);
+
+            } catch (error) {
+                console.error('Error removing member:', error);
+                showMessage('addMemberMessage', 'Failed to remove member. Please try again.', 'error');
+            }
+        }
+
+        async function deleteGroup(groupId) {
+            if (!confirm('Are you sure you want to delete this group? This action cannot be undone.')) {
+                return;
+            }
+
+            try {
+                await apiCall(`/api/groups/${groupId}`, {
+                    method: 'DELETE'
+                });
+
+                showMessage('groupMessage', 'Group deleted successfully!', 'success');
+                await loadGroups();
+
+            } catch (error) {
+                console.error('Error deleting group:', error);
+                showMessage('groupMessage', 'Failed to delete group. Please try again.', 'error');
+            }
+        }
+
+        // Update showSection function to include groups
+        function showSection(sectionName) {
+            // Hide all sections
+            document.querySelectorAll('.section').forEach(section => {
+                section.style.display = 'none';
+            });
+
+            // Show selected section
+            document.getElementById(sectionName + 'Section').style.display = 'block';
+
+            // Update navigation
+            document.querySelectorAll('.nav-link').forEach(link => {
+                link.classList.remove('active');
+            });
+            document.querySelector(`[onclick="showSection('${sectionName}')"]`).classList.add('active');
+
+            // Load section-specific data
+            switch (sectionName) {
+                case 'dashboard':
+                    loadDashboard();
+                    break;
+                case 'trips':
+                    loadTrips();
+                    break;
+                case 'groups':
+                    loadGroups();
+                    break;
+                case 'expenses':
+                    loadExpenses();
+                    break;
+                case 'gallery':
+                    loadGallery();
+                    break;
+                case 'checklist':
+                    loadChecklists();
+                    break;
+            }
+        }
     </script>
 </body>
 </html>
