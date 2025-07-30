@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Frontend API Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .success { color: green; }
+        .error { color: red; }
+        .info { color: blue; }
+        button {
+            padding: 10px 15px;
+            margin: 5px;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        pre {
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 3px;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body>
+    <h1>Frontend API Test</h1>
+    
+    <div class="test-section">
+        <h2>Authentication Test</h2>
+        <button onclick="testLogin()">Test Login</button>
+        <div id="loginResult"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>Trips Test</h2>
+        <button onclick="testGetTrips()">Get Trips</button>
+        <div id="tripsResult"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>Gallery Test</h2>
+        <button onclick="testGetPhotos()">Get Photos</button>
+        <div id="photosResult"></div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:8080';
+        let accessToken = null;
+
+        async function apiCall(endpoint, options = {}) {
+            const url = `${API_BASE}${endpoint}`;
+            const config = {
+                method: options.method || 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    ...options.headers
+                },
+                ...options
+            };
+
+            if (accessToken) {
+                config.headers['Authorization'] = `Bearer ${accessToken}`;
+            }
+
+            if (options.body && typeof options.body === 'object') {
+                config.body = JSON.stringify(options.body);
+            }
+
+            const response = await fetch(url, config);
+            
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
+            }
+            
+            return await response.json();
+        }
+
+        async function testLogin() {
+            const resultDiv = document.getElementById('loginResult');
+            resultDiv.innerHTML = '<span class="info">Testing login...</span>';
+            
+            try {
+                const response = await apiCall('/api/login', {
+                    method: 'POST',
+                    body: {
+                        email: 'test@gmail.com',
+                        password: 'password123'
+                    }
+                });
+                
+                accessToken = response.access_token;
+                resultDiv.innerHTML = `
+                    <span class="success">✅ Login successful!</span>
+                    <pre>${JSON.stringify(response, null, 2)}</pre>
+                `;
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <span class="error">❌ Login failed: ${error.message}</span>
+                `;
+            }
+        }
+
+        async function testGetTrips() {
+            const resultDiv = document.getElementById('tripsResult');
+            resultDiv.innerHTML = '<span class="info">Loading trips...</span>';
+            
+            if (!accessToken) {
+                resultDiv.innerHTML = '<span class="error">❌ Please login first</span>';
+                return;
+            }
+            
+            try {
+                const trips = await apiCall('/api/trips');
+                resultDiv.innerHTML = `
+                    <span class="success">✅ Found ${trips.length} trips</span>
+                    <pre>${JSON.stringify(trips, null, 2)}</pre>
+                `;
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <span class="error">❌ Failed to get trips: ${error.message}</span>
+                `;
+            }
+        }
+
+        async function testGetPhotos() {
+            const resultDiv = document.getElementById('photosResult');
+            resultDiv.innerHTML = '<span class="info">Loading photos...</span>';
+            
+            if (!accessToken) {
+                resultDiv.innerHTML = '<span class="error">❌ Please login first</span>';
+                return;
+            }
+            
+            try {
+                // First get trips to find a group
+                const trips = await apiCall('/api/trips');
+                if (trips.length === 0) {
+                    resultDiv.innerHTML = '<span class="error">❌ No trips found</span>';
+                    return;
+                }
+                
+                // Get groups for the first trip
+                const groups = await apiCall(`/api/trips/${trips[0].id}/groups`);
+                if (groups.length === 0) {
+                    resultDiv.innerHTML = '<span class="error">❌ No groups found</span>';
+                    return;
+                }
+                
+                // Get photos for the first group
+                const photos = await apiCall(`/api/groups/${groups[0].id}/photos`);
+                resultDiv.innerHTML = `
+                    <span class="success">✅ Found ${photos.length} photos</span>
+                    <pre>${JSON.stringify(photos, null, 2)}</pre>
+                `;
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <span class="error">❌ Failed to get photos: ${error.message}</span>
+                `;
+            }
+        }
+    </script>
+</body>
+</html> 
