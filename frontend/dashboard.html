@@ -2020,6 +2020,8 @@
                 <h1>Checklists</h1>
                 <p>Stay organized with packing and to-do lists</p>
             </div>
+            <!-- General Message Area -->
+            <div id="generalMessage" class="message" style="display: none;"></div>
             <div class="content">
                 <!-- Add Checklist Item -->
                 <div class="checklist-add-section">
@@ -3283,33 +3285,42 @@
                 return;
             }
 
-            const trip = currentTrips[0];
-            try {
-                const groups = await apiCall(`/api/trips/${trip.id}/groups`);
-                if (groups.length > 0) {
-                    // Assuming the first group is the main group for checklists
-                    const groupId = groups[0].id;
-                    await loadPackingItems(groupId);
-                    await loadTodoItems(groupId);
-                    await loadReminderItems(groupId);
-                } else {
-                    // Fallback to trip ID if no groups
-                    const groupId = trip.id;
-                    await loadPackingItems(groupId);
-                    await loadTodoItems(groupId);
-                    await loadReminderItems(groupId);
+            // Try to find a trip with accessible groups
+            let trip = null;
+            let accessibleGroup = null;
+            for (const t of currentTrips) {
+                try {
+                    const groups = await apiCall(`/api/trips/${t.id}/groups`);
+                    if (groups.length > 0) {
+                        // Test if we can access the first group
+                        try {
+                            await apiCall(`/api/groups/${groups[0].id}/packing-items`);
+                            trip = t;
+                            accessibleGroup = groups[0];
+                            break;
+                        } catch (accessError) {
+                            console.log(`Cannot access group ${groups[0].id} for trip ${t.id}`);
+                            continue;
+                        }
+                    }
+                } catch (error) {
+                    console.log(`Error loading groups for trip ${t.id}:`, error);
+                    continue;
                 }
+            }
+            if (!trip || !accessibleGroup) {
+                showMessage('checklistMessage', 'No accessible trips found. Create a new trip or join an existing one.', 'error');
+                return;
+            }
+            try {
+                const groupId = accessibleGroup.id;
+                console.log('Using accessible group ID for checklists:', groupId);
+                await loadPackingItems(groupId);
+                await loadTodoItems(groupId);
+                await loadReminderItems(groupId);
             } catch (error) {
                 console.error('Error loading checklists:', error);
-                const groupId = trip.id; // Fallback to trip ID
-                try {
-                    await loadPackingItems(groupId);
-                    await loadTodoItems(groupId);
-                    await loadReminderItems(groupId);
-                } catch (fallbackError) {
-                    console.error('Fallback also failed:', fallbackError);
-                    showMessage('checklistMessage', 'Failed to load checklists. Please try again.', 'error');
-                }
+                showMessage('checklistMessage', 'Failed to load checklists. Please try again.', 'error');
             }
         }
 
@@ -3434,8 +3445,30 @@
             document.getElementById('addChecklistItemForm').addEventListener('submit', async (e) => {
                 e.preventDefault();
                 
-                if (!currentGroupId) { // Use currentGroupId for checklist items
-                    showMessage('checklistMessage', 'Please select a trip first.', 'error');
+                // Find an accessible group for checklist items
+                let accessibleGroupId = null;
+                for (const trip of currentTrips) {
+                    try {
+                        const groups = await apiCall(`/api/trips/${trip.id}/groups`);
+                        if (groups.length > 0) {
+                            // Test if we can access the first group
+                            try {
+                                await apiCall(`/api/groups/${groups[0].id}/packing-items`);
+                                accessibleGroupId = groups[0].id;
+                                break;
+                            } catch (accessError) {
+                                console.log(`Cannot access group ${groups[0].id} for trip ${trip.id}`);
+                                continue;
+                            }
+                        }
+                    } catch (error) {
+                        console.log(`Error loading groups for trip ${trip.id}:`, error);
+                        continue;
+                    }
+                }
+                
+                if (!accessibleGroupId) {
+                    showMessage('checklistMessage', 'No accessible trips found. Create a new trip or join an existing one.', 'error');
                     return;
                 }
 
@@ -3448,7 +3481,7 @@
                 }
 
                 try {
-                    const response = await apiCall(`/api/groups/${currentGroupId}/checklist-items`, {
+                    const response = await apiCall(`/api/groups/${accessibleGroupId}/checklist-items`, {
                         method: 'POST',
                         body: JSON.stringify({
                             type: itemType,
@@ -3461,11 +3494,11 @@
                     
                     // Reload items based on category
                     if (itemType === 'packing') {
-                        await loadPackingItems(currentGroupId);
+                        await loadPackingItems(accessibleGroupId);
                     } else if (itemType === 'todo') {
-                        await loadTodoItems(currentGroupId);
+                        await loadTodoItems(accessibleGroupId);
                     } else if (itemType === 'reminder') {
-                        await loadReminderItems(currentGroupId);
+                        await loadReminderItems(accessibleGroupId);
                     }
 
                 } catch (error) {
@@ -3495,13 +3528,37 @@
 
                 showMessage('checklistMessage', 'Item deleted successfully!', 'success');
                 
-                // Reload items based on category
-                if (currentChecklistCategory === 'packing') {
-                    await loadPackingItems(currentGroupId);
-                } else if (currentChecklistCategory === 'todo') {
-                    await loadTodoItems(currentGroupId);
-                } else if (currentChecklistCategory === 'reminder') {
-                    await loadReminderItems(currentGroupId);
+                // Find an accessible group for reloading items
+                let accessibleGroupId = null;
+                for (const trip of currentTrips) {
+                    try {
+                        const groups = await apiCall(`/api/trips/${trip.id}/groups`);
+                        if (groups.length > 0) {
+                            // Test if we can access the first group
+                            try {
+                                await apiCall(`/api/groups/${groups[0].id}/packing-items`);
+                                accessibleGroupId = groups[0].id;
+                                break;
+                            } catch (accessError) {
+                                console.log(`Cannot access group ${groups[0].id} for trip ${trip.id}`);
+                                continue;
+                            }
+                        }
+                    } catch (error) {
+                        console.log(`Error loading groups for trip ${trip.id}:`, error);
+                        continue;
+                    }
+                }
+                
+                if (accessibleGroupId) {
+                    // Reload items based on category
+                    if (currentChecklistCategory === 'packing') {
+                        await loadPackingItems(accessibleGroupId);
+                    } else if (currentChecklistCategory === 'todo') {
+                        await loadTodoItems(accessibleGroupId);
+                    } else if (currentChecklistCategory === 'reminder') {
+                        await loadReminderItems(accessibleGroupId);
+                    }
                 }
 
             } catch (error) {
