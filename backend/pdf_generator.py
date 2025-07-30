@@ -4,14 +4,22 @@ from models import db, Group, GroupMember, Trip, User, Expense, Photo, Checklist
 from notifications import create_group_notification
 import json
 from datetime import datetime
-from reportlab.lib.pagesizes import letter, A4
-from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, PageBreak
-from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
-from reportlab.lib.units import inch
-from reportlab.lib import colors
-from reportlab.lib.enums import TA_CENTER, TA_LEFT, TA_RIGHT
 import io
 import os
+
+# Try to import reportlab, but handle gracefully if not available
+try:
+    from reportlab.lib.pagesizes import letter, A4
+    from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, PageBreak
+    from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+    from reportlab.lib.units import inch
+    from reportlab.lib import colors
+    from reportlab.lib.enums import TA_CENTER, TA_LEFT, TA_RIGHT
+    REPORTLAB_AVAILABLE = True
+    print("✅ ReportLab library available")
+except ImportError:
+    REPORTLAB_AVAILABLE = False
+    print("⚠️ ReportLab library not available - PDF generation disabled")
 
 pdf_bp = Blueprint('pdf_bp', __name__)
 
@@ -28,6 +36,21 @@ def finalize_group(group_id):
     
     if group.creator_id != user_id:
         return jsonify({'error': 'Only the group creator can finalize the group'}), 403
+    
+    if not REPORTLAB_AVAILABLE:
+        # Create notifications for all group members (without PDF)
+        create_group_notification(
+            group_id=group_id,
+            notification_type='pdf_generated',
+            title='Group Finalized',
+            message=f'Your trip has been finalized. Text itinerary is available for download.',
+            exclude_user_id=user_id
+        )
+        
+        return jsonify({
+            'message': 'Group finalized successfully (text itinerary available)',
+            'pdf_url': f'/api/groups/{group_id}/pdf'
+        }), 200
     
     try:
         # Generate PDF
@@ -61,6 +84,8 @@ def finalize_group(group_id):
         
     except Exception as e:
         print(f"Error finalizing group: {e}")
+        if not REPORTLAB_AVAILABLE:
+            return jsonify({'error': 'PDF generation is not available. Please install reportlab library.'}), 503
         return jsonify({'error': 'Failed to finalize group'}), 500
 
 # GET: Download PDF itinerary
@@ -73,6 +98,10 @@ def download_pdf(group_id):
     membership = GroupMember.query.filter_by(group_id=group_id, user_id=user_id).first()
     if not membership:
         return jsonify({'error': 'You are not a member of this group'}), 403
+    
+    if not REPORTLAB_AVAILABLE:
+        # Return text-based itinerary as fallback
+        return generate_text_itinerary(group_id)
     
     try:
         # Generate PDF
@@ -90,8 +119,80 @@ def download_pdf(group_id):
         print(f"Error generating PDF: {e}")
         return jsonify({'error': 'Failed to generate PDF'}), 500
 
+def generate_text_itinerary(group_id):
+    """Generate a simple text-based itinerary when PDF is not available"""
+    try:
+        # Get group and trip information
+        group = Group.query.get(group_id)
+        trip = Trip.query.get(group.trip_id)
+        
+        # Get all members
+        members = GroupMember.query.filter_by(group_id=group_id).all()
+        member_users = [User.query.get(member.user_id) for member in members]
+        
+        # Get expenses
+        expenses = Expense.query.filter_by(group_id=group_id).all()
+        
+        # Get checklist items
+        checklist_items = ChecklistItem.query.filter_by(group_id=group_id).all()
+        
+        # Build text content
+        content = f"""
+TRIP ITINERARY
+==============
+
+Group: {group.name}
+Trip: {trip.name}
+Dates: {trip.start_date} to {trip.end_date}
+Status: {'Finalized' if trip.finalized else 'Planning'}
+
+DESCRIPTION
+-----------
+{trip.description or 'No description provided'}
+
+MEMBERS
+-------
+"""
+        
+        for user in member_users:
+            if user:
+                content += f"- {user.name} ({user.email})\n"
+        
+        if expenses:
+            content += "\nEXPENSES\n--------\n"
+            total = 0
+            for expense in expenses:
+                user = User.query.get(expense.user_id)
+                user_name = user.name if user else 'Unknown'
+                content += f"- ${expense.amount:.2f} ({expense.category or 'General'}) by {user_name}\n"
+                if expense.note:
+                    content += f"  Note: {expense.note}\n"
+                total += expense.amount
+            content += f"\nTotal: ${total:.2f}\n"
+        
+        if checklist_items:
+            content += "\nCHECKLIST\n---------\n"
+            for item in checklist_items:
+                status = "✓" if item.is_completed else "○"
+                content += f"{status} {item.text} ({item.item_type})\n"
+        
+        # Return as text file
+        return send_file(
+            io.BytesIO(content.encode('utf-8')),
+            mimetype='text/plain',
+            as_attachment=True,
+            download_name=f'itinerary_group_{group_id}.txt'
+        )
+        
+    except Exception as e:
+        print(f"Error generating text itinerary: {e}")
+        return jsonify({'error': 'Failed to generate itinerary'}), 500
+
 def generate_trip_itinerary_pdf(group_id):
     """Generate a comprehensive PDF itinerary for a group"""
+    
+    if not REPORTLAB_AVAILABLE:
+        raise ImportError("ReportLab library is not available")
     
     # Get group and trip information
     group = Group.query.get(group_id)

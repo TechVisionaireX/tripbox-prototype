@@ -147,7 +147,17 @@ app.register_blueprint(trips_bp)
 app.register_blueprint(groups_bp)
 app.register_blueprint(chat_bp)
 app.register_blueprint(polls_bp)
-app.register_blueprint(pdf_bp)
+
+# Conditionally register PDF blueprint if available
+try:
+    if 'pdf_bp' in globals():
+        app.register_blueprint(pdf_bp)
+        print("✅ PDF blueprint registered successfully")
+    else:
+        print("⚠️ PDF blueprint not available - skipping registration")
+except Exception as e:
+    print(f"⚠️ Error registering PDF blueprint: {e}")
+
 app.register_blueprint(notifications_bp)
 app.register_blueprint(recommend_bp)
 app.register_blueprint(expense_bp)

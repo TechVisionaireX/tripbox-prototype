@@ -3802,6 +3802,7 @@
             try {
                 const messages = await apiCall(`/api/groups/${groupId}/chat`);
                 console.log('Loaded messages:', messages);
+                console.log('First message structure:', messages[0]);
                 displayChatMessages(messages);
             } catch (error) {
                 console.error('Error loading chat messages:', error);
@@ -3838,6 +3839,9 @@
                 
                 const isOwnMessage = currentUser && message.user_id === currentUser.id;
                 console.log('Is own message:', isOwnMessage);
+                console.log('Message user_id type:', typeof message.user_id);
+                console.log('Current user id type:', typeof currentUser?.id);
+                console.log('User ID comparison:', message.user_id === currentUser?.id);
                 
                 return `
                     <div class="chat-message ${isOwnMessage ? 'own-message' : 'other-message'}">
@@ -3877,6 +3881,7 @@
                 console.log('Sending message:', message, 'to group:', groupId);
                 
                 try {
+                    console.log('Sending message to API...');
                     const response = await apiCall(`/api/groups/${groupId}/chat`, {
                         method: 'POST',
                         body: JSON.stringify({ message: message })
@@ -3887,10 +3892,12 @@
                     await loadChatMessages(groupId);
                     
                     // Refresh notifications to show new message
+                    console.log('Refreshing chat notifications...');
                     await loadChatNotifications();
                     
                 } catch (error) {
                     console.error('Error sending message:', error);
+                    console.error('Error details:', error.message);
                     showMessage('chatMessage', 'Failed to send message. Please try again.', 'error');
                 }
             };
@@ -3911,11 +3918,12 @@
                 displayChatNotifications(notifications);
             } catch (error) {
                 console.error('Error loading chat notifications:', error);
+                console.error('Error details:', error.message);
                 document.getElementById('chatNotificationsList').innerHTML = `
                     <div class="empty-state">
                         <i class="fas fa-bell"></i>
-                        <h3>No notifications</h3>
-                        <p>You're all caught up!</p>
+                        <h3>Error loading notifications</h3>
+                        <p>${error.message}</p>
                     </div>
                 `;
             }
@@ -5776,6 +5784,9 @@
                 // Load notifications
                 await loadNotifications();
                 
+                // Debug current user state
+                debugCurrentUser();
+                
                 // Set up periodic token validation
                 setInterval(async () => {
                     const isValid = await validateToken();
@@ -6102,11 +6113,15 @@
                     method: 'POST'
                 });
                 
-                showMessage('groupMessage', 'Group finalized successfully! PDF itinerary has been generated and shared with all members.', 'success');
+                showMessage('groupMessage', 'Group finalized successfully! Itinerary has been generated and shared with all members.', 'success');
                 await loadGroups();
             } catch (error) {
                 console.error('Error finalizing group:', error);
-                showMessage('groupMessage', 'Failed to finalize group. Please try again.', 'error');
+                if (error.message && error.message.includes('503')) {
+                    showMessage('groupMessage', 'PDF generation is not available on this server. Group finalization disabled.', 'error');
+                } else {
+                    showMessage('groupMessage', 'Failed to finalize group. Please try again.', 'error');
+                }
             }
         }
 
@@ -6127,10 +6142,14 @@
                 window.URL.revokeObjectURL(url);
                 document.body.removeChild(a);
                 
-                showMessage('groupMessage', 'PDF downloaded successfully!', 'success');
+                showMessage('groupMessage', 'Itinerary downloaded successfully!', 'success');
             } catch (error) {
-                console.error('Error downloading PDF:', error);
-                showMessage('groupMessage', 'Failed to download PDF. Please try again.', 'error');
+                console.error('Error downloading itinerary:', error);
+                if (error.message && error.message.includes('503')) {
+                    showMessage('groupMessage', 'PDF generation is not available on this server. Please contact support.', 'error');
+                } else {
+                    showMessage('groupMessage', 'Failed to download itinerary. Please try again.', 'error');
+                }
             }
         }
 

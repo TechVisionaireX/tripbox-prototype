@@ -51,7 +51,7 @@ def register():
         
         return jsonify({
             'message': 'Registration successful', 
-            'user': {'email': user.email, 'name': user.name}
+            'user': {'id': user.id, 'email': user.email, 'name': user.name}
         })
         
     except Exception as e:
@@ -96,7 +96,7 @@ def login():
             response_data = {
                 'access_token': access_token,
                 'refresh_token': refresh_token,
-                'user': {'email': user.email, 'name': user.name},
+                'user': {'id': user.id, 'email': user.email, 'name': user.name},
                 'message': 'Login successful'
             }
             
@@ -125,7 +125,7 @@ def refresh():
         
         return jsonify({
             'access_token': new_access_token,
-            'user': {'email': user.email, 'name': user.name}
+            'user': {'id': user.id, 'email': user.email, 'name': user.name}
         })
         
     except Exception as e:
@@ -144,7 +144,7 @@ def validate_token():
         
         return jsonify({
             'valid': True, 
-            'user': {'email': user.email, 'name': user.name}
+            'user': {'id': user.id, 'email': user.email, 'name': user.name}
         })
         
     except Exception as e:
