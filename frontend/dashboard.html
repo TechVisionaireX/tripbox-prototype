@@ -11,6 +11,9 @@
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     
+    <!-- JSZip for ZIP downloads -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    
     <style>
         * {
             margin: 0;
@@ -1199,6 +1202,14 @@
 
         .gallery-item .actions button:hover {
             background: rgba(255, 255, 255, 0.3);
+        }
+
+        .gallery-item .actions .download-btn {
+            color: var(--primary-color);
+        }
+
+        .gallery-item .actions .download-btn:hover {
+            background: rgba(99, 102, 241, 0.2);
         }
 
         .gallery-item .actions .delete-btn {
@@ -2392,9 +2403,14 @@
                 <div class="gallery-grid-section">
                     <div class="section-header">
                         <h3><i class="fas fa-images"></i> Photo Gallery</h3>
-                        <button class="btn btn-secondary btn-sm" onclick="refreshGallery()">
-                            <i class="fas fa-sync-alt"></i> Refresh
-                        </button>
+                        <div class="header-actions">
+                            <button class="btn btn-primary btn-sm" onclick="downloadAllPhotos()" id="downloadAllBtn" style="display: none;">
+                                <i class="fas fa-download"></i> Download All
+                            </button>
+                            <button class="btn btn-secondary btn-sm" onclick="refreshGallery()">
+                                <i class="fas fa-sync-alt"></i> Refresh
+                            </button>
+                        </div>
                     </div>
                     <div id="galleryGrid">
                         <div class="empty-state">
@@ -4314,6 +4330,7 @@
 
         function displayGalleryPhotos() {
             const galleryGrid = document.getElementById('galleryGrid');
+            const downloadAllBtn = document.getElementById('downloadAllBtn');
             
             if (galleryPhotos.length === 0) {
                 galleryGrid.innerHTML = `
@@ -4323,7 +4340,15 @@
                         <p>Upload your first photo to start building your travel memories!</p>
                     </div>
                 `;
+                if (downloadAllBtn) {
+                    downloadAllBtn.style.display = 'none';
+                }
                 return;
+            }
+            
+            // Show download all button if there are photos
+            if (downloadAllBtn) {
+                downloadAllBtn.style.display = 'inline-block';
             }
 
             galleryGrid.innerHTML = galleryPhotos.map(photo => `
@@ -4331,7 +4356,10 @@
                     <img src="${photo.url}" alt="${photo.caption || 'Travel Photo'}" />
                     <div class="caption">${photo.caption || 'No caption'}</div>
                     <div class="actions">
-                        <button class="btn btn-secondary btn-sm" onclick="deletePhoto(${photo.id})">
+                        <button class="btn btn-primary btn-sm" onclick="downloadPhoto('${photo.url}', '${photo.caption || 'travel-photo'}')" title="Download Photo">
+                            <i class="fas fa-download"></i>
+                        </button>
+                        <button class="btn btn-secondary btn-sm" onclick="deletePhoto(${photo.id})" title="Delete Photo">
                             <i class="fas fa-trash"></i>
                         </button>
                     </div>
@@ -4439,6 +4467,97 @@
                 console.error('Error deleting photo:', error);
                 showMessage('uploadMessage', 'Failed to delete photo. Please try again.', 'error');
             }
+        }
+
+        async function downloadPhoto(photoUrl, caption) {
+            try {
+                // Create a temporary anchor element to trigger download
+                const link = document.createElement('a');
+                link.href = photoUrl;
+                
+                // Generate filename from caption or use default
+                const filename = caption.replace(/[^a-zA-Z0-9]/g, '-').toLowerCase() + '.jpg';
+                link.download = filename;
+                
+                // Set target to _blank to open in new tab if download fails
+                link.target = '_blank';
+                
+                // Append to body, click, and remove
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                
+                showMessage('uploadMessage', 'Download started!', 'success');
+            } catch (error) {
+                console.error('Error downloading photo:', error);
+                
+                // Fallback: open image in new tab
+                window.open(photoUrl, '_blank');
+                showMessage('uploadMessage', 'Opening photo in new tab...', 'info');
+            }
+        }
+
+        async function downloadAllPhotos() {
+            if (!galleryPhotos || galleryPhotos.length === 0) {
+                showMessage('uploadMessage', 'No photos to download.', 'error');
+                return;
+            }
+
+            try {
+                showMessage('uploadMessage', 'Preparing downloads...', 'info');
+                
+                // Create a zip file using JSZip (if available) or download individually
+                if (typeof JSZip !== 'undefined') {
+                    await downloadAsZip();
+                } else {
+                    await downloadIndividually();
+                }
+                
+            } catch (error) {
+                console.error('Error downloading all photos:', error);
+                showMessage('uploadMessage', 'Failed to download photos. Please try again.', 'error');
+            }
+        }
+
+        async function downloadAsZip() {
+            const JSZip = window.JSZip;
+            const zip = new JSZip();
+            
+            for (let i = 0; i < galleryPhotos.length; i++) {
+                const photo = galleryPhotos[i];
+                try {
+                    const response = await fetch(photo.url);
+                    const blob = await response.blob();
+                    const filename = (photo.caption || `photo-${i + 1}`).replace(/[^a-zA-Z0-9]/g, '-').toLowerCase() + '.jpg';
+                    zip.file(filename, blob);
+                } catch (error) {
+                    console.error(`Error adding photo ${i + 1} to zip:`, error);
+                }
+            }
+            
+            const zipBlob = await zip.generateAsync({ type: 'blob' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(zipBlob);
+            link.download = 'trip-photos.zip';
+            link.click();
+            URL.revokeObjectURL(link.href);
+            
+            showMessage('uploadMessage', 'All photos downloaded as ZIP!', 'success');
+        }
+
+        async function downloadIndividually() {
+            for (let i = 0; i < galleryPhotos.length; i++) {
+                const photo = galleryPhotos[i];
+                try {
+                    await downloadPhoto(photo.url, photo.caption || `photo-${i + 1}`);
+                    // Small delay between downloads to avoid browser blocking
+                    await new Promise(resolve => setTimeout(resolve, 500));
+                } catch (error) {
+                    console.error(`Error downloading photo ${i + 1}:`, error);
+                }
+            }
+            
+            showMessage('uploadMessage', 'All photos downloaded!', 'success');
         }
 
         // Checklist Functions
