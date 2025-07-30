@@ -2630,15 +2630,16 @@
                     <div id="chatMessages" class="chat-messages">
                         <!-- Messages will be loaded here -->
                     </div>
-                    <div class="chat-input-container">
-                        <form id="chatMessageForm" class="chat-form">
-                            <input type="text" id="chatMessageInput" placeholder="Type your message..." required>
-                            <button type="submit" class="btn btn-primary">
-                                <i class="fas fa-paper-plane"></i>
-                                Send
-                            </button>
-                        </form>
-                    </div>
+                                            <div class="chat-input-container">
+                            <form id="chatMessageForm" class="chat-form">
+                                <input type="text" id="chatMessageInput" placeholder="Type your message..." required>
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-paper-plane"></i>
+                                    Send
+                                </button>
+                            </form>
+                            <div id="chatMessage" class="message" style="display: none;"></div>
+                        </div>
                 </div>
             </div>
         </div>
@@ -3372,6 +3373,7 @@
         let chatNotifications = [];
 
         async function openGroupChat(groupId, groupName) {
+            console.log('Opening group chat for:', groupId, groupName);
             currentChatGroupId = groupId;
             document.getElementById('modalChatGroupName').textContent = `Group Chat - ${groupName}`;
             document.getElementById('groupChatModal').style.display = 'block';
@@ -3386,8 +3388,10 @@
         }
 
         async function loadChatMessages(groupId) {
+            console.log('Loading chat messages for group:', groupId);
             try {
-                const messages = await apiCall(`/api/groups/${groupId}/messages`);
+                const messages = await apiCall(`/api/groups/${groupId}/chat`);
+                console.log('Loaded messages:', messages);
                 displayChatMessages(messages);
             } catch (error) {
                 console.error('Error loading chat messages:', error);
@@ -3416,13 +3420,13 @@
             }
 
             const messagesHtml = messages.map(message => `
-                <div class="chat-message ${message.sender_id === currentUser.id ? 'own-message' : 'other-message'}">
+                <div class="chat-message ${message.user_id === currentUser.id ? 'own-message' : 'other-message'}">
                     <div class="message-header">
-                        <span class="sender-name">${message.sender_name}</span>
+                        <span class="sender-name">User ${message.user_id}</span>
                         <span class="message-time">${formatMessageTime(message.timestamp)}</span>
                     </div>
                     <div class="message-content">
-                        ${message.content}
+                        ${message.message}
                     </div>
                 </div>
             `).join('');
@@ -3435,18 +3439,29 @@
             const form = document.getElementById('chatMessageForm');
             const input = document.getElementById('chatMessageInput');
             
+            console.log('Setting up chat form for group:', groupId);
+            console.log('Form element:', form);
+            console.log('Input element:', input);
+            
             form.onsubmit = async (e) => {
                 e.preventDefault();
+                console.log('Chat form submitted');
                 
                 const message = input.value.trim();
-                if (!message) return;
+                if (!message) {
+                    console.log('Empty message, not sending');
+                    return;
+                }
+                
+                console.log('Sending message:', message, 'to group:', groupId);
                 
                 try {
-                    await apiCall(`/api/groups/${groupId}/messages`, {
+                    const response = await apiCall(`/api/groups/${groupId}/chat`, {
                         method: 'POST',
-                        body: JSON.stringify({ content: message })
+                        body: JSON.stringify({ message: message })
                     });
                     
+                    console.log('Message sent successfully:', response);
                     input.value = '';
                     await loadChatMessages(groupId);
                     
@@ -5030,10 +5045,10 @@
                                 <i class="fas fa-eye"></i>
                                 View Details
                             </button>
-                            <button class="btn btn-success btn-sm" onclick="openGroupChat(${group.id}, '${group.name}')">
-                                <i class="fas fa-comments"></i>
-                                Chat
-                            </button>
+                                                                <button class="btn btn-success btn-sm" onclick="console.log('Chat button clicked for group:', ${group.id}); openGroupChat(${group.id}, '${group.name}')">
+                                        <i class="fas fa-comments"></i>
+                                        Chat
+                                    </button>
                             ${group.is_owner ? `
                                 <button class="btn btn-danger btn-sm" onclick="deleteGroup(${group.id})">
                                     <i class="fas fa-trash"></i>
