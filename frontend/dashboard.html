@@ -1526,6 +1526,9 @@
             <div class="header">
                 <h1>Welcome Back!</h1>
                 <p>Here's what's happening with your trips today</p>
+                <button class="btn btn-primary btn-sm" onclick="refreshAllData()" style="margin-top: 1rem;">
+                    <i class="fas fa-sync-alt"></i> Refresh All Data
+                </button>
             </div>
             
             <div class="content">
@@ -2203,17 +2206,20 @@
         // Dashboard Functions
         async function loadDashboardData() {
             try {
+                console.log('🔄 Loading dashboard data...');
                 // Load trips for dashboard stats
                 await loadTrips();
+                console.log('✅ Trips loaded, updating stats...');
                 updateDashboardStats();
                 displayRecentTrips();
                 
-                // Also display all trips in the trips section
-                if (document.getElementById('tripsSection').style.display !== 'none') {
-                    displayAllTrips();
-                }
+                // Always display all trips in the trips section (regardless of visibility)
+                console.log('📋 Displaying all trips...');
+                displayAllTrips();
+                
+                console.log('✅ Dashboard data loaded successfully');
             } catch (error) {
-                console.error('Error loading dashboard data:', error);
+                console.error('❌ Error loading dashboard data:', error);
             }
         }
 
@@ -2412,6 +2418,9 @@
                     await loadExpenseSummary();
                     await loadExpensesList();
                     
+                    // Refresh all data to ensure consistency
+                    await refreshAllData();
+                    
                 } catch (error) {
                     console.error('Error adding expense:', error);
                     let errorMessage = 'Failed to add expense. Please try again.';
@@ -2548,11 +2557,11 @@
 
         function displayAllTrips() {
             const allTripsContainer = document.getElementById('allTrips');
-            console.log('Displaying trips. Current trips:', currentTrips);
-            console.log('Number of trips to display:', currentTrips.length);
+            console.log('📋 Displaying trips. Current trips:', currentTrips);
+            console.log('📊 Number of trips to display:', currentTrips.length);
             
-            if (currentTrips.length === 0) {
-                console.log('No trips to display, showing empty state');
+            if (!currentTrips || currentTrips.length === 0) {
+                console.log('📭 No trips to display, showing empty state');
                 allTripsContainer.innerHTML = `
                     <div class="empty-state">
                         <i class="fas fa-route"></i>
@@ -2563,8 +2572,9 @@
                 return;
             }
             
-            console.log('Creating trip cards for', currentTrips.length, 'trips');
+            console.log('🎴 Creating trip cards for', currentTrips.length, 'trips');
             allTripsContainer.innerHTML = currentTrips.map(trip => createTripCard(trip, true)).join('');
+            console.log('✅ Trip cards created successfully');
         }
 
         function createTripCard(trip, showActions = false) {
@@ -2754,6 +2764,44 @@
             `).join('');
         }
 
+        // Comprehensive data refresh function
+        async function refreshAllData() {
+            console.log('🔄 Refreshing all data...');
+            try {
+                // Reload trips first
+                await loadTrips();
+                
+                // Update dashboard stats
+                updateDashboardStats();
+                displayRecentTrips();
+                
+                // Refresh all sections if they're visible
+                if (document.getElementById('tripsSection').style.display !== 'none') {
+                    displayAllTrips();
+                }
+                
+                if (document.getElementById('expensesSection').style.display !== 'none') {
+                    await loadExpenses();
+                }
+                
+                if (document.getElementById('gallerySection').style.display !== 'none') {
+                    await loadGallery();
+                }
+                
+                if (document.getElementById('checklistSection').style.display !== 'none') {
+                    await loadChecklists();
+                }
+                
+                if (document.getElementById('groupsSection').style.display !== 'none') {
+                    await loadGroups();
+                }
+                
+                console.log('✅ All data refreshed successfully');
+            } catch (error) {
+                console.error('❌ Error refreshing data:', error);
+            }
+        }
+
         // Add Member Form Handler
         document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('addMemberForm').addEventListener('submit', async (e) => {
@@ -2789,6 +2837,10 @@
                     
                     // Reload members list
                     await loadTripMembers(currentTripId);
+                    
+                    // Refresh all related data since member was added
+                    console.log('🔄 Refreshing data after member addition...');
+                    await refreshAllData();
                     
                 } catch (error) {
                     console.error('Error adding member:', error);
@@ -3196,6 +3248,9 @@
                     } else if (itemType === 'reminder') {
                         await loadReminderItems(currentGroupId);
                     }
+                    
+                    // Refresh all data to ensure consistency
+                    await refreshAllData();
 
                 } catch (error) {
                     console.error('Error adding checklist item:', error);
@@ -3293,7 +3348,9 @@
 
         // Initialize App
         document.addEventListener('DOMContentLoaded', async () => {
+            console.log('🚀 Initializing TripBox Dashboard...');
             if (await checkAuth()) {
+                console.log('✅ Authentication successful, loading dashboard...');
                 // Show dashboard section initially
                 showSection('dashboard');
                 
@@ -3307,6 +3364,9 @@
                         }
                     }
                 }, 5 * 60 * 1000); // Check every 5 minutes
+            } else {
+                console.log('❌ Authentication failed, redirecting to login...');
+                window.location.href = 'index.html';
             }
         });
 
