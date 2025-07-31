@@ -2533,11 +2533,11 @@
                 </div>
 
                 <div class="card">
-                                    <div class="card-header">
-                    <h2>
-                        <i class="fas fa-list"></i>
-                        All Trips
-                    </h2>
+                    <div class="card-header">
+                        <h2>
+                            <i class="fas fa-list"></i>
+                            All Trips
+                        </h2>
                     <div class="header-actions">
                         <button class="btn btn-primary btn-sm" onclick="resetTripForm()">
                             <i class="fas fa-plus"></i> New Trip
@@ -2546,7 +2546,7 @@
                             <i class="fas fa-sync-alt"></i> Refresh
                         </button>
                     </div>
-                </div>
+                    </div>
                     <div class="card-body">
                         <div id="allTrips" class="trips-grid">
                             <!-- All trips will be loaded here -->
@@ -2938,13 +2938,21 @@
                             </div>
                             <div class="form-group">
                                 <label for="pollGroup">Select Group</label>
-                                <select id="pollGroup" required>
-                                    <option value="">Select a group...</option>
-                                </select>
+                                <div style="display: flex; gap: 0.5rem; align-items: center;">
+                                    <select id="pollGroup" required style="flex: 1;">
+                                        <option value="">Select a group...</option>
+                                    </select>
+                                    <button type="button" class="btn btn-secondary btn-sm" onclick="loadUserGroups()" title="Refresh groups">
+                                        <i class="fas fa-sync-alt"></i>
+                                    </button>
+                                </div>
                             </div>
                             <div class="form-actions">
                                 <button type="submit" class="btn btn-primary">
                                     <i class="fas fa-plus"></i> Create Poll
+                                </button>
+                                <button type="button" class="btn btn-secondary" onclick="testPollCreation()">
+                                    <i class="fas fa-test"></i> Test Poll
                                 </button>
                             </div>
                         </form>
@@ -3736,9 +3744,9 @@
             } catch (error) {
                 console.error('Error updating dashboard stats:', error);
                 // Fallback to basic stats
-                document.getElementById('activeGroups').textContent = '0';
-                document.getElementById('totalExpenses').textContent = '$0';
-                document.getElementById('photosCount').textContent = '0';
+            document.getElementById('activeGroups').textContent = '0';
+            document.getElementById('totalExpenses').textContent = '$0';
+            document.getElementById('photosCount').textContent = '0';
             }
         }
 
@@ -4230,25 +4238,45 @@
 
         async function loadUserGroups() {
             try {
+                console.log('Fetching user groups...');
                 const groups = await apiCall('/api/groups');
+                console.log('User groups received:', groups);
                 populatePollGroupSelector(groups);
             } catch (error) {
                 console.error('Error loading user groups:', error);
                 showMessage('createPollMessage', 'Failed to load groups. Please try again.', 'error');
+                // Set up form anyway so user can see the error
+                setupCreatePollForm();
             }
         }
 
         function populatePollGroupSelector(groups) {
+            console.log('Populating poll group selector with:', groups);
             const groupSelector = document.getElementById('pollGroup');
-            if (!groupSelector) return;
+            if (!groupSelector) {
+                console.error('Poll group selector not found!');
+                return;
+            }
+            
+            console.log('Found poll group selector:', groupSelector);
             
             // Clear existing options except the first one
             groupSelector.innerHTML = '<option value="">Select a group...</option>';
             
             if (!groups || groups.length === 0) {
-                groupSelector.innerHTML = '<option value="">No groups available</option>';
+                console.log('No groups available');
+                groupSelector.innerHTML = '<option value="">No groups available - Create a group first</option>';
+                
+                // Show helpful message
+                const messageDiv = document.getElementById('createPollMessage');
+                if (messageDiv) {
+                    messageDiv.innerHTML = '<div class="message error">No groups available. Please create a group in the Groups section first.</div>';
+                    messageDiv.style.display = 'block';
+                }
                 return;
             }
+            
+            console.log(`Adding ${groups.length} groups to selector`);
             
             // Add group options
             groups.forEach(group => {
@@ -4256,7 +4284,16 @@
                 option.value = group.id;
                 option.textContent = group.name;
                 groupSelector.appendChild(option);
+                console.log(`Added group option: ${group.name} (ID: ${group.id})`);
             });
+            
+            console.log('Final group selector options:', groupSelector.innerHTML);
+            
+            // Clear any error messages if groups are loaded successfully
+            const messageDiv = document.getElementById('createPollMessage');
+            if (messageDiv) {
+                messageDiv.style.display = 'none';
+            }
         }
 
         function setupCreatePollForm() {
@@ -4287,7 +4324,14 @@
                 }
                 
                 try {
-                    await apiCall(`/api/groups/${selectedGroupId}/polls`, {
+                    console.log('Creating poll with data:', {
+                        question: question,
+                        options: options,
+                        expires_in_hours: expiresInHours,
+                        group_id: selectedGroupId
+                    });
+                    
+                    const response = await apiCall(`/api/groups/${selectedGroupId}/polls`, {
                         method: 'POST',
                         body: JSON.stringify({
                             question: question,
@@ -4296,13 +4340,15 @@
                         })
                     });
                     
+                    console.log('Poll creation response:', response);
                     showMessage('createPollMessage', 'Poll created successfully!', 'success');
                     form.reset();
                     await loadActivePolls();
                     
                 } catch (error) {
                     console.error('Error creating poll:', error);
-                    showMessage('createPollMessage', 'Failed to create poll. Please try again.', 'error');
+                    console.error('Error details:', error.message);
+                    showMessage('createPollMessage', `Failed to create poll: ${error.message}`, 'error');
                 }
             };
         }
@@ -4313,21 +4359,74 @@
 
         async function loadPolls() {
             try {
+                console.log('Loading polls section...');
+                
                 // First load user groups to populate the selector
+                console.log('Loading user groups for polls...');
                 await loadUserGroups();
                 
-                const response = await apiCall('/api/polls', {
-                    method: 'GET'
-                });
-                displayActivePolls(response);
+                // Set up the polls form
+                console.log('Setting up polls form...');
+                setupCreatePollForm();
+                
+                // Test the polls endpoint
+                try {
+                    const response = await apiCall('/api/polls', {
+                        method: 'GET'
+                    });
+                    console.log('Polls loaded:', response);
+                    displayActivePolls(response);
+                } catch (pollsError) {
+                    console.error('Error loading polls:', pollsError);
+                    document.getElementById('pollsList').innerHTML = '<div class="error-message">Failed to load polls</div>';
+                }
             } catch (error) {
-                console.error('Error loading polls:', error);
+                console.error('Error in loadPolls:', error);
                 document.getElementById('pollsList').innerHTML = '<div class="error-message">Failed to load polls</div>';
             }
         }
 
         async function refreshPolls() {
             await loadPolls();
+        }
+
+        async function testPollCreation() {
+            try {
+                console.log('Testing poll creation...');
+                
+                // Get the first available group
+                const groups = await apiCall('/api/groups');
+                if (!groups || groups.length === 0) {
+                    alert('No groups available for testing');
+                    return;
+                }
+                
+                const groupId = groups[0].id;
+                console.log('Testing with group ID:', groupId);
+                
+                const testData = {
+                    question: 'Test Poll Question',
+                    options: ['Option 1', 'Option 2', 'Option 3'],
+                    expires_in_hours: 1
+                };
+                
+                console.log('Sending test poll data:', testData);
+                
+                const response = await apiCall(`/api/groups/${groupId}/polls`, {
+                    method: 'POST',
+                    body: JSON.stringify(testData)
+                });
+                
+                console.log('Test poll creation response:', response);
+                alert('Test poll created successfully!');
+                
+                // Refresh polls
+                await loadPolls();
+                
+            } catch (error) {
+                console.error('Test poll creation failed:', error);
+                alert(`Test poll creation failed: ${error.message}`);
+            }
         }
 
         // Location Check-in Functions
@@ -4746,6 +4845,8 @@
 
         async function downloadTripPDF(tripId, tripName) {
             try {
+                console.log('Downloading PDF for trip:', tripId, tripName);
+                
                 // Get the first group for this trip
                 const groups = await apiCall(`/api/trips/${tripId}/groups`);
                 if (!groups || groups.length === 0) {
@@ -4754,12 +4855,24 @@
                 }
                 
                 const groupId = groups[0].id;
-                const response = await apiCall(`/api/groups/${groupId}/pdf`, {
-                    method: 'GET'
+                console.log('Using group ID for PDF:', groupId);
+                
+                // Use fetch directly to get the file response
+                const token = localStorage.getItem('access_token');
+                const response = await fetch(`${API_BASE}/api/groups/${groupId}/pdf`, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
                 });
                 
-                // Create a download link for the PDF
-                const blob = new Blob([response], { type: 'application/pdf' });
+                if (!response.ok) {
+                    const errorData = await response.json().catch(() => ({}));
+                    throw new Error(errorData.error || `HTTP ${response.status}`);
+                }
+                
+                // Get the blob from the response
+                const blob = await response.blob();
                 const url = window.URL.createObjectURL(blob);
                 const a = document.createElement('a');
                 a.href = url;
@@ -4775,7 +4888,7 @@
                 if (error.message && error.message.includes('503')) {
                     showMessage('addTripMessage', 'PDF generation is not available on this server. Please contact support.', 'error');
                 } else {
-                    showMessage('addTripMessage', 'Failed to download PDF. Please try again.', 'error');
+                    showMessage('addTripMessage', `Failed to download PDF: ${error.message}`, 'error');
                 }
             }
         }
@@ -6305,12 +6418,24 @@
 
         async function downloadGroupPDF(groupId, groupName) {
             try {
-                const response = await apiCall(`/api/groups/${groupId}/pdf`, {
-                    method: 'GET'
+                console.log('Downloading PDF for group:', groupId, groupName);
+                
+                // Use fetch directly to get the file response
+                const token = localStorage.getItem('access_token');
+                const response = await fetch(`${API_BASE}/api/groups/${groupId}/pdf`, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
                 });
                 
-                // Create a download link for the PDF
-                const blob = new Blob([response], { type: 'application/pdf' });
+                if (!response.ok) {
+                    const errorData = await response.json().catch(() => ({}));
+                    throw new Error(errorData.error || `HTTP ${response.status}`);
+                }
+                
+                // Get the blob from the response
+                const blob = await response.blob();
                 const url = window.URL.createObjectURL(blob);
                 const a = document.createElement('a');
                 a.href = url;
@@ -6326,7 +6451,7 @@
                 if (error.message && error.message.includes('503')) {
                     showMessage('groupMessage', 'PDF generation is not available on this server. Please contact support.', 'error');
                 } else {
-                    showMessage('groupMessage', 'Failed to download itinerary. Please try again.', 'error');
+                    showMessage('groupMessage', `Failed to download itinerary: ${error.message}`, 'error');
                 }
             }
         }
