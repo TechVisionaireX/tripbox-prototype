@@ -1,11 +1,12 @@
-from flask import Flask
+from flask import Flask, jsonify
 
 app = Flask(__name__)
 
-@app.route('/')
-def hello():
-    return "Hello, Flask is working!"
+@app.route('/test')
+def test():
+    return jsonify({"message": "Server is working!"})
 
 if __name__ == '__main__':
-    print("Starting test server on port 5000...")
-    app.run(host='0.0.0.0', port=5000, debug=False) 
+    print("Starting test server...")
+    app.run(host='localhost', port=5000, debug=False)
+    print("Server started!") 
