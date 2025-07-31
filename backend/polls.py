@@ -16,6 +16,7 @@ def create_poll(group_id):
     
     print(f"Creating poll for group {group_id} by user {user_id}")
     print(f"Request data: {data}")
+    print(f"Request headers: {dict(request.headers)}")
     
     # Check if user is a member of the group
     membership = GroupMember.query.filter_by(group_id=group_id, user_id=user_id).first()
@@ -39,6 +40,10 @@ def create_poll(group_id):
     expires_at = datetime.utcnow() + timedelta(hours=expires_in_hours)
     
     try:
+        print(f"Creating Poll object with: group_id={group_id}, creator_id={user_id}, question={question}")
+        print(f"Options JSON: {json.dumps(options)}")
+        print(f"Expires at: {expires_at}")
+        
         poll = Poll(
             group_id=group_id,
             creator_id=user_id,
@@ -47,19 +52,24 @@ def create_poll(group_id):
             expires_at=expires_at
         )
         
+        print(f"Poll object created: {poll}")
         db.session.add(poll)
+        print("Poll added to session")
         db.session.commit()
-        
-        print(f"Poll created successfully with ID {poll.id}")
+        print(f"Poll committed successfully with ID {poll.id}")
         
         # Create notifications for all group members
-        create_group_notification(
-            group_id=group_id,
-            notification_type='poll_created',
-            title='New Poll Created',
-            message=f'A new poll "{question}" has been created in your group.',
-            exclude_user_id=user_id
-        )
+        try:
+            create_group_notification(
+                group_id=group_id,
+                notification_type='poll_created',
+                title='New Poll Created',
+                message=f'A new poll "{question}" has been created in your group.',
+                exclude_user_id=user_id
+            )
+            print("Notification created successfully")
+        except Exception as notif_error:
+            print(f"Error creating notification: {notif_error}")
         
         return jsonify({
             'message': 'Poll created successfully',
@@ -71,6 +81,9 @@ def create_poll(group_id):
         
     except Exception as e:
         print(f"Error creating poll: {e}")
+        print(f"Error type: {type(e)}")
+        import traceback
+        print(f"Error traceback: {traceback.format_exc()}")
         db.session.rollback()
         return jsonify({'error': f'Failed to create poll: {str(e)}'}), 500
 

@@ -2189,46 +2189,107 @@
             margin: 0;
         }
 
-        /* Make dashboard cards more compact */
+        /* Make dashboard cards more compact like first row */
         #dashboardSection .card {
-            margin-bottom: 1rem;
-            padding: 0.75rem;
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            border-radius: 8px;
         }
 
         #dashboardSection .card-header {
-            padding: 0.5rem 0.75rem;
-            margin-bottom: 0.5rem;
+            padding: 0.25rem 0.5rem;
+            margin-bottom: 0.25rem;
+            border-bottom: 1px solid #e5e7eb;
         }
 
         #dashboardSection .card-header h2 {
-            font-size: 1rem;
+            font-size: 0.875rem;
             margin: 0;
+            font-weight: 600;
         }
 
         #dashboardSection .card-body {
-            padding: 0.5rem 0.75rem;
-            max-height: 150px;
+            padding: 0.25rem 0.5rem;
+            max-height: 120px;
             overflow-y: auto;
         }
 
         #dashboardSection .empty-state {
-            padding: 0.75rem;
+            padding: 0.5rem;
             text-align: center;
         }
 
         #dashboardSection .empty-state i {
-            font-size: 1.25rem;
+            font-size: 1rem;
             margin-bottom: 0.25rem;
+            color: #9ca3af;
         }
 
         #dashboardSection .empty-state h3 {
-            font-size: 0.85rem;
+            font-size: 0.75rem;
             margin: 0.25rem 0;
+            color: #6b7280;
         }
 
         #dashboardSection .empty-state p {
-            font-size: 0.75rem;
+            font-size: 0.625rem;
             margin: 0;
+            color: #9ca3af;
+        }
+
+        /* Make dashboard sections even more compact */
+        #dashboardSection .dashboard-section {
+            margin-bottom: 0.5rem;
+        }
+
+        #dashboardSection .dashboard-section .card {
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+        }
+
+        #dashboardSection .dashboard-section .card-header {
+            padding: 0.25rem 0.5rem;
+            margin-bottom: 0.25rem;
+        }
+
+        #dashboardSection .dashboard-section .card-header h2 {
+            font-size: 0.875rem;
+            margin: 0;
+        }
+
+        #dashboardSection .dashboard-section .card-body {
+            padding: 0.25rem 0.5rem;
+            max-height: 100px;
+            overflow-y: auto;
+        }
+
+        /* Compact buttons */
+        #dashboardSection .btn-sm {
+            padding: 0.25rem 0.5rem;
+            font-size: 0.75rem;
+        }
+
+        /* Compact notification items */
+        #dashboardSection .chat-notification-item,
+        #dashboardSection .notification-item {
+            padding: 0.25rem 0.5rem;
+            margin-bottom: 0.25rem;
+            font-size: 0.75rem;
+        }
+
+        #dashboardSection .notification-header {
+            font-size: 0.75rem;
+            margin-bottom: 0.125rem;
+        }
+
+        #dashboardSection .notification-message {
+            font-size: 0.625rem;
+            margin-bottom: 0.125rem;
+        }
+
+        #dashboardSection .notification-group {
+            font-size: 0.625rem;
+            color: #6b7280;
         }
     </style>
 </head>
@@ -2457,7 +2518,7 @@
                     <div class="card-body">
                         <div class="expense-summary">
                             <div class="total-expense-summary">
-                                <h3>Total Across All Trips: <span id="totalMyExpenses">$0.00</span></h3>
+                                <h3 style="font-size: 0.75rem; margin: 0;">Total: <span id="totalMyExpenses">$0.00</span></h3>
                             </div>
                         </div>
                         <div id="myTripExpensesList" class="trip-expenses-list">
@@ -3844,29 +3905,27 @@
             }
 
             const expensesHtml = tripExpenses.map(trip => `
-                <div class="trip-expense-item">
-                    <div class="trip-expense-header">
+                <div class="trip-expense-item" style="padding: 0.25rem 0.5rem; margin-bottom: 0.25rem; font-size: 0.75rem;">
+                    <div class="trip-expense-header" style="display: flex; justify-content: space-between; align-items: center;">
                         <div class="trip-info">
-                            <h4>${trip.tripName}</h4>
-                            <span class="trip-role ${trip.isOwner ? 'owner' : 'member'}">${trip.role}</span>
+                            <h4 style="font-size: 0.875rem; margin: 0; font-weight: 600;">${trip.tripName}</h4>
+                            <span class="trip-role ${trip.isOwner ? 'owner' : 'member'}" style="font-size: 0.625rem;">${trip.role}</span>
                         </div>
-                        <div class="expense-info">
-                            <div class="user-share">
-                                <span class="label">My Share:</span>
-                                <span class="amount">$${trip.userShare.toFixed(2)}</span>
+                        <div class="expense-info" style="text-align: right;">
+                            <div class="user-share" style="font-size: 0.75rem; color: #059669; font-weight: 600;">
+                                $${trip.userShare.toFixed(2)}
                             </div>
-                            <div class="trip-total">
-                                <span class="label">Trip Total:</span>
-                                <span class="amount">$${trip.tripTotal.toFixed(2)}</span>
+                            <div class="trip-total" style="font-size: 0.625rem; color: #6b7280;">
+                                Total: $${trip.tripTotal.toFixed(2)}
                             </div>
                         </div>
                     </div>
-                                    <div class="trip-expense-footer">
-                    <button class="btn btn-primary btn-sm view-details-btn" onclick="openTripDetailsModal(${trip.tripId})">
-                        <i class="fas fa-eye"></i>
-                        View Trip Details
-                    </button>
-                </div>
+                    <div class="trip-expense-footer" style="margin-top: 0.125rem;">
+                        <button class="btn btn-primary btn-sm view-details-btn" onclick="openTripDetailsModal(${trip.tripId})" style="padding: 0.125rem 0.25rem; font-size: 0.625rem;">
+                            <i class="fas fa-eye"></i>
+                            View
+                        </button>
+                    </div>
                 </div>
             `).join('');
 
@@ -4158,24 +4217,24 @@
                 }
 
                 const pollsHtml = polls.map(poll => `
-                    <div class="poll-item">
-                        <div class="poll-header">
-                            <h4>${poll.question}</h4>
-                            <span class="poll-group">in ${poll.group_name}</span>
+                    <div class="poll-item" style="padding: 0.25rem 0.5rem; margin-bottom: 0.25rem; font-size: 0.75rem;">
+                        <div class="poll-header" style="margin-bottom: 0.25rem;">
+                            <h4 style="font-size: 0.875rem; margin: 0; font-weight: 600;">${poll.question}</h4>
+                            <span class="poll-group" style="font-size: 0.625rem; color: #6b7280;">in ${poll.group_name}</span>
                         </div>
-                        <div class="poll-options">
+                        <div class="poll-options" style="margin-bottom: 0.25rem;">
                             ${poll.options.map(option => `
-                                <div class="poll-option ${poll.user_vote === option ? 'selected' : ''}">
-                                    <button class="vote-btn" onclick="voteOnPoll(${poll.id}, '${option}')">
+                                <div class="poll-option ${poll.user_vote === option ? 'selected' : ''}" style="display: flex; align-items: center; margin-bottom: 0.125rem;">
+                                    <button class="vote-btn" onclick="voteOnPoll(${poll.id}, '${option}')" style="padding: 0.125rem; margin-right: 0.25rem; font-size: 0.625rem;">
                                         <i class="fas fa-check"></i>
                                     </button>
-                                    <span class="option-text">${option}</span>
-                                    <span class="vote-count">${poll.vote_counts[option] || 0} votes</span>
+                                    <span class="option-text" style="flex: 1; font-size: 0.75rem;">${option}</span>
+                                    <span class="vote-count" style="font-size: 0.625rem; color: #6b7280;">${poll.vote_counts[option] || 0} votes</span>
                                 </div>
                             `).join('')}
                         </div>
-                        <div class="poll-footer">
-                            <span class="poll-creator">Created by ${poll.creator_name}</span>
+                        <div class="poll-footer" style="display: flex; justify-content: space-between; font-size: 0.625rem; color: #6b7280;">
+                            <span class="poll-creator">by ${poll.creator_name}</span>
                             <span class="poll-expires">Expires: ${formatPollTime(poll.expires_at)}</span>
                         </div>
                     </div>
@@ -4241,9 +4300,15 @@
                 console.log('Fetching user groups...');
                 const groups = await apiCall('/api/groups');
                 console.log('User groups received:', groups);
+                console.log('Groups type:', typeof groups);
+                console.log('Groups length:', groups ? groups.length : 'null');
+                if (groups && groups.length > 0) {
+                    console.log('First group:', groups[0]);
+                }
                 populatePollGroupSelector(groups);
             } catch (error) {
                 console.error('Error loading user groups:', error);
+                console.error('Error details:', error.message);
                 showMessage('createPollMessage', 'Failed to load groups. Please try again.', 'error');
                 // Set up form anyway so user can see the error
                 setupCreatePollForm();
@@ -4307,6 +4372,10 @@
                 const expiresInHours = parseInt(document.getElementById('pollExpires').value);
                 const selectedGroupId = document.getElementById('pollGroup').value;
                 
+                console.log('Selected group ID:', selectedGroupId);
+                console.log('Selected group ID type:', typeof selectedGroupId);
+                console.log('Selected group ID length:', selectedGroupId.length);
+                
                 if (!question || !optionsText) {
                     showMessage('createPollMessage', 'Please fill in all fields.', 'error');
                     return;
@@ -4331,6 +4400,13 @@
                         group_id: selectedGroupId
                     });
                     
+                    console.log('Making API call to:', `/api/groups/${selectedGroupId}/polls`);
+                    console.log('Request body:', JSON.stringify({
+                        question: question,
+                        options: options,
+                        expires_in_hours: expiresInHours
+                    }));
+                    
                     const response = await apiCall(`/api/groups/${selectedGroupId}/polls`, {
                         method: 'POST',
                         body: JSON.stringify({
@@ -4348,6 +4424,7 @@
                 } catch (error) {
                     console.error('Error creating poll:', error);
                     console.error('Error details:', error.message);
+                    console.error('Error stack:', error.stack);
                     showMessage('createPollMessage', `Failed to create poll: ${error.message}`, 'error');
                 }
             };
@@ -4371,7 +4448,7 @@
                 
                 // Test the polls endpoint
                 try {
-                    const response = await apiCall('/api/polls', {
+                    const response = await apiCall('/api/polls/active', {
                         method: 'GET'
                     });
                     console.log('Polls loaded:', response);
@@ -4396,13 +4473,16 @@
                 
                 // Get the first available group
                 const groups = await apiCall('/api/groups');
+                console.log('Available groups for testing:', groups);
+                
                 if (!groups || groups.length === 0) {
-                    alert('No groups available for testing');
+                    alert('No groups available for testing. Please create a group first.');
                     return;
                 }
                 
                 const groupId = groups[0].id;
                 console.log('Testing with group ID:', groupId);
+                console.log('Group details:', groups[0]);
                 
                 const testData = {
                     question: 'Test Poll Question',
@@ -4425,6 +4505,7 @@
                 
             } catch (error) {
                 console.error('Test poll creation failed:', error);
+                console.error('Error details:', error.message);
                 alert(`Test poll creation failed: ${error.message}`);
             }
         }
@@ -6183,14 +6264,6 @@
                                 Chat
                             </button>
                             ${group.is_owner ? `
-                                <button class="btn btn-warning btn-sm" onclick="finalizeGroup(${group.id}, '${group.name}')">
-                                    <i class="fas fa-check"></i>
-                                    Finalize
-                                </button>
-                                <button class="btn btn-info btn-sm" onclick="downloadGroupPDF(${group.id}, '${group.name}')">
-                                    <i class="fas fa-download"></i>
-                                    PDF
-                                </button>
                                 <button class="btn btn-danger btn-sm" onclick="deleteGroup(${group.id})">
                                     <i class="fas fa-trash"></i>
                                     Delete Group
