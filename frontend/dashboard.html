@@ -2291,6 +2291,79 @@
             font-size: 0.625rem;
             color: #6b7280;
         }
+
+        /* Notification Cards Grid */
+        .notification-cards-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .notification-card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            padding: 1.5rem;
+            transition: all 0.3s ease;
+            border: 1px solid #e5e7eb;
+        }
+
+        .notification-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .notification-card-header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .notification-card-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.25rem;
+            color: white;
+            flex-shrink: 0;
+        }
+
+        .notification-card-icon.primary {
+            background: linear-gradient(135deg, #6366f1, #8b5cf6);
+        }
+
+        .notification-card-icon.success {
+            background: linear-gradient(135deg, #10b981, #059669);
+        }
+
+        .notification-card-icon.warning {
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+        }
+
+        .notification-card-icon.info {
+            background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+        }
+
+        .notification-card-content {
+            flex: 1;
+        }
+
+        .notification-card-number {
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: #1f2937;
+            margin-bottom: 0.25rem;
+        }
+
+        .notification-card-label {
+            font-size: 0.875rem;
+            color: #6b7280;
+            font-weight: 500;
+        }
     </style>
 </head>
 <body>
@@ -2414,7 +2487,7 @@
                         <div class="stat-header">
                             <div>
                                 <div class="stat-number" id="totalExpenses">$0</div>
-                                <div class="stat-label">Total Expenses</div>
+                                <div class="stat-label">Recent Trip Expenses</div>
                             </div>
                             <div class="stat-icon warning">
                                 <i class="fas fa-dollar-sign"></i>
@@ -2430,6 +2503,57 @@
                             </div>
                             <div class="stat-icon secondary">
                                 <i class="fas fa-camera"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Notification Cards Grid -->
+                <div class="notification-cards-grid">
+                    <div class="notification-card" onclick="showSection('notifications')" style="cursor: pointer;">
+                        <div class="notification-card-header">
+                            <div class="notification-card-icon primary">
+                                <i class="fas fa-bell"></i>
+                            </div>
+                            <div class="notification-card-content">
+                                <div class="notification-card-number" id="unreadNotifications">0</div>
+                                <div class="notification-card-label">Unread Notifications</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="notification-card" onclick="showSection('chat')" style="cursor: pointer;">
+                        <div class="notification-card-header">
+                            <div class="notification-card-icon success">
+                                <i class="fas fa-comments"></i>
+                            </div>
+                            <div class="notification-card-content">
+                                <div class="notification-card-number" id="chatNotifications">0</div>
+                                <div class="notification-card-label">Chat Messages</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="notification-card" onclick="showSection('polls')" style="cursor: pointer;">
+                        <div class="notification-card-header">
+                            <div class="notification-card-icon warning">
+                                <i class="fas fa-poll"></i>
+                            </div>
+                            <div class="notification-card-content">
+                                <div class="notification-card-number" id="activePollsCount">0</div>
+                                <div class="notification-card-label">Active Polls</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="notification-card" onclick="showSection('checklists')" style="cursor: pointer;">
+                        <div class="notification-card-header">
+                            <div class="notification-card-icon info">
+                                <i class="fas fa-tasks"></i>
+                            </div>
+                            <div class="notification-card-content">
+                                <div class="notification-card-number" id="pendingTasks">0</div>
+                                <div class="notification-card-label">Pending Tasks</div>
                             </div>
                         </div>
                     </div>
@@ -3802,12 +3926,50 @@
                 
                 document.getElementById('activeGroups').textContent = activeGroups;
                 document.getElementById('photosCount').textContent = totalPhotos;
+                
+                // Update notification card numbers
+                await updateNotificationCards();
+                
             } catch (error) {
                 console.error('Error updating dashboard stats:', error);
                 // Fallback to basic stats
-            document.getElementById('activeGroups').textContent = '0';
-            document.getElementById('totalExpenses').textContent = '$0';
-            document.getElementById('photosCount').textContent = '0';
+                document.getElementById('activeGroups').textContent = '0';
+                document.getElementById('totalExpenses').textContent = '$0';
+                document.getElementById('photosCount').textContent = '0';
+            }
+        }
+
+        async function updateNotificationCards() {
+            try {
+                // Update unread notifications count
+                const notifications = await apiCall('/api/notifications');
+                const unreadCount = notifications.filter(n => !n.is_read).length;
+                document.getElementById('unreadNotifications').textContent = unreadCount;
+                
+                // Update chat notifications count
+                const chatNotifications = await apiCall('/api/chat/notifications');
+                document.getElementById('chatNotifications').textContent = chatNotifications.length;
+                
+                // Update active polls count
+                const activePolls = await apiCall('/api/polls/active');
+                document.getElementById('activePollsCount').textContent = activePolls.length;
+                
+                // Update pending tasks count (checklist items)
+                const groups = await apiCall('/api/groups');
+                let pendingTasks = 0;
+                for (const group of groups) {
+                    const checklistItems = await apiCall(`/api/groups/${group.id}/checklist`);
+                    pendingTasks += checklistItems.filter(item => !item.is_completed).length;
+                }
+                document.getElementById('pendingTasks').textContent = pendingTasks;
+                
+            } catch (error) {
+                console.error('Error updating notification cards:', error);
+                // Set default values if API calls fail
+                document.getElementById('unreadNotifications').textContent = '0';
+                document.getElementById('chatNotifications').textContent = '0';
+                document.getElementById('activePollsCount').textContent = '0';
+                document.getElementById('pendingTasks').textContent = '0';
             }
         }
 
@@ -6213,6 +6375,13 @@
                         await loadChatNotifications();
                     }
                 }, 30 * 1000); // Refresh notifications every 30 seconds
+
+                // Set up periodic notification cards refresh
+                setInterval(async () => {
+                    if (document.getElementById('dashboardSection').style.display !== 'none') {
+                        await updateNotificationCards();
+                    }
+                }, 60 * 1000); // Refresh notification cards every 60 seconds
             }
         });
 
