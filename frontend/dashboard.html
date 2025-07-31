@@ -2559,75 +2559,6 @@
                     </div>
                 </div>
 
-                                <!-- Active Polls Section -->
-                <div class="card dashboard-section">
-                    <div class="card-header">
-                        <h2>
-                            <i class="fas fa-poll"></i>
-                            Active Polls
-                            <span id="pollCount" class="notification-badge" style="display: none;">0</span>
-                        </h2>
-                        <div class="header-actions">
-                            <button class="btn btn-primary btn-sm" onclick="openCreatePollModal()">
-                                <i class="fas fa-plus"></i> Create Poll
-                            </button>
-                            <button class="btn btn-secondary btn-sm" onclick="refreshActivePolls()">
-                                <i class="fas fa-sync-alt"></i> Refresh
-                            </button>
-                        </div>
-                    </div>
-                    <div class="card-body">
-                        <div id="activePollsList" class="polls-list">
-                            <div class="loading-spinner">Loading polls...</div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Notifications Section -->
-                <div class="card dashboard-section">
-                    <div class="card-header">
-                        <h2>
-                            <i class="fas fa-bell"></i>
-                            Notifications
-                            <span id="notificationCount" class="notification-badge" style="display: none;">0</span>
-                        </h2>
-                        <div class="header-actions">
-                            <button class="btn btn-secondary btn-sm" onclick="markAllNotificationsRead()">
-                                <i class="fas fa-check-double"></i> Mark All Read
-                            </button>
-                            <button class="btn btn-secondary btn-sm" onclick="refreshNotifications()">
-                                <i class="fas fa-sync-alt"></i> Refresh
-                            </button>
-                        </div>
-                    </div>
-                    <div class="card-body">
-                        <div id="notificationsList" class="notifications-list">
-                            <div class="loading-spinner">Loading notifications...</div>
-                        </div>
-                    </div>
-                </div>
-
-
-
-                <!-- Chat Notifications Section -->
-                <div class="card dashboard-section">
-                    <div class="card-header">
-                        <h2>
-                            <i class="fas fa-bell"></i>
-                            Chat Notifications
-                            <span id="notificationCount" class="notification-badge" style="display: none;">0</span>
-                        </h2>
-                        <button class="btn btn-secondary btn-sm" onclick="refreshChatNotifications()">
-                            <i class="fas fa-sync-alt"></i> Refresh
-                        </button>
-                    </div>
-                    <div class="card-body">
-                        <div id="chatNotificationsList" class="chat-notifications-list">
-                            <div class="loading-spinner">Loading notifications...</div>
-                        </div>
-                    </div>
-                </div>
-
                 <!-- My Trip Expenses Section -->
                 <div class="card dashboard-section">
                     <div class="card-header">
@@ -3458,8 +3389,6 @@
                 case 'dashboard':
                     loadDashboardData();
                     loadUserTripExpenses();
-                    loadChatNotifications();
-                    loadActivePolls();
                     break;
                 case 'trips':
                     console.log('Loading trips section...');
@@ -4582,6 +4511,23 @@
                         throw new Error('User not logged in. Please log in first.');
                     }
                     
+                    // Test backend connectivity first
+                    try {
+                        await apiCall('/api/hello');
+                        console.log('Backend connectivity confirmed');
+                    } catch (connectivityError) {
+                        throw new Error('Backend server not accessible. Please check if the server is running.');
+                    }
+                    
+                    // Test polls endpoint
+                    try {
+                        await apiCall('/api/polls/active');
+                        console.log('Polls endpoint confirmed');
+                    } catch (pollsError) {
+                        console.error('Polls endpoint error:', pollsError);
+                        throw new Error('Polls functionality not available. Please check backend configuration.');
+                    }
+                    
                     const response = await apiCall(`/api/groups/${selectedGroupId}/polls`, {
                         method: 'POST',
                         body: JSON.stringify({
@@ -4605,6 +4551,10 @@
                         showMessage('createPollMessage', 'Network error: Please check if the backend server is running on http://localhost:5000', 'error');
                     } else if (error.message.includes('not logged in')) {
                         showMessage('createPollMessage', 'Please log in first', 'error');
+                    } else if (error.message.includes('not accessible')) {
+                        showMessage('createPollMessage', 'Backend server not accessible. Please check if the server is running.', 'error');
+                    } else if (error.message.includes('not available')) {
+                        showMessage('createPollMessage', 'Polls functionality not available. Please check backend configuration.', 'error');
                     } else {
                         showMessage('createPollMessage', `Failed to create poll: ${error.message}`, 'error');
                     }
@@ -4667,6 +4617,18 @@
                 const token = localStorage.getItem('access_token');
                 if (!token) {
                     alert('Please log in first before testing poll creation.');
+                    return;
+                }
+                
+                console.log('User is logged in with token:', token.substring(0, 20) + '...');
+                
+                // Test polls endpoint
+                try {
+                    const pollsResponse = await apiCall('/api/polls/active');
+                    console.log('Polls endpoint working:', pollsResponse);
+                } catch (pollsError) {
+                    console.error('Polls endpoint error:', pollsError);
+                    alert('Polls endpoint not working. Please check backend logs.');
                     return;
                 }
                 
@@ -6369,13 +6331,6 @@
                     }
                 }, 5 * 60 * 1000); // Check every 5 minutes
                 
-                // Set up periodic chat notification refresh
-                setInterval(async () => {
-                    if (document.getElementById('dashboardSection').style.display !== 'none') {
-                        await loadChatNotifications();
-                    }
-                }, 30 * 1000); // Refresh notifications every 30 seconds
-
                 // Set up periodic notification cards refresh
                 setInterval(async () => {
                     if (document.getElementById('dashboardSection').style.display !== 'none') {
