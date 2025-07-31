@@ -4388,7 +4388,13 @@
                 }
                 
                 if (!selectedGroupId) {
-                    showMessage('createPollMessage', 'Please select a group.', 'error');
+                    showMessage('createPollMessage', 'Please select a group. If no groups are available, please create a group first in the Groups section.', 'error');
+                    return;
+                }
+                
+                // Check if the selected group ID is valid
+                if (selectedGroupId === '') {
+                    showMessage('createPollMessage', 'Please select a valid group. If no groups are available, please create a group first.', 'error');
                     return;
                 }
                 
@@ -4406,6 +4412,13 @@
                         options: options,
                         expires_in_hours: expiresInHours
                     }));
+                    
+                    // Check if user is logged in
+                    const token = localStorage.getItem('access_token');
+                    console.log('JWT Token available:', !!token);
+                    if (!token) {
+                        throw new Error('User not logged in. Please log in first.');
+                    }
                     
                     const response = await apiCall(`/api/groups/${selectedGroupId}/polls`, {
                         method: 'POST',
@@ -4425,7 +4438,14 @@
                     console.error('Error creating poll:', error);
                     console.error('Error details:', error.message);
                     console.error('Error stack:', error.stack);
-                    showMessage('createPollMessage', `Failed to create poll: ${error.message}`, 'error');
+                    
+                    if (error.message.includes('Failed to fetch')) {
+                        showMessage('createPollMessage', 'Network error: Please check if the backend server is running on http://localhost:5000', 'error');
+                    } else if (error.message.includes('not logged in')) {
+                        showMessage('createPollMessage', 'Please log in first', 'error');
+                    } else {
+                        showMessage('createPollMessage', `Failed to create poll: ${error.message}`, 'error');
+                    }
                 }
             };
         }
@@ -4471,12 +4491,29 @@
             try {
                 console.log('Testing poll creation...');
                 
+                // First test if backend is accessible
+                try {
+                    const helloResponse = await apiCall('/api/hello');
+                    console.log('Backend is accessible:', helloResponse);
+                } catch (backendError) {
+                    console.error('Backend not accessible:', backendError);
+                    alert('Backend server is not accessible. Please make sure the server is running on http://localhost:5000');
+                    return;
+                }
+                
+                // Check if user is logged in
+                const token = localStorage.getItem('access_token');
+                if (!token) {
+                    alert('Please log in first before testing poll creation.');
+                    return;
+                }
+                
                 // Get the first available group
                 const groups = await apiCall('/api/groups');
                 console.log('Available groups for testing:', groups);
                 
                 if (!groups || groups.length === 0) {
-                    alert('No groups available for testing. Please create a group first.');
+                    alert('No groups available for testing. Please create a group first in the Groups section.');
                     return;
                 }
                 
