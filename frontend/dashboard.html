@@ -2142,6 +2142,94 @@
         .member-item .remove-member:hover {
             color: #dc2626;
         }
+
+        /* Compact Dashboard Sections */
+        .dashboard-section {
+            margin-bottom: 1rem;
+        }
+
+        .dashboard-section .card {
+            padding: 0.75rem;
+            margin-bottom: 1rem;
+        }
+
+        .dashboard-section .card-header {
+            padding: 0.5rem 0.75rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .dashboard-section .card-header h2 {
+            font-size: 1rem;
+            margin: 0;
+        }
+
+        .dashboard-section .card-body {
+            padding: 0.5rem 0.75rem;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .dashboard-section .empty-state {
+            padding: 1rem;
+            text-align: center;
+        }
+
+        .dashboard-section .empty-state i {
+            font-size: 1.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .dashboard-section .empty-state h3 {
+            font-size: 0.9rem;
+            margin: 0.25rem 0;
+        }
+
+        .dashboard-section .empty-state p {
+            font-size: 0.8rem;
+            margin: 0;
+        }
+
+        /* Make dashboard cards more compact */
+        #dashboardSection .card {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+        }
+
+        #dashboardSection .card-header {
+            padding: 0.5rem 0.75rem;
+            margin-bottom: 0.5rem;
+        }
+
+        #dashboardSection .card-header h2 {
+            font-size: 1rem;
+            margin: 0;
+        }
+
+        #dashboardSection .card-body {
+            padding: 0.5rem 0.75rem;
+            max-height: 150px;
+            overflow-y: auto;
+        }
+
+        #dashboardSection .empty-state {
+            padding: 0.75rem;
+            text-align: center;
+        }
+
+        #dashboardSection .empty-state i {
+            font-size: 1.25rem;
+            margin-bottom: 0.25rem;
+        }
+
+        #dashboardSection .empty-state h3 {
+            font-size: 0.85rem;
+            margin: 0.25rem 0;
+        }
+
+        #dashboardSection .empty-state p {
+            font-size: 0.75rem;
+            margin: 0;
+        }
     </style>
 </head>
 <body>
@@ -2287,7 +2375,7 @@
                 </div>
 
                                 <!-- Active Polls Section -->
-                <div class="card">
+                <div class="card dashboard-section">
                     <div class="card-header">
                         <h2>
                             <i class="fas fa-poll"></i>
@@ -2311,7 +2399,7 @@
                 </div>
 
                 <!-- Notifications Section -->
-                <div class="card">
+                <div class="card dashboard-section">
                     <div class="card-header">
                         <h2>
                             <i class="fas fa-bell"></i>
@@ -2337,7 +2425,7 @@
 
 
                 <!-- Chat Notifications Section -->
-                <div class="card">
+                <div class="card dashboard-section">
                     <div class="card-header">
                         <h2>
                             <i class="fas fa-bell"></i>
@@ -2356,7 +2444,7 @@
                 </div>
 
                 <!-- My Trip Expenses Section -->
-                <div class="card">
+                <div class="card dashboard-section">
                     <div class="card-header">
                         <h2>
                             <i class="fas fa-wallet"></i>
@@ -3197,6 +3285,9 @@
                 case 'checklist':
                     loadChecklists();
                     break;
+                case 'polls':
+                    loadPolls();
+                    break;
                 // Add cases for other sections as needed
             }
         }
@@ -3837,11 +3928,14 @@
                 console.log('Message user_id:', message.user_id);
                 console.log('Current user id:', currentUser?.id);
                 
-                const isOwnMessage = currentUser && message.user_id === currentUser.id;
+                // Convert both to numbers for proper comparison
+                const messageUserId = parseInt(message.user_id);
+                const currentUserId = parseInt(currentUser?.id);
+                const isOwnMessage = currentUser && messageUserId === currentUserId;
                 console.log('Is own message:', isOwnMessage);
-                console.log('Message user_id type:', typeof message.user_id);
-                console.log('Current user id type:', typeof currentUser?.id);
-                console.log('User ID comparison:', message.user_id === currentUser?.id);
+                console.log('Message user_id:', messageUserId);
+                console.log('Current user id:', currentUserId);
+                console.log('User ID comparison:', messageUserId === currentUserId);
                 
                 return `
                     <div class="chat-message ${isOwnMessage ? 'own-message' : 'other-message'}">
@@ -4134,6 +4228,37 @@
             document.getElementById('createPollForm').reset();
         }
 
+        async function loadUserGroups() {
+            try {
+                const groups = await apiCall('/api/groups');
+                populatePollGroupSelector(groups);
+            } catch (error) {
+                console.error('Error loading user groups:', error);
+                showMessage('createPollMessage', 'Failed to load groups. Please try again.', 'error');
+            }
+        }
+
+        function populatePollGroupSelector(groups) {
+            const groupSelector = document.getElementById('pollGroup');
+            if (!groupSelector) return;
+            
+            // Clear existing options except the first one
+            groupSelector.innerHTML = '<option value="">Select a group...</option>';
+            
+            if (!groups || groups.length === 0) {
+                groupSelector.innerHTML = '<option value="">No groups available</option>';
+                return;
+            }
+            
+            // Add group options
+            groups.forEach(group => {
+                const option = document.createElement('option');
+                option.value = group.id;
+                option.textContent = group.name;
+                groupSelector.appendChild(option);
+            });
+        }
+
         function setupCreatePollForm() {
             const form = document.getElementById('createPollForm');
             
@@ -4143,6 +4268,7 @@
                 const question = document.getElementById('pollQuestion').value.trim();
                 const optionsText = document.getElementById('pollOptions').value.trim();
                 const expiresInHours = parseInt(document.getElementById('pollExpires').value);
+                const selectedGroupId = document.getElementById('pollGroup').value;
                 
                 if (!question || !optionsText) {
                     showMessage('createPollMessage', 'Please fill in all fields.', 'error');
@@ -4155,23 +4281,13 @@
                     return;
                 }
                 
-                // Use the first available group for now
-                if (!currentTrips || currentTrips.length === 0) {
-                    showMessage('createPollMessage', 'Please create a trip first.', 'error');
+                if (!selectedGroupId) {
+                    showMessage('createPollMessage', 'Please select a group.', 'error');
                     return;
                 }
                 
                 try {
-                    // Get the first group from the first trip
-                    const groups = await apiCall(`/api/trips/${currentTrips[0].id}/groups`);
-                    if (!groups || groups.length === 0) {
-                        showMessage('createPollMessage', 'No groups available. Please create a group first.', 'error');
-                        return;
-                    }
-                    
-                    const groupId = groups[0].id;
-                    
-                    await apiCall(`/api/groups/${groupId}/polls`, {
+                    await apiCall(`/api/groups/${selectedGroupId}/polls`, {
                         method: 'POST',
                         body: JSON.stringify({
                             question: question,
@@ -4181,7 +4297,7 @@
                     });
                     
                     showMessage('createPollMessage', 'Poll created successfully!', 'success');
-                    closeCreatePollModal();
+                    form.reset();
                     await loadActivePolls();
                     
                 } catch (error) {
@@ -4193,6 +4309,25 @@
 
         async function refreshActivePolls() {
             await loadActivePolls();
+        }
+
+        async function loadPolls() {
+            try {
+                // First load user groups to populate the selector
+                await loadUserGroups();
+                
+                const response = await apiCall('/api/polls', {
+                    method: 'GET'
+                });
+                displayActivePolls(response);
+            } catch (error) {
+                console.error('Error loading polls:', error);
+                document.getElementById('pollsList').innerHTML = '<div class="error-message">Failed to load polls</div>';
+            }
+        }
+
+        async function refreshPolls() {
+            await loadPolls();
         }
 
         // Location Check-in Functions
@@ -4609,6 +4744,42 @@
             }
         }
 
+        async function downloadTripPDF(tripId, tripName) {
+            try {
+                // Get the first group for this trip
+                const groups = await apiCall(`/api/trips/${tripId}/groups`);
+                if (!groups || groups.length === 0) {
+                    showMessage('addTripMessage', 'No groups found for this trip. Please create a group first.', 'error');
+                    return;
+                }
+                
+                const groupId = groups[0].id;
+                const response = await apiCall(`/api/groups/${groupId}/pdf`, {
+                    method: 'GET'
+                });
+                
+                // Create a download link for the PDF
+                const blob = new Blob([response], { type: 'application/pdf' });
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `${tripName}-itinerary.pdf`;
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(url);
+                document.body.removeChild(a);
+                
+                showMessage('addTripMessage', 'PDF downloaded successfully!', 'success');
+            } catch (error) {
+                console.error('Error downloading PDF:', error);
+                if (error.message && error.message.includes('503')) {
+                    showMessage('addTripMessage', 'PDF generation is not available on this server. Please contact support.', 'error');
+                } else {
+                    showMessage('addTripMessage', 'Failed to download PDF. Please try again.', 'error');
+                }
+            }
+        }
+
         // Trip Details Modal Functions
         let currentTripDetailsId = null;
 
@@ -4843,6 +5014,10 @@
                                     <button class="btn btn-success btn-sm" onclick="finalizeTrip(${trip.id})">
                                         <i class="fas fa-check"></i>
                                         Finalize
+                                    </button>
+                                    <button class="btn btn-info btn-sm" onclick="downloadTripPDF(${trip.id}, '${tripName.replace(/'/g, "\\'")}')">
+                                        <i class="fas fa-download"></i>
+                                        PDF
                                     </button>
                                     <button class="btn btn-danger btn-sm" onclick="deleteTrip(${trip.id})">
                                         <i class="fas fa-trash"></i>
@@ -5783,6 +5958,9 @@
                 
                 // Load notifications
                 await loadNotifications();
+                
+                // Set up polls form
+                setupCreatePollForm();
                 
                 // Debug current user state
                 debugCurrentUser();
