@@ -3747,24 +3747,7 @@
                     </div>
                 </div>
 
-                <!-- Weather Alerts -->
-                <div class="card">
-                    <div class="card-header">
-                        <h2><i class="fas fa-exclamation-triangle"></i> Weather Alerts</h2>
-                        <button class="btn btn-secondary btn-sm" onclick="loadWeatherAlerts()">
-                            <i class="fas fa-sync-alt"></i> Refresh
-                        </button>
-                    </div>
-                    <div class="card-body">
-                        <div id="weatherAlertsDisplay" class="weather-alerts">
-                            <div class="empty-state">
-                                <i class="fas fa-exclamation-triangle"></i>
-                                <h3>No weather alerts</h3>
-                                <p>Weather conditions look good for your trip!</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+
 
                 <!-- Packing Suggestions -->
                 <div class="card">
@@ -3888,11 +3871,11 @@
 
 
 
-                <!-- Weather Alerts -->
+
                 <div class="card">
                     <div class="card-header">
                         <h2><i class="fas fa-cloud-sun"></i> Current Weather</h2>
-                        <button class="btn btn-secondary btn-sm" onclick="loadWeatherAlerts()">
+                        <button class="btn btn-secondary btn-sm" onclick="loadWeatherData()">
                             <i class="fas fa-sync-alt"></i> Refresh
                         </button>
                     </div>
@@ -3900,12 +3883,17 @@
                         <div class="weather-input">
                             <div class="form-row">
                                 <div class="form-group">
-                                    <label for="weatherPlace">Place Name</label>
-                                    <input type="text" id="weatherPlace" placeholder="e.g., Paris, London, Tokyo">
+                                    <label for="weatherPlaceInput">Place Name</label>
+                                    <input type="text" id="weatherPlaceInput" placeholder="e.g., Paris, London, Tokyo">
+                                </div>
+                                <div class="form-group">
+                                    <button type="button" class="btn btn-primary" onclick="getWeatherForPlace()">
+                                        <i class="fas fa-cloud-sun"></i> Get Weather
+                                    </button>
                                 </div>
                             </div>
                         </div>
-                        <div id="weatherAlerts" class="weather-alerts">
+                        <div id="weatherDisplay" class="weather-display">
                             <!-- Current weather will be loaded here -->
                         </div>
                     </div>
@@ -5580,8 +5568,8 @@
                 // Load user groups for context
                 await loadUserGroups();
                 
-                // Load initial current weather
-                await loadWeatherAlerts();
+                // Load initial weather data
+                await loadWeatherData();
                 
                 // Initialize conversation ID
                 if (!currentConversationId) {
@@ -5900,99 +5888,7 @@
 
 
 
-        async function loadWeatherAlerts() {
-            try {
-                const placeName = document.getElementById('weatherPlace').value;
-                
-                if (!placeName) {
-                    document.getElementById('weatherAlerts').innerHTML = '<div class="empty-state"><i class="fas fa-cloud-sun"></i><h3>Enter place name</h3><p>Please enter a city or place name to get current weather</p></div>';
-                    return;
-                }
-                
-                const groups = await apiCall('/api/groups');
-                if (!groups || groups.length === 0) {
-                    alert('Please create a group first');
-                    return;
-                }
-                
-                const groupId = groups[0].id;
-                
-                // Get current weather by place name
-                const weatherResponse = await apiCall(`/api/groups/${groupId}/weather/place?place=${encodeURIComponent(placeName)}`);
-                
-                if (weatherResponse && weatherResponse.weather) {
-                    displayCurrentWeather(weatherResponse.weather);
-                } else {
-                    document.getElementById('weatherAlerts').innerHTML = '<div class="error-message">Failed to get weather data</div>';
-                }
-                
-            } catch (error) {
-                console.error('Error loading weather:', error);
-                document.getElementById('weatherAlerts').innerHTML = '<div class="error-message">Failed to load weather data</div>';
-            }
-        }
 
-        async function getWeatherByPlace(placeName) {
-            try {
-                const groups = await apiCall('/api/groups');
-                if (!groups || groups.length === 0) {
-                    return null;
-                }
-                
-                const groupId = groups[0].id;
-                const response = await apiCall(`/api/groups/${groupId}/weather/place?place=${encodeURIComponent(placeName)}`);
-                return response.weather;
-                
-            } catch (error) {
-                console.error('Error getting weather for place:', error);
-                return null;
-            }
-        }
-
-        function displayCurrentWeather(weather) {
-            const container = document.getElementById('weatherAlerts');
-            const weatherHtml = `
-                <div class="current-weather">
-                    <div class="weather-header">
-                        <h3><i class="fas fa-cloud-sun"></i> Current Weather in ${weather.location}</h3>
-                    </div>
-                    <div class="weather-details">
-                        <div class="weather-temp">${weather.temperature}°C (${(weather.temperature * 9/5 + 32).toFixed(1)}°F)</div>
-                        <div class="weather-desc">${weather.description}</div>
-                        <div class="weather-info">
-                            <span>Feels like: ${weather.feels_like}°C</span>
-                            <span>Humidity: ${weather.humidity}%</span>
-                            <span>Wind: ${weather.wind_speed} km/h</span>
-                        </div>
-                    </div>
-                </div>
-            `;
-            
-            // Replace the entire content with current weather
-            container.innerHTML = weatherHtml;
-        }
-
-        function displayWeatherAlerts(alerts) {
-            const container = document.getElementById('weatherAlerts');
-            
-            if (!alerts || alerts.length === 0) {
-                container.innerHTML = '<div class="empty-state"><i class="fas fa-cloud-sun"></i><h3>No weather alerts</h3><p>Weather conditions look good for your trip!</p></div>';
-                return;
-            }
-            
-            container.innerHTML = alerts.map(alert => `
-                <div class="weather-alert">
-                    <div class="weather-icon ${alert.type}">
-                        <i class="fas fa-${alert.icon}"></i>
-                    </div>
-                    <div class="weather-content">
-                        <div class="weather-alert-title">${alert.alert}</div>
-                        <div class="weather-alert-message">${alert.suggestion}</div>
-                        <div class="weather-alert-suggestion">Priority: ${alert.priority}</div>
-                    </div>
-                </div>
-            `).join('');
-        }
 
         // Weather Section Functions
         async function loadWeatherData() {
@@ -6171,52 +6067,7 @@
             container.innerHTML = packingHtml;
         }
 
-        async function loadWeatherAlerts() {
-            try {
-                const groups = await apiCall('/api/groups');
-                if (!groups || groups.length === 0) {
-                    alert('Please create a group first');
-                    return;
-                }
-                
-                const groupId = groups[0].id;
-                
-                // Get weather alerts
-                const alertsResponse = await apiCall(`/api/groups/${groupId}/ai-assistant/weather-alerts`);
-                
-                if (alertsResponse && alertsResponse.weather_alerts) {
-                    displayWeatherAlertsSection(alertsResponse.weather_alerts);
-                } else {
-                    document.getElementById('weatherAlertsDisplay').innerHTML = '<div class="empty-state"><i class="fas fa-exclamation-triangle"></i><h3>No weather alerts</h3><p>Weather conditions look good for your trip!</p></div>';
-                }
-                
-            } catch (error) {
-                console.error('Error loading weather alerts:', error);
-                document.getElementById('weatherAlertsDisplay').innerHTML = '<div class="error-message">Failed to load weather alerts</div>';
-            }
-        }
 
-                function displayWeatherAlertsSection(alerts) {
-            const container = document.getElementById('weatherAlertsDisplay');
-            
-            if (!alerts || alerts.length === 0) {
-                container.innerHTML = '<div class="empty-state"><i class="fas fa-exclamation-triangle"></i><h3>No weather alerts</h3><p>Weather conditions look good for your trip!</p></div>';
-                return;
-            }
-            
-            container.innerHTML = alerts.map(alert => `
-                <div class="weather-alert">
-                    <div class="weather-icon weather">
-                        <i class="fas fa-exclamation-triangle"></i>
-                    </div>
-                    <div class="weather-content">
-                        <div class="weather-alert-title">${alert}</div>
-                        <div class="weather-alert-message">Weather alert for your destination</div>
-                        <div class="weather-alert-suggestion">Check local weather updates</div>
-                    </div>
-                </div>
-            `).join('');
-        }
 
         // Location Check-in Functions
 
