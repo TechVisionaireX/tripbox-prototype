@@ -4039,12 +4039,7 @@
         <div class="modal-content chat-modal">
             <div class="modal-header">
                 <h3 id="modalChatGroupName">Group Chat</h3>
-                <div class="modal-actions">
-                    <button class="btn btn-secondary btn-sm" onclick="refreshChatMessages()" title="Refresh messages">
-                        <i class="fas fa-sync-alt"></i>
-                    </button>
-                    <span class="close" onclick="closeGroupChatModal()">&times;</span>
-                </div>
+                <span class="close" onclick="closeGroupChatModal()">&times;</span>
             </div>
             <div class="modal-body">
                 <div class="chat-container">
@@ -4833,35 +4828,24 @@
         // Chat Functions
         let currentChatGroupId = null;
         let chatNotifications = [];
-        let chatRefreshInterval = null;
 
         async function openGroupChat(groupId, groupName) {
             console.log('Opening group chat for:', groupId, groupName);
-            console.log('Current user:', currentUser);
-            console.log('Current user ID:', currentUser?.id);
-            
             currentChatGroupId = groupId;
             document.getElementById('modalChatGroupName').textContent = `Group Chat - ${groupName}`;
             document.getElementById('groupChatModal').style.display = 'block';
             
             await loadChatMessages(groupId);
             setupChatMessageForm(groupId);
-            
-            // Start auto-refresh for chat messages
-            startChatAutoRefresh(groupId);
         }
 
         function closeGroupChatModal() {
             document.getElementById('groupChatModal').style.display = 'none';
             currentChatGroupId = null;
-            
-            // Stop auto-refresh when closing chat
-            stopChatAutoRefresh();
         }
 
         async function loadChatMessages(groupId) {
             console.log('Loading chat messages for group:', groupId);
-            console.log('Current user for chat:', currentUser);
             try {
                 const messages = await apiCall(`/api/groups/${groupId}/chat`);
                 console.log('Loaded messages:', messages);
@@ -4880,12 +4864,9 @@
         }
 
         function displayChatMessages(messages) {
-            console.log('displayChatMessages called with:', messages);
             const container = document.getElementById('chatMessages');
-            console.log('Chat messages container:', container);
             
             if (!messages || messages.length === 0) {
-                console.log('No messages to display');
                 container.innerHTML = `
                     <div class="empty-state">
                         <i class="fas fa-comments"></i>
@@ -4896,10 +4877,9 @@
                 return;
             }
 
-            console.log('Processing', messages.length, 'messages');
-            const messagesHtml = messages.map((message, index) => {
+            const messagesHtml = messages.map(message => {
                 // Debug logging
-                console.log(`Message ${index}:`, message);
+                console.log('Message:', message);
                 console.log('Current user:', currentUser);
                 console.log('Message user_id:', message.user_id);
                 console.log('Current user id:', currentUser?.id);
@@ -4926,10 +4906,8 @@
                 `;
             }).join('');
 
-            console.log('Generated HTML length:', messagesHtml.length);
             container.innerHTML = messagesHtml;
             container.scrollTop = container.scrollHeight;
-            console.log('Chat messages displayed successfully');
         }
 
         function setupChatMessageForm(groupId) {
@@ -4943,9 +4921,6 @@
             form.onsubmit = async (e) => {
                 e.preventDefault();
                 console.log('Chat form submitted');
-                console.log('Form element:', form);
-                console.log('Input element:', input);
-                console.log('Input value:', input.value);
                 
                 const message = input.value.trim();
                 if (!message) {
@@ -4954,7 +4929,6 @@
                 }
                 
                 console.log('Sending message:', message, 'to group:', groupId);
-                console.log('Current user for sending:', currentUser);
                 
                 try {
                     console.log('Sending message to API...');
@@ -4965,16 +4939,11 @@
                     
                     console.log('Message sent successfully:', response);
                     input.value = '';
-                    
-                    // Immediately refresh chat messages to show the new message
                     await loadChatMessages(groupId);
                     
                     // Refresh notifications to show new message
                     console.log('Refreshing chat notifications...');
                     await loadChatNotifications();
-                    
-                    // Also refresh dashboard notifications
-                    await updateNotificationCards();
                     
                 } catch (error) {
                     console.error('Error sending message:', error);
@@ -4987,61 +4956,6 @@
         function formatMessageTime(timestamp) {
             const date = new Date(timestamp);
             return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-        }
-
-        // Auto-refresh functions for chat
-        function startChatAutoRefresh(groupId) {
-            console.log('Starting chat auto-refresh for group:', groupId);
-            
-            // Clear any existing interval
-            stopChatAutoRefresh();
-            
-            // Set up auto-refresh every 1.5 seconds for better real-time experience
-            chatRefreshInterval = setInterval(async () => {
-                const timestamp = new Date().toLocaleTimeString();
-                if (currentChatGroupId === groupId) {
-                    console.log(`[${timestamp}] Auto-refreshing chat messages...`);
-                    try {
-                        await loadChatMessages(groupId);
-                        // Also refresh notifications periodically
-                        if (Math.random() < 0.3) { // 30% chance to refresh notifications
-                            await loadChatNotifications();
-                            console.log(`[${timestamp}] Notifications refreshed too`);
-                        }
-                        console.log(`[${timestamp}] Auto-refresh completed successfully`);
-                    } catch (error) {
-                        console.error(`[${timestamp}] Auto-refresh error:`, error);
-                    }
-                } else {
-                    console.log(`[${timestamp}] Auto-refresh skipped - different group or chat closed`);
-                }
-            }, 1500); // Refresh every 1.5 seconds
-            
-            console.log('Auto-refresh interval set with ID:', chatRefreshInterval);
-        }
-
-        function stopChatAutoRefresh() {
-            if (chatRefreshInterval) {
-                console.log('Stopping chat auto-refresh');
-                clearInterval(chatRefreshInterval);
-                chatRefreshInterval = null;
-            }
-        }
-
-        async function refreshChatMessages() {
-            if (currentChatGroupId) {
-                console.log('Manually refreshing chat messages...');
-                await loadChatMessages(currentChatGroupId);
-            }
-        }
-
-        // Debug function to test auto-refresh
-        function testAutoRefresh() {
-            console.log('=== Auto-Refresh Debug Info ===');
-            console.log('Current chat group ID:', currentChatGroupId);
-            console.log('Chat refresh interval:', chatRefreshInterval);
-            console.log('Auto-refresh active:', chatRefreshInterval !== null);
-            console.log('==============================');
         }
 
         // Chat Notifications
