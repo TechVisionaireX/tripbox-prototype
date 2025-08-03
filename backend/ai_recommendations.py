@@ -1,10 +1,11 @@
 from flask import Blueprint, request, jsonify
 from flask_jwt_extended import jwt_required, get_jwt_identity
-from models import db, GroupMember, Recommendation
+from models import db, GroupMember, Recommendation, User, Group
 import requests
 import os
 from datetime import datetime, timedelta
 import json
+import random
 
 ai_recommendations_bp = Blueprint('ai_recommendations_bp', __name__)
 
@@ -16,6 +17,302 @@ OPENAI_API_KEY = os.environ.get('OPENAI_API_KEY', 'your-openai-api-key')
 conversation_history = {}
 user_preferences = {}
 conversation_context = {}
+
+# Restaurant recommendations by destination
+restaurant_recommendations = {
+    'london': {
+        'fine_dining': [
+            'The Ritz London - Classic British luxury dining',
+            'Sketch - Michelin-starred modern British cuisine',
+            'The Ivy - Iconic British restaurant',
+            'Hawksmoor - Premium steakhouse',
+            'Dishoom - Modern Indian cuisine'
+        ],
+        'casual': [
+            'Borough Market - Famous food market',
+            'Camden Market - Street food paradise',
+            'Dishoom - Popular Indian restaurant',
+            'Franco Manca - Artisan pizza',
+            'Honest Burgers - Quality burgers'
+        ],
+        'local_favorites': [
+            'The Clove Club - Modern British fine dining',
+            'Gymkhana - Colonial Indian cuisine',
+            'The Ledbury - Two Michelin stars',
+            'Barrafina - Spanish tapas',
+            'Hoppers - Sri Lankan street food'
+        ]
+    },
+    'paris': {
+        'fine_dining': [
+            'Le Jules Verne - Eiffel Tower restaurant',
+            'L\'Astrance - Three Michelin stars',
+            'Le Comptoir du Relais - Bistro excellence',
+            'Septime - Modern French cuisine',
+            'L\'Arpège - Three Michelin stars'
+        ],
+        'casual': [
+            'L\'As du Fallafel - Famous falafel',
+            'Breizh Café - Authentic crêpes',
+            'Du Pain et des Idées - Artisan bakery',
+            'Le Chateaubriand - Modern bistro',
+            'Frenchie - Contemporary French'
+        ],
+        'local_favorites': [
+            'Le Petit Prince - Traditional bistro',
+            'Chez L\'Ami Louis - Classic French',
+            'L\'Ami Louis - Historic bistro',
+            'Le Comptoir du Relais - Popular spot',
+            'Frenchie - Modern French cuisine'
+        ]
+    },
+    'tokyo': {
+        'fine_dining': [
+            'Sukiyabashi Jiro - Legendary sushi',
+            'Narisawa - Modern Japanese cuisine',
+            'Sukiyabashi Jiro Honten - Master sushi',
+            'Kozasa - Traditional kaiseki',
+            'Sukiyabashi Jiro - World-famous sushi'
+        ],
+        'casual': [
+            'Ichiran Ramen - Famous ramen chain',
+            'Tsukiji Outer Market - Fresh seafood',
+            'Sukiyabashi Jiro - Sushi excellence',
+            'Ichiran - Popular ramen',
+            'Tsukiji Market - Fresh fish'
+        ],
+        'local_favorites': [
+            'Sukiyabashi Jiro - Master sushi chef',
+            'Ichiran Ramen - Tonkotsu ramen',
+            'Tsukiji Outer Market - Fresh sushi',
+            'Sukiyabashi Jiro - Omakase experience',
+            'Ichiran - Famous ramen'
+        ]
+    },
+    'new york': {
+        'fine_dining': [
+            'Le Bernardin - Four-star seafood',
+            'Eleven Madison Park - Three Michelin stars',
+            'Per Se - Thomas Keller\'s restaurant',
+            'Daniel - French fine dining',
+            'Gramercy Tavern - Danny Meyer\'s restaurant'
+        ],
+        'casual': [
+            'Katz\'s Delicatessen - Famous pastrami',
+            'Joe\'s Pizza - Classic NYC pizza',
+            'Russ & Daughters - Jewish deli',
+            'Shake Shack - Modern burger chain',
+            'Magnolia Bakery - Famous cupcakes'
+        ],
+        'local_favorites': [
+            'Katz\'s Delicatessen - Pastrami sandwich',
+            'Joe\'s Pizza - NYC pizza',
+            'Russ & Daughters - Bagels and lox',
+            'Shake Shack - Quality burgers',
+            'Magnolia Bakery - Cupcakes'
+        ]
+    },
+    'rome': {
+        'fine_dining': [
+            'La Pergola - Three Michelin stars',
+            'Imàgo - Rooftop dining',
+            'Aroma - Michelin-starred',
+            'La Pergola - Fine dining',
+            'Imàgo - Luxury dining'
+        ],
+        'casual': [
+            'Roscioli - Famous deli and restaurant',
+            'Pizzarium - Gourmet pizza by the slice',
+            'Trapizzino - Roman street food',
+            'Supplizio - Traditional supplì',
+            'Bonci Pizzarium - Artisan pizza'
+        ],
+        'local_favorites': [
+            'Roscioli - Traditional Roman',
+            'Pizzarium - Pizza al taglio',
+            'Trapizzino - Roman street food',
+            'Supplizio - Roman supplì',
+            'Bonci Pizzarium - Pizza'
+        ]
+    },
+    'dubai': {
+        'fine_dining': [
+            'At.mosphere - Burj Khalifa restaurant',
+            'Zuma - Japanese izakaya',
+            'Nobu - Japanese-Peruvian fusion',
+            'Pierchic - Overwater dining',
+            'Al Mahara - Underwater restaurant'
+        ],
+        'casual': [
+            'Ravi Restaurant - Pakistani cuisine',
+            'Al Ustad Special Kabab - Persian kebabs',
+            'Al Mallah - Lebanese street food',
+            'Al Reef Lebanese Bakery - Fresh bread',
+            'Al Qasr - Traditional Emirati'
+        ],
+        'local_favorites': [
+            'Ravi Restaurant - Pakistani food',
+            'Al Ustad Special Kabab - Persian',
+            'Al Mallah - Lebanese',
+            'Al Reef Lebanese Bakery - Bread',
+            'Al Qasr - Emirati cuisine'
+        ]
+    }
+}
+
+# Attraction recommendations by destination
+attraction_recommendations = {
+    'london': {
+        'landmarks': [
+            'Big Ben and Houses of Parliament',
+            'Tower of London - Historic castle',
+            'Buckingham Palace - Royal residence',
+            'London Eye - Giant observation wheel',
+            'Tower Bridge - Iconic bridge'
+        ],
+        'museums': [
+            'British Museum - World-famous artifacts',
+            'Natural History Museum - Dinosaur exhibits',
+            'Tate Modern - Contemporary art',
+            'Victoria and Albert Museum - Art and design',
+            'Science Museum - Interactive exhibits'
+        ],
+        'parks': [
+            'Hyde Park - Large royal park',
+            'Regent\'s Park - Beautiful gardens',
+            'Greenwich Park - Royal Observatory',
+            'Kew Gardens - Botanical gardens',
+            'St James\'s Park - Royal park'
+        ],
+        'shopping': [
+            'Oxford Street - Major shopping street',
+            'Carnaby Street - Fashion district',
+            'Covent Garden - Market and entertainment',
+            'Camden Market - Alternative shopping',
+            'Portobello Road - Antiques market'
+        ]
+    },
+    'paris': {
+        'landmarks': [
+            'Eiffel Tower - Iconic iron tower',
+            'Arc de Triomphe - Historic monument',
+            'Notre-Dame Cathedral - Gothic church',
+            'Sacré-Cœur - White basilica',
+            'Palace of Versailles - Royal palace'
+        ],
+        'museums': [
+            'Louvre Museum - World\'s largest art museum',
+            'Musée d\'Orsay - Impressionist art',
+            'Centre Pompidou - Modern art',
+            'Musée Rodin - Sculpture garden',
+            'Musée de l\'Orangerie - Water lilies'
+        ],
+        'parks': [
+            'Luxembourg Gardens - Beautiful park',
+            'Tuileries Garden - Formal gardens',
+            'Parc des Buttes-Chaumont - Romantic park',
+            'Bois de Vincennes - Large forest',
+            'Parc Monceau - Elegant park'
+        ],
+        'shopping': [
+            'Champs-Élysées - Famous avenue',
+            'Le Marais - Trendy district',
+            'Rue du Commerce - Local shopping',
+            'Galeries Lafayette - Department store',
+            'Rue de Rivoli - Shopping street'
+        ]
+    },
+    'tokyo': {
+        'landmarks': [
+            'Tokyo Skytree - Tallest tower',
+            'Tokyo Tower - Iconic red tower',
+            'Senso-ji Temple - Ancient temple',
+            'Meiji Shrine - Shinto shrine',
+            'Imperial Palace - Emperor\'s residence'
+        ],
+        'museums': [
+            'Tokyo National Museum - Japanese art',
+            'Mori Art Museum - Contemporary art',
+            'Ghibli Museum - Animation museum',
+            'Edo-Tokyo Museum - History museum',
+            'National Museum of Western Art'
+        ],
+        'parks': [
+            'Ueno Park - Cherry blossoms',
+            'Yoyogi Park - Popular park',
+            'Shinjuku Gyoen - Beautiful garden',
+            'Hamarikyu Gardens - Traditional garden',
+            'Rikugien Garden - Stroll garden'
+        ],
+        'shopping': [
+            'Shibuya Crossing - Famous intersection',
+            'Harajuku - Youth fashion district',
+            'Ginza - Luxury shopping',
+            'Akihabara - Electronics district',
+            'Asakusa - Traditional district'
+        ]
+    },
+    'new york': {
+        'landmarks': [
+            'Statue of Liberty - Iconic monument',
+            'Empire State Building - Famous skyscraper',
+            'Times Square - Bright lights',
+            'Brooklyn Bridge - Historic bridge',
+            'Central Park - Urban oasis'
+        ],
+        'museums': [
+            'Metropolitan Museum of Art - World-class art',
+            'Museum of Modern Art (MoMA) - Modern art',
+            'American Museum of Natural History - Dinosaurs',
+            'Guggenheim Museum - Modern architecture',
+            'Whitney Museum - American art'
+        ],
+        'parks': [
+            'Central Park - 843-acre park',
+            'High Line - Elevated park',
+            'Bryant Park - Midtown oasis',
+            'Prospect Park - Brooklyn\'s park',
+            'Washington Square Park - Greenwich Village'
+        ],
+        'shopping': [
+            'Fifth Avenue - Luxury shopping',
+            'SoHo - Fashion district',
+            'Brooklyn Flea - Vintage market',
+            'Chelsea Market - Food and shopping',
+            'Williamsburg - Hipster district'
+        ]
+    },
+    'rome': {
+        'landmarks': [
+            'Colosseum - Ancient amphitheater',
+            'Vatican City - Smallest country',
+            'Trevi Fountain - Baroque fountain',
+            'Pantheon - Ancient temple',
+            'Roman Forum - Ancient ruins'
+        ],
+        'museums': [
+            'Vatican Museums - Art collection',
+            'Capitoline Museums - Ancient art',
+            'Galleria Borghese - Art gallery',
+            'MAXXI - Modern art',
+            'Palazzo Barberini - Baroque art'
+        ],
+        'parks': [
+            'Villa Borghese - Large park',
+            'Villa Doria Pamphili - Public park',
+            'Gianicolo Hill - Panoramic views',
+            'Villa Ada - Natural park',
+            'Pincian Hill - Historic park'
+        ],
+        'shopping': [
+            'Via del Corso - Main shopping street',
+            'Via Condotti - Luxury shopping',
+            'Campo de\' Fiori - Market square',
+            'Trastevere - Bohemian district',
+            'Via del Governo Vecchio - Vintage shops'
+        ]
+    }
+}
 
 @ai_recommendations_bp.route('/api/groups/<int:group_id>/ai-recommendations', methods=['POST'])
 @jwt_required()
@@ -186,6 +483,139 @@ def generate_ai_suggestions(preferences, budget, duration, location):
     
     return suggestions
 
+def generate_smart_suggestions(destination, dates, interests, budget, group_size):
+    """Generate smart suggestions based on destination and preferences"""
+    destination_lower = destination.lower() if destination else ''
+    
+    suggestions = {
+        'restaurants': [],
+        'attractions': [],
+        'activities': [],
+        'tips': []
+    }
+    
+    # Restaurant suggestions
+    if destination_lower in restaurant_recommendations:
+        if budget == 'low':
+            suggestions['restaurants'].extend(restaurant_recommendations[destination_lower]['casual'][:3])
+        elif budget == 'high':
+            suggestions['restaurants'].extend(restaurant_recommendations[destination_lower]['fine_dining'][:3])
+        else:
+            suggestions['restaurants'].extend(restaurant_recommendations[destination_lower]['local_favorites'][:3])
+    
+    # Attraction suggestions
+    if destination_lower in attraction_recommendations:
+        if 'culture' in interests or 'history' in interests:
+            suggestions['attractions'].extend(attraction_recommendations[destination_lower]['museums'][:3])
+        if 'nature' in interests or 'outdoors' in interests:
+            suggestions['attractions'].extend(attraction_recommendations[destination_lower]['parks'][:3])
+        if 'shopping' in interests:
+            suggestions['attractions'].extend(attraction_recommendations[destination_lower]['shopping'][:3])
+        if not suggestions['attractions']:
+            suggestions['attractions'].extend(attraction_recommendations[destination_lower]['landmarks'][:3])
+    
+    # Activity suggestions based on group size
+    if group_size <= 2:
+        suggestions['activities'].extend([
+            'Private guided tours',
+            'Romantic dinner experiences',
+            'Couple spa treatments',
+            'Private photography sessions',
+            'Intimate cultural workshops'
+        ])
+    elif group_size <= 5:
+        suggestions['activities'].extend([
+            'Group cooking classes',
+            'Team building activities',
+            'Group adventure tours',
+            'Shared accommodation experiences',
+            'Group dining experiences'
+        ])
+    else:
+        suggestions['activities'].extend([
+            'Large group tours',
+            'Corporate team activities',
+            'Group transportation services',
+            'Bulk booking discounts',
+            'Group event planning'
+        ])
+    
+    # General tips
+    suggestions['tips'].extend([
+        f'Best time to visit {destination}: Check local weather and peak seasons',
+        'Book attractions in advance to avoid queues',
+        'Download offline maps for navigation',
+        'Learn basic local phrases for better experience',
+        'Check local customs and dress codes'
+    ])
+    
+    return suggestions
+
+def generate_smart_reminders(trip_context):
+    """Generate smart reminders for the trip"""
+    reminders = []
+    
+    destination = trip_context.get('destination', '')
+    dates = trip_context.get('dates', {})
+    
+    if destination:
+        reminders.append(f'Research visa requirements for {destination}')
+        reminders.append(f'Check vaccination requirements for {destination}')
+        reminders.append(f'Download offline maps for {destination}')
+    
+    if dates.get('start'):
+        reminders.append(f'Book accommodation for {dates["start"]}')
+        reminders.append('Arrange airport transfers')
+        reminders.append('Confirm flight details')
+    
+    reminders.extend([
+        'Pack essential documents (passport, visa, tickets)',
+        'Set up travel insurance',
+        'Notify bank of international travel',
+        'Download important apps (maps, translation, transport)',
+        'Check local weather forecast',
+        'Research local emergency numbers'
+    ])
+    
+    return reminders
+
+def generate_weather_alerts(latitude, longitude, trip_dates):
+    """Generate weather alerts and packing suggestions"""
+    alerts = []
+    
+    # Simulated weather data
+    weather_conditions = ['sunny', 'rainy', 'cloudy', 'snowy', 'stormy']
+    current_weather = random.choice(weather_conditions)
+    
+    alerts.append(f'Current weather: {current_weather}')
+    
+    if current_weather == 'rainy':
+        alerts.extend([
+            'Pack waterproof clothing and umbrella',
+            'Consider indoor activities as backup',
+            'Check for weather-related attraction closures'
+        ])
+    elif current_weather == 'sunny':
+        alerts.extend([
+            'Pack sunscreen and hat',
+            'Stay hydrated during outdoor activities',
+            'Consider early morning or evening activities'
+        ])
+    elif current_weather == 'snowy':
+        alerts.extend([
+            'Pack warm clothing and boots',
+            'Check for snow-related transport delays',
+            'Consider indoor cultural activities'
+        ])
+    
+    alerts.extend([
+        'Check weather forecast for trip dates',
+        'Pack appropriate clothing for local climate',
+        'Consider weather-dependent activity alternatives'
+    ])
+    
+    return alerts
+
 @ai_recommendations_bp.route('/api/groups/<int:group_id>/ai-assistant/chat', methods=['POST'])
 @jwt_required()
 def ai_assistant_chat(group_id):
@@ -193,23 +623,40 @@ def ai_assistant_chat(group_id):
     user_id = int(get_jwt_identity())
     data = request.get_json()
     
+    print(f"AI Chat Request - User: {user_id}, Group: {group_id}")
+    print(f"Request data: {data}")
+    
     # Verify user is part of the group
     member = GroupMember.query.filter_by(group_id=group_id, user_id=user_id).first()
     if not member:
+        print(f"User {user_id} is not a member of group {group_id}")
         return jsonify({'error': 'You are not a member of this group'}), 403
+    
+    print(f"User {user_id} is a member of group {group_id}")
     
     user_message = data.get('message', '')
     trip_context = data.get('trip_context', {})
-    conversation_id = data.get('conversation_id') # Get conversation_id from request
+    conversation_id = data.get('conversation_id')
     
-    # Generate AI response based on message type
-    ai_response = generate_ai_response(user_message, trip_context, conversation_id)
+    print(f"User message: {user_message}")
+    print(f"Trip context: {trip_context}")
+    print(f"Conversation ID: {conversation_id}")
     
-    return jsonify({
-        'response': ai_response,
-        'message_type': 'ai_assistant',
-        'timestamp': datetime.now().isoformat()
-    })
+    try:
+        # Generate AI response based on message type
+        ai_response = generate_ai_response(user_message, trip_context, conversation_id)
+        print(f"AI response generated: {ai_response}")
+        
+        return jsonify({
+            'response': ai_response,
+            'message_type': 'ai_assistant',
+            'timestamp': datetime.now().isoformat()
+        })
+    except Exception as e:
+        print(f"Error generating AI response: {e}")
+        import traceback
+        print(f"Error traceback: {traceback.format_exc()}")
+        return jsonify({'error': f'Failed to generate AI response: {str(e)}'}), 500
 
 @ai_recommendations_bp.route('/api/groups/<int:group_id>/ai-assistant/suggestions', methods=['POST'])
 @jwt_required()

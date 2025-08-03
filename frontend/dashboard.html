@@ -5396,13 +5396,14 @@
             
             try {
                 // Get current group context
+                console.log('Fetching groups...');
                 const groups = await apiCall('/api/groups');
                 console.log('Groups found:', groups);
                 
                 if (!groups || groups.length === 0) {
                     hideTypingIndicator();
                     isTyping = false;
-                    addAiMessage('Please create a group first to use the AI assistant.', 'assistant');
+                    addAiMessage('Please create a group first to use the AI assistant. You need to be a member of a group to chat with me!', 'assistant');
                     return;
                 }
                 
@@ -5410,6 +5411,7 @@
                 console.log('Using group ID:', groupId);
                 
                 // Get trip context if available
+                console.log('Fetching trips...');
                 const trips = await apiCall('/api/trips');
                 console.log('Trips found:', trips);
                 
@@ -5423,6 +5425,7 @@
                 } : {};
                 
                 console.log('Trip context:', tripContext);
+                console.log('Sending request to AI chat endpoint...');
                 
                 const response = await apiCall(`/api/groups/${groupId}/ai-assistant/chat`, {
                     method: 'POST',
@@ -5441,14 +5444,27 @@
                 if (response && response.response) {
                     addAiMessage(response.response.content, 'assistant', response.response.suggestions);
                 } else {
+                    console.error('Invalid AI response format:', response);
                     addAiMessage('Sorry, I encountered an error. Please try again.', 'assistant');
                 }
                 
             } catch (error) {
                 console.error('Error sending AI message:', error);
+                console.error('Error details:', error.message);
+                console.error('Error stack:', error.stack);
                 hideTypingIndicator();
                 isTyping = false;
-                addAiMessage('Sorry, I encountered an error. Please try again.', 'assistant');
+                
+                // Provide more specific error messages
+                if (error.message.includes('Failed to fetch')) {
+                    addAiMessage('Network error: Please check your connection and try again.', 'assistant');
+                } else if (error.message.includes('403')) {
+                    addAiMessage('Access denied: You are not a member of this group.', 'assistant');
+                } else if (error.message.includes('404')) {
+                    addAiMessage('Group not found: Please check your group membership.', 'assistant');
+                } else {
+                    addAiMessage('Sorry, I encountered an error. Please try again.', 'assistant');
+                }
             }
         }
 
