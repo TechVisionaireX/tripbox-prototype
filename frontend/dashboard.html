@@ -3551,7 +3551,7 @@
                 <!-- Weather Alerts -->
                 <div class="card">
                     <div class="card-header">
-                        <h2><i class="fas fa-cloud-sun"></i> Weather Alerts</h2>
+                        <h2><i class="fas fa-cloud-sun"></i> Current Weather</h2>
                         <button class="btn btn-secondary btn-sm" onclick="loadWeatherAlerts()">
                             <i class="fas fa-sync-alt"></i> Refresh
                         </button>
@@ -3566,7 +3566,7 @@
                             </div>
                         </div>
                         <div id="weatherAlerts" class="weather-alerts">
-                            <!-- Weather alerts will be loaded here -->
+                            <!-- Current weather will be loaded here -->
                         </div>
                     </div>
                 </div>
@@ -5123,7 +5123,7 @@
                 // Load user groups for context
                 await loadUserGroups();
                 
-                // Load initial reminders and weather alerts
+                // Load initial reminders and current weather
                 await loadSmartReminders();
                 await loadWeatherAlerts();
                 
@@ -5367,7 +5367,7 @@
                 const placeName = document.getElementById('weatherPlace').value;
                 
                 if (!placeName) {
-                    document.getElementById('weatherAlerts').innerHTML = '<div class="empty-state"><i class="fas fa-cloud-sun"></i><h3>Enter place name</h3><p>Please enter a city or place name to get weather alerts</p></div>';
+                    document.getElementById('weatherAlerts').innerHTML = '<div class="empty-state"><i class="fas fa-cloud-sun"></i><h3>Enter place name</h3><p>Please enter a city or place name to get current weather</p></div>';
                     return;
                 }
                 
@@ -5379,20 +5379,18 @@
                 
                 const groupId = groups[0].id;
                 
-                // Get weather by place name
+                // Get current weather by place name
                 const weatherResponse = await apiCall(`/api/groups/${groupId}/weather/place?place=${encodeURIComponent(placeName)}`);
                 
                 if (weatherResponse && weatherResponse.weather) {
                     displayCurrentWeather(weatherResponse.weather);
+                } else {
+                    document.getElementById('weatherAlerts').innerHTML = '<div class="error-message">Failed to get weather data</div>';
                 }
                 
-                // Get weather alerts
-                const response = await apiCall(`/api/groups/${groupId}/ai-assistant/weather-alerts?lat=0&lng=0`);
-                displayWeatherAlerts(response.weather_alerts);
-                
             } catch (error) {
-                console.error('Error loading weather alerts:', error);
-                document.getElementById('weatherAlerts').innerHTML = '<div class="error-message">Failed to load weather alerts</div>';
+                console.error('Error loading weather:', error);
+                document.getElementById('weatherAlerts').innerHTML = '<div class="error-message">Failed to load weather data</div>';
             }
         }
 
@@ -5432,8 +5430,8 @@
                 </div>
             `;
             
-            // Insert weather info at the top
-            container.innerHTML = weatherHtml + container.innerHTML;
+            // Replace the entire content with current weather
+            container.innerHTML = weatherHtml;
         }
 
         function displayWeatherAlerts(alerts) {
