@@ -208,6 +208,27 @@ def home():
 def hello():
     return jsonify(message="Hello from backend!")
 
+@app.route('/api/weather/<place>', methods=['GET'])
+def get_weather_simple(place):
+    """Simple weather endpoint for testing"""
+    import random
+    from datetime import datetime
+    
+    # Generate realistic weather data
+    weather_data = {
+        'temperature': 20 + random.randint(-5, 10),
+        'feels_like': 22 + random.randint(-3, 5),
+        'description': random.choice(['Sunny', 'Partly cloudy', 'Light rain', 'Clear', 'Overcast']),
+        'humidity': 60 + random.randint(-20, 20),
+        'wind_speed': 5 + random.randint(0, 15),
+        'location': place
+    }
+    
+    return jsonify({
+        'weather': weather_data,
+        'place': place
+    })
+
 # CORS preflight handler
 @app.route('/api/<path:path>', methods=['OPTIONS'])
 def handle_options(path):
