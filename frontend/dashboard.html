@@ -4996,13 +4996,28 @@
             // Clear any existing interval
             stopChatAutoRefresh();
             
-            // Set up auto-refresh every 3 seconds
+            // Set up auto-refresh every 1.5 seconds for better real-time experience
             chatRefreshInterval = setInterval(async () => {
+                const timestamp = new Date().toLocaleTimeString();
                 if (currentChatGroupId === groupId) {
-                    console.log('Auto-refreshing chat messages...');
-                    await loadChatMessages(groupId);
+                    console.log(`[${timestamp}] Auto-refreshing chat messages...`);
+                    try {
+                        await loadChatMessages(groupId);
+                        // Also refresh notifications periodically
+                        if (Math.random() < 0.3) { // 30% chance to refresh notifications
+                            await loadChatNotifications();
+                            console.log(`[${timestamp}] Notifications refreshed too`);
+                        }
+                        console.log(`[${timestamp}] Auto-refresh completed successfully`);
+                    } catch (error) {
+                        console.error(`[${timestamp}] Auto-refresh error:`, error);
+                    }
+                } else {
+                    console.log(`[${timestamp}] Auto-refresh skipped - different group or chat closed`);
                 }
-            }, 3000); // Refresh every 3 seconds
+            }, 1500); // Refresh every 1.5 seconds
+            
+            console.log('Auto-refresh interval set with ID:', chatRefreshInterval);
         }
 
         function stopChatAutoRefresh() {
@@ -5018,6 +5033,15 @@
                 console.log('Manually refreshing chat messages...');
                 await loadChatMessages(currentChatGroupId);
             }
+        }
+
+        // Debug function to test auto-refresh
+        function testAutoRefresh() {
+            console.log('=== Auto-Refresh Debug Info ===');
+            console.log('Current chat group ID:', currentChatGroupId);
+            console.log('Chat refresh interval:', chatRefreshInterval);
+            console.log('Auto-refresh active:', chatRefreshInterval !== null);
+            console.log('==============================');
         }
 
         // Chat Notifications
