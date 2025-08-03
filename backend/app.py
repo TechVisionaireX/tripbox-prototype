@@ -167,7 +167,16 @@ app.register_blueprint(checklist_bp)
 app.register_blueprint(budget_bp)
 app.register_blueprint(finalize_bp)
 app.register_blueprint(location_bp)  #  NEW
-app.register_blueprint(ai_recommendations_bp)  # AI Recommendations
+
+# Conditionally register AI recommendations blueprint if available
+try:
+    if 'ai_recommendations_bp' in globals():
+        app.register_blueprint(ai_recommendations_bp)
+        print("✅ AI Recommendations blueprint registered successfully")
+    else:
+        print("⚠️ AI Recommendations blueprint not available - skipping registration")
+except Exception as e:
+    print(f"⚠️ Error registering AI Recommendations blueprint: {e}")
 # Temporarily disabled new blueprints for deployment fix
 # app.register_blueprint(live_location_bp)  # Live Location Tracking
 # app.register_blueprint(pdf_generator_bp)  # PDF Generation
