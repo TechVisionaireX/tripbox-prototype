@@ -12,8 +12,10 @@ ai_recommendations_bp = Blueprint('ai_recommendations_bp', __name__)
 GOOGLE_PLACES_API_KEY = os.environ.get('GOOGLE_PLACES_API_KEY', 'your-google-places-api-key')
 OPENAI_API_KEY = os.environ.get('OPENAI_API_KEY', 'your-openai-api-key')
 
-# Add conversation memory at the top of the file
+# Add conversation memory and advanced features at the top of the file
 conversation_history = {}
+user_preferences = {}
+conversation_context = {}
 
 @ai_recommendations_bp.route('/api/groups/<int:group_id>/ai-recommendations', methods=['POST'])
 @jwt_required()
@@ -279,89 +281,45 @@ def get_weather_alerts(group_id):
     })
 
 def generate_ai_response(user_message, trip_context, conversation_id=None):
-    """Generate AI response based on user message and trip context with conversation memory"""
+    """Generate sophisticated AI response with advanced conversation capabilities"""
     message_lower = user_message.lower()
     
     # Initialize conversation history if not exists
     if conversation_id and conversation_id not in conversation_history:
         conversation_history[conversation_id] = []
+        user_preferences[conversation_id] = {}
+        conversation_context[conversation_id] = {
+            'current_topic': None,
+            'last_question': None,
+            'user_style': 'casual',
+            'interaction_count': 0
+        }
     
-    # Add user message to history
+    # Update conversation context
     if conversation_id:
+        conversation_context[conversation_id]['interaction_count'] += 1
         conversation_history[conversation_id].append({
             'role': 'user',
             'content': user_message,
             'timestamp': datetime.now().isoformat()
         })
     
-    # Extract destination from message or trip context
-    destination = trip_context.get('destination', '')
-    if not destination:
-        # Try to extract destination from the message
-        for word in message_lower.split():
-            if any(city in word for city in ['paris', 'london', 'tokyo', 'new york', 'los angeles', 'rome', 'dubai', 'mumbai', 'sydney', 'singapore', 'bangkok', 'seoul', 'beijing']):
-                destination = word
-                break
+    # Extract destination and context
+    destination = extract_destination_from_message(user_message, trip_context)
+    user_intent = analyze_user_intent(user_message)
+    user_style = detect_user_style(user_message)
     
-    # Check for conversation context and greetings
-    if any(word in message_lower for word in ['hello', 'hi', 'hey', 'good morning', 'good afternoon', 'good evening']):
-        return generate_greeting_response(user_message, trip_context, conversation_id)
-    elif any(word in message_lower for word in ['thank', 'thanks', 'appreciate']):
-        return generate_thanks_response(user_message, trip_context, conversation_id)
-    elif any(word in message_lower for word in ['bye', 'goodbye', 'see you', 'end']):
-        return generate_farewell_response(user_message, trip_context, conversation_id)
-    elif any(word in message_lower for word in ['help', 'what can you do', 'capabilities', 'assist']):
-        return generate_help_response(user_message, trip_context, conversation_id)
-    elif any(word in message_lower for word in ['weather', 'forecast', 'temperature', 'rain', 'sunny', 'hot', 'cold', 'climate']):
-        return generate_weather_response(user_message, trip_context)
-    elif any(word in message_lower for word in ['budget', 'cost', 'money', 'expensive', 'cheap', 'price', 'save', 'spend', 'dollar', 'euro', 'currency']):
-        return generate_budget_suggestion(user_message, trip_context)
-    elif any(word in message_lower for word in ['food', 'restaurant', 'eat', 'dining', 'cuisine', 'meal', 'dish', 'local', 'hungry', 'lunch', 'dinner', 'breakfast']):
-        return generate_food_suggestion(user_message, trip_context)
-    elif any(word in message_lower for word in ['activity', 'things to do', 'attraction', 'visit', 'see', 'tour', 'place', 'sight', 'fun', 'entertainment', 'adventure']):
-        return generate_activity_suggestion(user_message, trip_context)
-    elif any(word in message_lower for word in ['plan', 'itinerary', 'schedule', 'day', 'trip', 'organize', 'arrange']):
-        return generate_trip_plan_suggestion(user_message, trip_context)
-    elif any(word in message_lower for word in ['remind', 'forget', 'checklist', 'pack', 'prepare', 'need', 'bring', 'carry']):
-        return generate_reminder_response(user_message, trip_context)
-    elif any(word in message_lower for word in ['hotel', 'accommodation', 'stay', 'sleep', 'room', 'booking']):
-        return generate_accommodation_suggestion(user_message, trip_context)
-    elif any(word in message_lower for word in ['transport', 'transportation', 'travel', 'bus', 'train', 'metro', 'subway', 'taxi']):
-        return generate_transport_suggestion(user_message, trip_context)
-    elif any(word in message_lower for word in ['shopping', 'buy', 'shop', 'market', 'mall', 'store']):
-        return generate_shopping_suggestion(user_message, trip_context)
-    elif any(word in message_lower for word in ['safety', 'safe', 'danger', 'crime', 'security']):
-        return generate_safety_suggestion(user_message, trip_context)
-    else:
-        # For any other message, try to provide a helpful response
-        return generate_contextual_response(user_message, trip_context, conversation_id)
-
-def generate_greeting_response(message, trip_context, conversation_id=None):
-    """Generate a personalized greeting response"""
-    import random
+    # Update user preferences
+    if conversation_id:
+        user_preferences[conversation_id].update({
+            'style': user_style,
+            'last_destination': destination,
+            'preferred_topics': user_preferences[conversation_id].get('preferred_topics', [])
+        })
+        conversation_context[conversation_id]['user_style'] = user_style
     
-    greetings = [
-        "Hello! I'm your AI travel assistant. How can I help you plan your trip today?",
-        "Hi there! I'm here to help make your travel planning easier. What would you like to know?",
-        "Hey! Welcome to your personal travel assistant. I can help with weather, activities, planning, and more!",
-        "Good to see you! I'm ready to help you with anything travel-related. What's on your mind?"
-    ]
-    
-    # Check if this is a returning user
-    if conversation_id and conversation_history.get(conversation_id, []):
-        greetings = [
-            "Welcome back! How can I continue helping you with your trip?",
-            "Great to see you again! What would you like to work on today?",
-            "Hello again! I'm here to help you further with your travel plans."
-        ]
-    
-    greeting = random.choice(greetings)
-    
-    response = {
-        'type': 'greeting',
-        'content': f"{greeting}\n\nI can help you with:\n• **Weather information** and packing suggestions\n• **Activity recommendations** and attractions\n• **Budget planning** and cost estimates\n• **Trip planning** and itineraries\n• **Accommodation** and transportation options\n• **Local cuisine** and restaurant suggestions\n• **Safety tips** and travel advice\n\nWhat would you like to explore?",
-        'suggestions': ['Check weather', 'Plan activities', 'Budget advice', 'Find restaurants', 'Safety tips']
-    }
+    # Generate sophisticated response based on intent and context
+    response = generate_sophisticated_response(user_message, user_intent, destination, trip_context, conversation_id)
     
     # Save response to conversation history
     if conversation_id:
@@ -373,924 +331,706 @@ def generate_greeting_response(message, trip_context, conversation_id=None):
     
     return response
 
-def generate_thanks_response(message, trip_context, conversation_id=None):
-    """Generate a response to thank you messages"""
-    import random
+def extract_destination_from_message(message, trip_context):
+    """Extract destination from message or trip context"""
+    message_lower = message.lower()
+    destination = trip_context.get('destination', '')
     
-    thanks_responses = [
-        "You're very welcome! I'm here to help make your trip planning as smooth as possible.",
-        "My pleasure! Feel free to ask me anything else about your travels.",
-        "Happy to help! Is there anything else you'd like to know about your trip?",
-        "You're welcome! I'm always here when you need travel assistance."
-    ]
+    if not destination:
+        # Common destinations to look for
+        destinations = [
+            'paris', 'london', 'tokyo', 'new york', 'los angeles', 'rome', 'dubai', 
+            'mumbai', 'sydney', 'singapore', 'bangkok', 'seoul', 'beijing', 'amsterdam',
+            'berlin', 'madrid', 'barcelona', 'venice', 'florence', 'prague', 'vienna',
+            'budapest', 'athens', 'istanbul', 'cairo', 'marrakech', 'cape town',
+            'rio de janeiro', 'buenos aires', 'mexico city', 'toronto', 'vancouver'
+        ]
+        
+        for dest in destinations:
+            if dest in message_lower:
+                destination = dest.title()
+                break
     
-    response = {
-        'type': 'thanks',
-        'content': random.choice(thanks_responses),
-        'suggestions': ['More help', 'Weather check', 'Activity ideas', 'Budget tips']
+    return destination
+
+def analyze_user_intent(message):
+    """Analyze user intent from message"""
+    message_lower = message.lower()
+    
+    intents = {
+        'greeting': ['hello', 'hi', 'hey', 'good morning', 'good afternoon', 'good evening', 'sup', 'yo'],
+        'farewell': ['bye', 'goodbye', 'see you', 'end', 'stop', 'quit'],
+        'thanks': ['thank', 'thanks', 'appreciate', 'grateful'],
+        'help': ['help', 'what can you do', 'capabilities', 'assist', 'support'],
+        'weather': ['weather', 'forecast', 'temperature', 'rain', 'sunny', 'hot', 'cold', 'climate', 'packing'],
+        'budget': ['budget', 'cost', 'money', 'expensive', 'cheap', 'price', 'save', 'spend', 'dollar', 'euro', 'currency', 'affordable'],
+        'food': ['food', 'restaurant', 'eat', 'dining', 'cuisine', 'meal', 'dish', 'local', 'hungry', 'lunch', 'dinner', 'breakfast', 'cafe'],
+        'activity': ['activity', 'things to do', 'attraction', 'visit', 'see', 'tour', 'place', 'sight', 'fun', 'entertainment', 'adventure', 'explore'],
+        'planning': ['plan', 'itinerary', 'schedule', 'day', 'trip', 'organize', 'arrange', 'prepare'],
+        'accommodation': ['hotel', 'accommodation', 'stay', 'sleep', 'room', 'booking', 'lodging', 'hostel'],
+        'transport': ['transport', 'transportation', 'travel', 'bus', 'train', 'metro', 'subway', 'taxi', 'car', 'walking'],
+        'shopping': ['shopping', 'buy', 'shop', 'market', 'mall', 'store', 'souvenir', 'gift'],
+        'safety': ['safety', 'safe', 'danger', 'crime', 'security', 'emergency', 'health'],
+        'general_question': ['what', 'how', 'when', 'where', 'why', 'which', 'tell me', 'explain', 'describe'],
+        'clarification': ['what do you mean', 'i don\'t understand', 'can you explain', 'clarify'],
+        'follow_up': ['and', 'also', 'what about', 'how about', 'what else', 'more']
     }
     
-    if conversation_id:
-        conversation_history[conversation_id].append({
-            'role': 'assistant',
-            'content': response['content'],
-            'timestamp': datetime.now().isoformat()
-        })
+    for intent, keywords in intents.items():
+        if any(keyword in message_lower for keyword in keywords):
+            return intent
     
-    return response
+    return 'general_question'
 
-def generate_farewell_response(message, trip_context, conversation_id=None):
-    """Generate a farewell response"""
+def detect_user_style(message):
+    """Detect user's communication style"""
+    message_lower = message.lower()
+    
+    if any(word in message_lower for word in ['please', 'could you', 'would you', 'thank you']):
+        return 'polite'
+    elif any(word in message_lower for word in ['yo', 'sup', 'hey', 'cool', 'awesome']):
+        return 'casual'
+    elif any(word in message_lower for word in ['urgent', 'asap', 'quick', 'fast']):
+        return 'direct'
+    elif len(message.split()) > 20:
+        return 'detailed'
+    else:
+        return 'casual'
+
+def generate_sophisticated_response(message, intent, destination, trip_context, conversation_id):
+    """Generate sophisticated response based on intent and context"""
+    
+    # Get conversation context
+    context = conversation_context.get(conversation_id, {})
+    preferences = user_preferences.get(conversation_id, {})
+    
+    # Handle different intents with sophisticated responses
+    if intent == 'greeting':
+        return generate_sophisticated_greeting(context, preferences, destination)
+    elif intent == 'farewell':
+        return generate_sophisticated_farewell(context, preferences)
+    elif intent == 'thanks':
+        return generate_sophisticated_thanks(context, preferences)
+    elif intent == 'help':
+        return generate_sophisticated_help(context, preferences)
+    elif intent == 'weather':
+        return generate_sophisticated_weather(message, destination, trip_context)
+    elif intent == 'budget':
+        return generate_sophisticated_budget(message, destination, trip_context)
+    elif intent == 'food':
+        return generate_sophisticated_food(message, destination, trip_context)
+    elif intent == 'activity':
+        return generate_sophisticated_activity(message, destination, trip_context)
+    elif intent == 'planning':
+        return generate_sophisticated_planning(message, destination, trip_context)
+    elif intent == 'accommodation':
+        return generate_sophisticated_accommodation(message, destination, trip_context)
+    elif intent == 'transport':
+        return generate_sophisticated_transport(message, destination, trip_context)
+    elif intent == 'shopping':
+        return generate_sophisticated_shopping(message, destination, trip_context)
+    elif intent == 'safety':
+        return generate_sophisticated_safety(message, destination, trip_context)
+    elif intent == 'clarification':
+        return generate_sophisticated_clarification(message, context)
+    elif intent == 'follow_up':
+        return generate_sophisticated_follow_up(message, context, destination)
+    else:
+        return generate_sophisticated_general(message, context, destination)
+
+def generate_sophisticated_greeting(context, preferences, destination):
+    """Generate sophisticated greeting response"""
     import random
+    
+    interaction_count = context.get('interaction_count', 0)
+    user_style = context.get('user_style', 'casual')
+    
+    if interaction_count == 1:
+        # First interaction
+        greetings = [
+            f"Hey there! 👋 I'm your AI travel companion, and I'm excited to help you plan an amazing trip! Whether you're heading to {destination or 'your destination'} or still figuring out where to go, I've got you covered.",
+            f"Hello! 🌟 Welcome to your personal travel assistant! I'm here to make your trip planning smooth and enjoyable. {destination and f'Planning for {destination}?' or 'Where are you thinking of traveling?'}",
+            f"Hi! ✨ I'm your travel buddy, ready to help you create unforgettable experiences! {destination and f'So {destination} is on your radar?' or 'What destination is calling your name?'}"
+        ]
+    else:
+        # Returning user
+        greetings = [
+            f"Welcome back! 🎉 Great to see you again! How can I continue helping with your travel plans?",
+            f"Hey! 👋 You're back! I'm ready to pick up where we left off. What's on your mind today?",
+            f"Hello again! 🌟 I'm here to help you further with your travel adventure. What would you like to work on?"
+        ]
+    
+    greeting = random.choice(greetings)
+    
+    # Add personalized touch based on user style
+    if user_style == 'polite':
+        greeting += "\n\nI'm here to assist you with any travel-related questions or planning needs you might have."
+    elif user_style == 'direct':
+        greeting += "\n\nWhat do you need help with?"
+    else:
+        greeting += "\n\nI can help with weather, activities, planning, budget, food, accommodation, transport, shopping, and safety tips!"
+    
+    return {
+        'type': 'greeting',
+        'content': greeting,
+        'suggestions': ['Check weather', 'Plan activities', 'Budget advice', 'Find restaurants', 'Safety tips', 'Help me plan']
+    }
+
+def generate_sophisticated_farewell(context, preferences):
+    """Generate sophisticated farewell response"""
+    import random
+    
+    user_style = context.get('user_style', 'casual')
     
     farewells = [
-        "Goodbye! Have a wonderful trip and don't hesitate to come back if you need more help!",
-        "See you later! Safe travels and enjoy your adventure!",
-        "Take care! I'll be here when you need travel assistance again.",
-        "Have a great trip! Feel free to return anytime for more travel help."
+        "Safe travels! ✈️ Have an incredible adventure and don't hesitate to come back if you need more help!",
+        "Bon voyage! 🌍 Enjoy every moment of your journey and feel free to return anytime for travel assistance!",
+        "Take care! 🛡️ Have a wonderful trip and I'll be here when you need travel help again!",
+        "Happy travels! 🎒 Enjoy your adventure and remember, I'm always here for travel support!"
     ]
     
-    response = {
+    farewell = random.choice(farewells)
+    
+    if user_style == 'polite':
+        farewell += "\n\nThank you for using our travel assistant!"
+    elif user_style == 'direct':
+        farewell += "\n\nSee you later!"
+    
+    return {
         'type': 'farewell',
-        'content': random.choice(farewells),
+        'content': farewell,
         'suggestions': []
     }
-    
-    if conversation_id:
-        conversation_history[conversation_id].append({
-            'role': 'assistant',
-            'content': response['content'],
-            'timestamp': datetime.now().isoformat()
-        })
-    
-    return response
 
-def generate_help_response(message, trip_context, conversation_id=None):
-    """Generate a comprehensive help response"""
-    response = {
+def generate_sophisticated_thanks(context, preferences):
+    """Generate sophisticated thanks response"""
+    import random
+    
+    user_style = context.get('user_style', 'casual')
+    
+    thanks_responses = [
+        "You're very welcome! 😊 I'm here to make your trip planning as smooth and enjoyable as possible.",
+        "My pleasure! 🌟 Feel free to ask me anything else about your travels - I love helping with travel planning!",
+        "Happy to help! ✨ Is there anything else you'd like to know about your trip?",
+        "You're welcome! 🎉 I'm always here when you need travel assistance - that's what I'm here for!"
+    ]
+    
+    response = random.choice(thanks_responses)
+    
+    if user_style == 'polite':
+        response += "\n\nIt's truly my pleasure to assist you with your travel needs."
+    elif user_style == 'direct':
+        response += "\n\nWhat else can I help with?"
+    
+    return {
+        'type': 'thanks',
+        'content': response,
+        'suggestions': ['More help', 'Weather check', 'Activity ideas', 'Budget tips', 'Continue planning']
+    }
+
+def generate_sophisticated_help(context, preferences):
+    """Generate sophisticated help response"""
+    
+    return {
         'type': 'help',
-        'content': "I'm your AI travel assistant! Here's what I can help you with:\n\n" +
+        'content': "I'm your **AI travel companion**! Here's what I can help you with:\n\n" +
                   "**🌤️ Weather & Packing**\n" +
-                  "• Check current weather for any destination\n" +
-                  "• Get packing suggestions based on weather\n" +
+                  "• Real-time weather for any destination\n" +
+                  "• Smart packing suggestions based on weather\n" +
+                  "• Seasonal clothing recommendations\n" +
                   "• Weather alerts and forecasts\n\n" +
                   "**🎯 Activities & Attractions**\n" +
-                  "• Popular tourist attractions\n" +
-                  "• Local activities and experiences\n" +
-                  "• Hidden gems and off-the-beaten-path spots\n\n" +
+                  "• Popular tourist attractions and hidden gems\n" +
+                  "• Local activities and unique experiences\n" +
+                  "• Cultural events and festivals\n" +
+                  "• Adventure and outdoor activities\n\n" +
                   "**💰 Budget & Planning**\n" +
-                  "• Cost estimates and budget tips\n" +
-                  "• Money-saving strategies\n" +
-                  "• Currency and payment advice\n\n" +
+                  "• Detailed cost estimates and budget breakdowns\n" +
+                  "• Money-saving strategies and tips\n" +
+                  "• Currency and payment advice\n" +
+                  "• Cost comparison for different options\n\n" +
                   "**🍽️ Food & Dining**\n" +
                   "• Local cuisine recommendations\n" +
-                  "• Restaurant suggestions\n" +
-                  "• Food safety and dietary tips\n\n" +
+                  "• Restaurant suggestions and reviews\n" +
+                  "• Food safety and dietary tips\n" +
+                  "• Culinary experiences and food tours\n\n" +
                   "**🏨 Accommodation & Transport**\n" +
-                  "• Hotel and lodging options\n" +
-                  "• Transportation advice\n" +
-                  "• Booking tips and strategies\n\n" +
+                  "• Hotel and lodging recommendations\n" +
+                  "• Transportation advice and routes\n" +
+                  "• Booking tips and strategies\n" +
+                  "• Location and safety considerations\n\n" +
                   "**🛡️ Safety & Tips**\n" +
-                  "• Travel safety advice\n" +
-                  "• Local customs and etiquette\n" +
-                  "• Emergency information\n\n" +
-                  "Just ask me anything about your trip!",
-        'suggestions': ['Weather check', 'Plan activities', 'Budget advice', 'Find restaurants', 'Safety tips']
-    }
-    
-    if conversation_id:
-        conversation_history[conversation_id].append({
-            'role': 'assistant',
-            'content': response['content'],
-            'timestamp': datetime.now().isoformat()
-        })
-    
-    return response
-
-def generate_trip_plan_suggestion(message, trip_context):
-    """Generate a trip plan suggestion"""
-    destination = trip_context.get('destination', 'your destination')
-    
-    return {
-        'type': 'trip_plan',
-        'content': f"Here's a suggested plan for {destination}:\n\n" +
-                  "**Day 1: Arrival & Orientation**\n" +
-                  "• Check into accommodation\n" +
-                  "• Explore the local area\n" +
-                  "• Try local cuisine for dinner\n\n" +
-                  "**Day 2: Cultural Exploration**\n" +
-                  "• Visit main attractions\n" +
-                  "• Take guided tours\n" +
-                  "• Experience local culture\n\n" +
-                  "**Day 3: Adventure & Activities**\n" +
-                  "• Outdoor activities\n" +
-                  "• Shopping and souvenirs\n" +
-                  "• Evening entertainment\n\n" +
-                  "Would you like me to customize this plan based on your specific interests and budget?",
-        'suggestions': ['Customize plan', 'Add activities', 'Check weather', 'Budget breakdown']
+                  "• Travel safety advice and precautions\n" +
+                  "• Local customs and cultural etiquette\n" +
+                  "• Emergency information and contacts\n" +
+                  "• Health and medical considerations\n\n" +
+                  "**🎨 Smart Features**\n" +
+                  "• Personalized recommendations based on your preferences\n" +
+                  "• Context-aware responses that remember our conversation\n" +
+                  "• Interactive suggestions and quick actions\n" +
+                  "• Comprehensive travel planning assistance\n\n" +
+                  "Just ask me anything about your trip - I'm here to make your travel planning amazing! ✨",
+        'suggestions': ['Weather check', 'Plan activities', 'Budget advice', 'Find restaurants', 'Safety tips', 'Help me plan']
     }
 
-def generate_weather_response(message, trip_context):
-    """Generate weather-related response"""
-    destination = trip_context.get('destination', 'your destination')
+def generate_sophisticated_weather(message, destination, trip_context):
+    """Generate sophisticated weather response"""
+    import random
     
-    # Try to get real weather data if destination is provided
-    try:
-        if destination and destination != 'your destination':
-            # For now, return realistic weather data
-            # In production, integrate with OpenWeatherMap API
-            weather_data = {
-                'temperature': 22,
-                'conditions': 'Partly cloudy',
-                'humidity': 65,
-                'wind_speed': 10,
-                'feels_like': 24
-            }
-            
-            return {
-                'type': 'weather_info',
-                'content': f"Here's the current weather for **{destination}**:\n\n" +
-                          f"🌡️ **Temperature**: {weather_data['temperature']}°C ({weather_data['temperature']*9/5+32:.0f}°F)\n" +
-                          f"🌤️ **Feels like**: {weather_data['feels_like']}°C\n" +
-                          f"☁️ **Conditions**: {weather_data['conditions']}\n" +
-                          f"💧 **Humidity**: {weather_data['humidity']}%\n" +
-                          f"💨 **Wind**: {weather_data['wind_speed']} km/h\n\n" +
-                          "**Packing Suggestions:**\n" +
-                          "• Light layers for changing temperatures\n" +
-                          "• Comfortable walking shoes\n" +
-                          "• Rain gear (just in case)\n" +
-                          "• Sun protection\n\n" +
-                          "Would you like me to get the detailed 7-day forecast or help you plan activities based on this weather?",
-                'suggestions': ['7-day forecast', 'Packing list', 'Weather alerts', 'Plan activities']
-            }
-    except Exception as e:
-        print(f"Weather API error: {e}")
+    if not destination:
+        destination = "your destination"
     
-    # Fallback response
+    # Get dynamic weather data
+    weather_data = get_weather_for_place(destination) if destination != "your destination" else {
+        'temperature': 22,
+        'feels_like': 24,
+        'description': 'Partly cloudy',
+        'humidity': 65,
+        'wind_speed': 10,
+        'location': destination
+    }
+    
+    # Create sophisticated weather response
+    weather_emoji = {
+        'sunny': '☀️',
+        'partly cloudy': '⛅',
+        'cloudy': '☁️',
+        'rain': '🌧️',
+        'snow': '❄️',
+        'storm': '⛈️'
+    }
+    
+    condition_emoji = weather_emoji.get(weather_data['description'].lower(), '🌤️')
+    
+    response = f"Here's the **current weather** for **{destination}**:\n\n" + \
+              f"{condition_emoji} **Conditions**: {weather_data['description']}\n" + \
+              f"🌡️ **Temperature**: {weather_data['temperature']}°C ({weather_data['temperature']*9/5+32:.0f}°F)\n" + \
+              f"🌤️ **Feels like**: {weather_data['feels_like']}°C\n" + \
+              f"💧 **Humidity**: {weather_data['humidity']}%\n" + \
+              f"💨 **Wind**: {weather_data['wind_speed']} km/h\n\n"
+    
+    # Add packing suggestions based on weather
+    packing_tips = generate_packing_suggestions(weather_data)
+    response += f"**🧳 Smart Packing Suggestions:**\n{packing_tips}\n\n"
+    
+    # Add activity suggestions based on weather
+    activity_tips = generate_weather_based_activities(weather_data)
+    response += f"**🎯 Weather-Appropriate Activities:**\n{activity_tips}\n\n"
+    
+    response += "Would you like me to get the detailed 7-day forecast or help you plan activities based on this weather?"
+    
     return {
         'type': 'weather_info',
-        'content': f"I'll check the current weather for **{destination}**.\n\n" +
-                  "**Current Weather:**\n" +
-                  "🌡️ **Temperature**: 22°C (72°F)\n" +
-                  "🌤️ **Conditions**: Partly cloudy\n" +
-                  "💧 **Humidity**: 65%\n" +
-                  "💨 **Wind**: 10 km/h\n\n" +
-                  "**Packing Suggestions:**\n" +
-                  "• Light layers for changing temperatures\n" +
-                  "• Comfortable walking shoes\n" +
-                  "• Rain gear (just in case)\n" +
-                  "• Sun protection\n\n" +
-                  "Would you like me to get the detailed 7-day forecast or help you plan activities based on this weather?",
-        'suggestions': ['7-day forecast', 'Packing list', 'Weather alerts', 'Plan activities']
+        'content': response,
+        'suggestions': ['7-day forecast', 'Packing list', 'Weather alerts', 'Plan activities', 'Check other destinations']
     }
 
-def generate_budget_suggestion(message, trip_context):
-    """Generate budget-related suggestions"""
+def generate_packing_suggestions(weather_data):
+    """Generate smart packing suggestions based on weather"""
+    temp = weather_data['temperature']
+    conditions = weather_data['description'].lower()
+    
+    suggestions = []
+    
+    if temp < 10:
+        suggestions.extend(["• Warm jacket or coat", "• Thermal layers", "• Gloves and scarf", "• Waterproof boots"])
+    elif temp < 20:
+        suggestions.extend(["• Light jacket or sweater", "• Long-sleeve shirts", "• Comfortable pants", "• Closed-toe shoes"])
+    else:
+        suggestions.extend(["• Light, breathable clothing", "• Shorts and t-shirts", "• Comfortable walking shoes", "• Sun protection"])
+    
+    if 'rain' in conditions:
+        suggestions.extend(["• Waterproof jacket or umbrella", "• Water-resistant shoes", "• Quick-dry clothing"])
+    elif 'sunny' in conditions:
+        suggestions.extend(["• Sunscreen and hat", "• Sunglasses", "• Light, airy clothing"])
+    
+    suggestions.extend(["• Comfortable walking shoes", "• Day bag or backpack", "• Camera or phone for photos"])
+    
+    return "\n".join(suggestions)
+
+def generate_weather_based_activities(weather_data):
+    """Generate activity suggestions based on weather"""
+    temp = weather_data['temperature']
+    conditions = weather_data['description'].lower()
+    
+    if temp < 10 or 'rain' in conditions:
+        return "• Indoor museums and galleries\n• Cozy cafes and restaurants\n• Shopping centers and markets\n• Cultural indoor activities"
+    elif temp > 25 and 'sunny' in conditions:
+        return "• Outdoor parks and gardens\n• Beach activities (if applicable)\n• Outdoor dining and picnics\n• Walking tours and sightseeing"
+    else:
+        return "• Mix of indoor and outdoor activities\n• Walking tours and sightseeing\n• Local cafes and restaurants\n• Cultural experiences"
+
+def generate_sophisticated_budget(message, destination, trip_context):
+    """Generate sophisticated budget response"""
+    
+    if not destination:
+        destination = "your destination"
+    
+    response = f"Here's my **comprehensive budget advice** for {destination}:\n\n" + \
+              "**💰 Budget Categories Breakdown:**\n\n" + \
+              "**🏨 Accommodation (30-40% of budget):**\n" + \
+              "• Budget: $20-60/night (hostels, guesthouses)\n" + \
+              "• Mid-range: $80-150/night (hotels, apartments)\n" + \
+              "• Luxury: $200+/night (premium hotels)\n\n" + \
+              "**🍽️ Food & Dining (20-30% of budget):**\n" + \
+              "• Budget: $10-25/day (street food, markets)\n" + \
+              "• Mid-range: $30-60/day (restaurants, cafes)\n" + \
+              "• Luxury: $80+/day (fine dining)\n\n" + \
+              "**🚇 Transportation (10-20% of budget):**\n" + \
+              "• Public transport: $5-15/day\n" + \
+              "• Taxis/rideshares: $20-50/day\n" + \
+              "• Walking: Free!\n\n" + \
+              "**🎯 Activities & Entertainment (15-25% of budget):**\n" + \
+              "• Free activities: Parks, walking tours, museums (free days)\n" + \
+              "• Paid activities: $20-100/day\n" + \
+              "• Tours and experiences: $50-200\n\n" + \
+              "**💡 Smart Money-Saving Tips:**\n" + \
+              "• Book accommodation in advance for better rates\n" + \
+              "• Use public transportation instead of taxis\n" + \
+              "• Eat at local markets and street food stalls\n" + \
+              "• Look for free walking tours and activities\n" + \
+              "• Consider city passes for multiple attractions\n" + \
+              "• Travel during shoulder seasons for better prices\n\n" + \
+              "Would you like me to create a detailed budget breakdown for your specific trip duration and group size?"
+    
     return {
         'type': 'budget_advice',
-        'content': "Here are some **budget-friendly tips** for your trip:\n\n" +
-                  "**🏨 Accommodation:**\n" +
-                  "• Consider hostels or vacation rentals\n" +
-                  "• Book in advance for better rates\n" +
-                  "• Look for deals on booking platforms\n" +
-                  "• Consider staying slightly outside city centers\n\n" +
-                  "**🍽️ Food & Dining:**\n" +
-                  "• Eat at local markets and street food\n" +
-                  "• Avoid tourist trap restaurants\n" +
-                  "• Cook some meals if you have kitchen access\n" +
-                  "• Look for lunch specials\n\n" +
-                  "**🚇 Transportation:**\n" +
-                  "• Use public transportation\n" +
-                  "• Walk when possible\n" +
-                  "• Consider city passes for attractions\n" +
-                  "• Share rides with other travelers\n\n" +
-                  "**🎯 Activities:**\n" +
-                  "• Many museums have free days\n" +
-                  "• Explore parks and public spaces\n" +
-                  "• Take free walking tours\n" +
-                  "• Research free events and festivals\n\n" +
-                  "Would you like me to help you create a detailed budget breakdown for your specific destination?",
-        'suggestions': ['Create budget', 'Find deals', 'Cost estimates', 'Money tips']
+        'content': response,
+        'suggestions': ['Create budget', 'Find deals', 'Cost estimates', 'Money tips', 'Budget calculator']
     }
 
-def generate_food_suggestion(message, trip_context):
-    """Generate food-related suggestions"""
-    destination = trip_context.get('destination', 'your destination')
+def generate_sophisticated_food(message, destination, trip_context):
+    """Generate sophisticated food response"""
+    
+    if not destination:
+        destination = "your destination"
+    
+    response = f"Here's my **culinary guide** for {destination}:\n\n" + \
+              "**🍽️ Must-Try Local Cuisine:**\n" + \
+              "• Traditional local specialties and signature dishes\n" + \
+              "• Street food favorites and local snacks\n" + \
+              "• Regional specialties unique to the area\n" + \
+              "• Seasonal ingredients and fresh local produce\n\n" + \
+              "**🏪 Best Places to Eat:**\n" + \
+              "• **Local Markets**: Fresh produce, street food, and local vendors\n" + \
+              "• **Family-Run Restaurants**: Authentic local cuisine and warm hospitality\n" + \
+              "• **Popular Local Spots**: Where locals actually eat\n" + \
+              "• **Hidden Gems**: Off-the-beaten-path culinary discoveries\n\n" + \
+              "**💡 Pro Food Tips:**\n" + \
+              "• Try the daily specials and chef's recommendations\n" + \
+              "• Ask locals for their favorite spots\n" + \
+              "• Be adventurous with new flavors and ingredients\n" + \
+              "• Check food safety and hygiene standards\n" + \
+              "• Learn basic food-related phrases in the local language\n\n" + \
+              "**🍷 Local Drinks & Beverages:**\n" + \
+              "• Regional wines, beers, and spirits\n" + \
+              "• Traditional non-alcoholic beverages\n" + \
+              "• Coffee and tea culture\n" + \
+              "• Seasonal drinks and specialties\n\n" + \
+              "**🌱 Dietary Considerations:**\n" + \
+              "• Vegetarian and vegan options available\n" + \
+              "• Allergen information and food labeling\n" + \
+              "• Halal and kosher dining options\n" + \
+              "• Gluten-free and special dietary needs\n\n" + \
+              "Would you like me to suggest specific restaurants or help you plan a food tour?"
     
     return {
         'type': 'food_recommendations',
-        'content': f"Here are some **food recommendations** for {destination}:\n\n" +
-                  "**🍽️ Local Cuisine to Try:**\n" +
-                  "• Traditional local dishes\n" +
-                  "• Street food specialties\n" +
-                  "• Regional specialties\n" +
-                  "• Seasonal ingredients\n\n" +
-                  "**🏪 Best Places to Eat:**\n" +
-                  "• Local markets and food stalls\n" +
-                  "• Family-run restaurants\n" +
-                  "• Popular local spots\n" +
-                  "• Hidden gems off the tourist path\n\n" +
-                  "**💡 Food Tips:**\n" +
-                  "• Try the daily specials\n" +
-                  "• Ask locals for recommendations\n" +
-                  "• Be adventurous with new flavors\n" +
-                  "• Check food safety and hygiene\n\n" +
-                  "**🍷 Local Drinks:**\n" +
-                  "• Regional wines and beers\n" +
-                  "• Traditional beverages\n" +
-                  "• Coffee and tea culture\n\n" +
-                  "Would you like me to suggest specific restaurants or help you plan a food tour?",
-        'suggestions': ['Restaurant list', 'Food tour', 'Local dishes', 'Dietary needs']
+        'content': response,
+        'suggestions': ['Restaurant list', 'Food tour', 'Local dishes', 'Dietary needs', 'Cooking classes']
     }
 
-def generate_activity_suggestion(message, trip_context):
-    """Generate activity-related suggestions"""
-    destination = trip_context.get('destination', 'your destination')
+def generate_sophisticated_activity(message, destination, trip_context):
+    """Generate sophisticated activity response"""
+    
+    if not destination:
+        destination = "your destination"
+    
+    response = f"Here are **amazing activities** to experience in {destination}:\n\n" + \
+              "**🏛️ Cultural & Historical Experiences:**\n" + \
+              "• Visit iconic landmarks and architectural marvels\n" + \
+              "• Explore world-class museums and art galleries\n" + \
+              "• Take guided historical tours with local experts\n" + \
+              "• Attend cultural events, festivals, and performances\n\n" + \
+              "**🌳 Outdoor & Nature Adventures:**\n" + \
+              "• Explore beautiful parks, gardens, and green spaces\n" + \
+              "• Hike scenic trails and nature paths\n" + \
+              "• Take boat tours and water-based activities\n" + \
+              "• Visit scenic viewpoints and perfect photo spots\n\n" + \
+              "**🎭 Entertainment & Nightlife:**\n" + \
+              "• Experience local theaters, shows, and performances\n" + \
+              "• Discover live music venues and jazz clubs\n" + \
+              "• Explore vibrant bars, clubs, and entertainment districts\n" + \
+              "• Enjoy evening entertainment and cultural shows\n\n" + \
+              "**🛍️ Shopping & Market Experiences:**\n" + \
+              "• Browse local markets, bazaars, and artisan shops\n" + \
+              "• Explore shopping districts and designer boutiques\n" + \
+              "• Find unique souvenirs and local crafts\n" + \
+              "• Experience the hustle and bustle of local markets\n\n" + \
+              "**🎯 Unique & Authentic Experiences:**\n" + \
+              "• Take cooking classes and learn local recipes\n" + \
+              "• Participate in local workshops and craft sessions\n" + \
+              "• Try adventure activities and outdoor sports\n" + \
+              "• Join photography tours and cultural experiences\n\n" + \
+              "**💡 Insider Tips:**\n" + \
+              "• Book popular attractions in advance to avoid queues\n" + \
+              "• Visit museums on free days or discounted hours\n" + \
+              "• Take advantage of city passes for multiple attractions\n" + \
+              "• Ask locals for hidden gems and off-the-beaten-path spots\n\n" + \
+              "Would you like me to create a detailed itinerary or suggest specific activities based on your interests and travel style?"
     
     return {
         'type': 'activity_recommendations',
-        'content': f"Here are some **amazing activities** to do in {destination}:\n\n" +
-                  "**🏛️ Cultural & Historical:**\n" +
-                  "• Visit famous landmarks and monuments\n" +
-                  "• Explore museums and galleries\n" +
-                  "• Take guided historical tours\n" +
-                  "• Attend cultural events and festivals\n\n" +
-                  "**🌳 Outdoor & Nature:**\n" +
-                  "• Parks and gardens\n" +
-                  "• Hiking and nature trails\n" +
-                  "• Boat tours and water activities\n" +
-                  "• Scenic viewpoints and photo spots\n\n" +
-                  "**🎭 Entertainment & Nightlife:**\n" +
-                  "• Local theaters and shows\n" +
-                  "• Live music venues\n" +
-                  "• Bars and clubs\n" +
-                  "• Evening entertainment\n\n" +
-                  "**🛍️ Shopping & Markets:**\n" +
-                  "• Local markets and bazaars\n" +
-                  "• Shopping districts\n" +
-                  "• Artisan and craft shops\n" +
-                  "• Souvenir shopping\n\n" +
-                  "**🎯 Unique Experiences:**\n" +
-                  "• Cooking classes\n" +
-                  "• Local workshops\n" +
-                  "• Adventure activities\n" +
-                  "• Photography tours\n\n" +
-                  "Would you like me to create a detailed itinerary or suggest specific activities based on your interests?",
-        'suggestions': ['Create itinerary', 'Popular attractions', 'Hidden gems', 'Adventure activities']
+        'content': response,
+        'suggestions': ['Create itinerary', 'Popular attractions', 'Hidden gems', 'Adventure activities', 'Cultural experiences']
     }
 
-def generate_reminder_response(message, trip_context):
-    """Generate reminder-related response"""
+def generate_sophisticated_planning(message, destination, trip_context):
+    """Generate sophisticated planning response"""
+    
+    if not destination:
+        destination = "your destination"
+    
+    response = f"Here's a **comprehensive travel plan** for {destination}:\n\n" + \
+              "**📅 Day 1: Arrival & Orientation**\n" + \
+              "• Check into your accommodation and settle in\n" + \
+              "• Explore the local neighborhood on foot\n" + \
+              "• Try local cuisine for dinner\n" + \
+              "• Get familiar with public transportation\n" + \
+              "• Pick up a local map and tourist information\n\n" + \
+              "**📅 Day 2: Cultural Exploration**\n" + \
+              "• Visit main attractions and iconic landmarks\n" + \
+              "• Take guided historical and cultural tours\n" + \
+              "• Experience local culture and traditions\n" + \
+              "• Enjoy evening entertainment and shows\n\n" + \
+              "**📅 Day 3: Adventure & Activities**\n" + \
+              "• Outdoor activities and adventure experiences\n" + \
+              "• Shopping and souvenir hunting\n" + \
+              "• Local markets and street food exploration\n" + \
+              "• Nightlife and evening activities\n\n" + \
+              "**📅 Day 4: Hidden Gems & Local Life**\n" + \
+              "• Explore off-the-beaten-path locations\n" + \
+              "• Visit local neighborhoods and communities\n" + \
+              "• Unique experiences and local interactions\n" + \
+              "• Relaxation and reflection time\n\n" + \
+              "**💡 Planning Tips:**\n" + \
+              "• Book popular attractions in advance\n" + \
+              "• Allow flexibility for spontaneous discoveries\n" + \
+              "• Consider your energy levels and pace\n" + \
+              "• Mix tourist attractions with local experiences\n\n" + \
+              "Would you like me to customize this plan based on your specific interests, budget, and travel style?"
+    
     return {
-        'type': 'reminders',
-        'content': "Here are some important reminders for your trip:\n\n" +
-                  "**Pre-Trip Checklist:**\n" +
-                  "• Passport and visas\n" +
-                  "• Travel insurance\n" +
-                  "• Vaccinations\n" +
-                  "• Currency exchange\n\n" +
-                  "**Packing Essentials:**\n" +
-                  "• Weather-appropriate clothing\n" +
-                  "• Travel documents\n" +
-                  "• Medications\n" +
-                  "• Chargers and adapters\n\n" +
-                  "**Smart Reminders:**\n" +
-                  "• Check weather forecast\n" +
-                  "• Book activities in advance\n" +
-                  "• Notify bank of travel\n\n" +
-                  "Would you like me to create a custom checklist?",
-        'suggestions': ['Create checklist', 'Travel insurance', 'Visa requirements', 'Packing list']
+        'type': 'trip_plan',
+        'content': response,
+        'suggestions': ['Customize plan', 'Add activities', 'Check weather', 'Budget breakdown', 'Create detailed itinerary']
     }
 
-def generate_general_response(message, trip_context):
-    """Generate general helpful response"""
-    return {
-        'type': 'general_help',
-        'content': "I'm here to help you plan the perfect trip! I can assist with:\n\n" +
-                  "• Trip planning and itineraries\n" +
-                  "• Weather forecasts and packing suggestions\n" +
-                  "• Budget planning and cost-saving tips\n" +
-                  "• Restaurant and activity recommendations\n" +
-                  "• Travel reminders and checklists\n\n" +
-                  "Just ask me anything about your trip!",
-        'suggestions': ['Plan trip', 'Weather check', 'Budget help', 'Activity ideas']
-    }
-
-def generate_contextual_response(message, trip_context, conversation_id=None):
-    """Generate a contextual response based on conversation history and current message"""
-    import random
+def generate_sophisticated_accommodation(message, destination, trip_context):
+    """Generate sophisticated accommodation response"""
     
-    # Check conversation history for context
-    context = ""
-    if conversation_id and conversation_history.get(conversation_id, []):
-        recent_messages = conversation_history[conversation_id][-3:]  # Last 3 messages
-        context = "Based on our conversation, "
+    if not destination:
+        destination = "your destination"
     
-    # Generate contextual responses
-    contextual_responses = [
-        f"{context}I understand you're asking about travel. Could you be more specific? I can help with weather, activities, planning, budget, food, accommodation, or safety.",
-        f"{context}That's an interesting question about travel! I'd be happy to help you with specific details about your destination, activities, or travel planning.",
-        f"{context}I'm here to help with your travel needs. Would you like information about weather, activities, budget planning, or something else?",
-        f"{context}Let me help you with that travel question. I can provide specific advice about destinations, activities, planning, or any other travel-related topic."
-    ]
-    
-    response = {
-        'type': 'contextual',
-        'content': random.choice(contextual_responses),
-        'suggestions': ['Weather info', 'Activity ideas', 'Budget tips', 'Food recommendations', 'Safety advice']
-    }
-    
-    if conversation_id:
-        conversation_history[conversation_id].append({
-            'role': 'assistant',
-            'content': response['content'],
-            'timestamp': datetime.now().isoformat()
-        })
-    
-    return response
-
-def generate_accommodation_suggestion(message, trip_context):
-    """Generate accommodation suggestions"""
-    destination = trip_context.get('destination', 'your destination')
+    response = f"Here are **accommodation options** for {destination}:\n\n" + \
+              "**🏨 Hotels & Resorts:**\n" + \
+              "• **Luxury Hotels**: Full amenities, premium service, and exclusive experiences\n" + \
+              "• **Boutique Hotels**: Unique character, personalized service, and intimate atmosphere\n" + \
+              "• **Business Hotels**: Convenient locations, reliable service, and business facilities\n" + \
+              "• **Resort-Style**: Comprehensive amenities, pools, spas, and activities\n\n" + \
+              "**🏠 Alternative Accommodations:**\n" + \
+              "• **Vacation Rentals**: Apartments and houses for more space and privacy\n" + \
+              "• **Hostels**: Budget-friendly options with social atmosphere\n" + \
+              "• **Bed & Breakfast**: Charming accommodations with personal touch\n" + \
+              "• **Guesthouses**: Local hospitality and authentic experiences\n\n" + \
+              "**📍 Location Considerations:**\n" + \
+              "• **City Center**: Convenient access to attractions and transport\n" + \
+              "• **Quiet Neighborhoods**: Peaceful atmosphere away from tourist crowds\n" + \
+              "• **Near Public Transport**: Easy access to metro, bus, and train stations\n" + \
+              "• **Safe Areas**: Well-lit, secure neighborhoods with good reputation\n\n" + \
+              "**💡 Booking Strategies:**\n" + \
+              "• Book 2-3 months in advance for better rates and availability\n" + \
+              "• Read recent reviews and check ratings\n" + \
+              "• Compare prices across multiple booking platforms\n" + \
+              "• Check cancellation policies and flexibility\n" + \
+              "• Consider package deals for flights and accommodation\n\n" + \
+              "Would you like me to suggest specific hotels or help you find the best area to stay?"
     
     return {
         'type': 'accommodation_advice',
-        'content': f"Here are **accommodation options** for {destination}:\n\n" +
-                  "**🏨 Hotels & Resorts:**\n" +
-                  "• Luxury hotels with full amenities\n" +
-                  "• Boutique hotels with character\n" +
-                  "• Business hotels for convenience\n" +
-                  "• Resort-style accommodations\n\n" +
-                  "**🏠 Alternative Options:**\n" +
-                  "• Vacation rentals and apartments\n" +
-                  "• Hostels for budget travelers\n" +
-                  "• Bed & breakfast establishments\n" +
-                  "• Guesthouses and homestays\n\n" +
-                  "**📍 Location Tips:**\n" +
-                  "• City center for convenience\n" +
-                  "• Quiet neighborhoods for peace\n" +
-                  "• Near public transport\n" +
-                  "• Safe and well-lit areas\n\n" +
-                  "**💡 Booking Tips:**\n" +
-                  "• Book in advance for better rates\n" +
-                  "• Read recent reviews\n" +
-                  "• Check cancellation policies\n" +
-                  "• Compare multiple booking sites\n\n" +
-                  "Would you like me to suggest specific hotels or help you find the best area to stay?",
-        'suggestions': ['Hotel recommendations', 'Best areas', 'Booking tips', 'Budget options']
+        'content': response,
+        'suggestions': ['Hotel recommendations', 'Best areas', 'Booking tips', 'Budget options', 'Luxury stays']
     }
 
-def generate_transport_suggestion(message, trip_context):
-    """Generate transportation suggestions"""
-    destination = trip_context.get('destination', 'your destination')
+def generate_sophisticated_transport(message, destination, trip_context):
+    """Generate sophisticated transport response"""
+    
+    if not destination:
+        destination = "your destination"
+    
+    response = f"Here's **transportation advice** for {destination}:\n\n" + \
+              "**🚇 Public Transportation:**\n" + \
+              "• **Metro/Subway**: Fast, efficient, and cost-effective for city travel\n" + \
+              "• **Bus Networks**: Extensive coverage to all areas of the city\n" + \
+              "• **Tram and Light Rail**: Scenic routes and convenient connections\n" + \
+              "• **Train Connections**: Regional and intercity travel options\n\n" + \
+              "**🚗 Private Transport:**\n" + \
+              "• **Taxi Services**: Convenient for door-to-door service\n" + \
+              "• **Ride-Sharing Apps**: Modern alternatives with upfront pricing\n" + \
+              "• **Car Rentals**: Freedom to explore at your own pace\n" + \
+              "• **Private Drivers**: Personalized service for special occasions\n\n" + \
+              "**🚶 Walking & Cycling:**\n" + \
+              "• **Pedestrian-Friendly Areas**: Safe and enjoyable walking routes\n" + \
+              "• **Bike Rental Services**: Eco-friendly way to explore\n" + \
+              "• **Walking Tours**: Guided exploration on foot\n" + \
+              "• **Scenic Routes**: Beautiful paths and promenades\n\n" + \
+              "**💡 Travel Tips:**\n" + \
+              "• Get a travel pass for unlimited rides and savings\n" + \
+              "• Download transport apps for real-time information\n" + \
+              "• Learn basic transport phrases in the local language\n" + \
+              "• Keep emergency numbers and transport information handy\n" + \
+              "• Consider walking for short distances to save money\n\n" + \
+              "Would you like me to help you plan the best routes or suggest transport passes?"
     
     return {
         'type': 'transport_advice',
-        'content': f"Here's **transportation advice** for {destination}:\n\n" +
-                  "**🚇 Public Transportation:**\n" +
-                  "• Metro/subway systems\n" +
-                  "• Bus networks\n" +
-                  "• Tram and light rail\n" +
-                  "• Train connections\n\n" +
-                  "**🚗 Private Transport:**\n" +
-                  "• Taxi and ride-sharing services\n" +
-                  "• Car rentals (if needed)\n" +
-                  "• Private drivers and tours\n" +
-                  "• Airport transfers\n\n" +
-                  "**🚶 Walking & Cycling:**\n" +
-                  "• Pedestrian-friendly areas\n" +
-                  "• Bike rental services\n" +
-                  "• Walking tours\n" +
-                  "• Scenic routes\n\n" +
-                  "**💡 Travel Tips:**\n" +
-                  "• Get a travel pass for savings\n" +
-                  "• Download transport apps\n" +
-                  "• Learn basic transport phrases\n" +
-                  "• Keep emergency numbers handy\n\n" +
-                  "Would you like me to help you plan the best routes or suggest transport passes?",
-        'suggestions': ['Transport passes', 'Best routes', 'Airport transfer', 'Walking tours']
+        'content': response,
+        'suggestions': ['Transport passes', 'Best routes', 'Airport transfer', 'Walking tours', 'Bike rentals']
     }
 
-def generate_shopping_suggestion(message, trip_context):
-    """Generate shopping suggestions"""
-    destination = trip_context.get('destination', 'your destination')
+def generate_sophisticated_shopping(message, destination, trip_context):
+    """Generate sophisticated shopping response"""
+    
+    if not destination:
+        destination = "your destination"
+    
+    response = f"Here are **shopping recommendations** for {destination}:\n\n" + \
+              "**🛍️ Shopping Districts:**\n" + \
+              "• **Main Shopping Streets**: High-end boutiques and international brands\n" + \
+              "• **Local Markets**: Traditional bazaars and artisan shops\n" + \
+              "• **Shopping Malls**: Modern retail complexes with diverse options\n" + \
+              "• **Designer Boutiques**: Exclusive fashion and luxury items\n\n" + \
+              "**🎁 Souvenirs & Gifts:**\n" + \
+              "• **Local Handicrafts**: Traditional art and handmade items\n" + \
+              "• **Textiles & Clothing**: Regional fabrics and traditional garments\n" + \
+              "• **Food & Beverages**: Local specialties and culinary souvenirs\n" + \
+              "• **Unique Products**: One-of-a-kind items specific to the region\n\n" + \
+              "**💰 Shopping Tips:**\n" + \
+              "• Bargain at markets where appropriate and expected\n" + \
+              "• Check for authenticity and quality of items\n" + \
+              "• Compare prices at different shops and markets\n" + \
+              "• Keep receipts for customs and warranty purposes\n" + \
+              "• Avoid tourist traps and overpriced souvenir shops\n\n" + \
+              "**🕐 Best Shopping Times:**\n" + \
+              "• Avoid peak tourist hours for better deals\n" + \
+              "• Check market opening times and schedules\n" + \
+              "• Look for sales, discounts, and special offers\n" + \
+              "• Plan shopping around other activities and sightseeing\n\n" + \
+              "Would you like me to suggest specific shopping areas or help you find unique souvenirs?"
     
     return {
         'type': 'shopping_advice',
-        'content': f"Here are **shopping recommendations** for {destination}:\n\n" +
-                  "**🛍️ Shopping Districts:**\n" +
-                  "• Main shopping streets and malls\n" +
-                  "• Local markets and bazaars\n" +
-                  "• Artisan and craft shops\n" +
-                  "• Designer boutiques\n\n" +
-                  "**🎁 Souvenirs & Gifts:**\n" +
-                  "• Local handicrafts and art\n" +
-                  "• Traditional clothing and textiles\n" +
-                  "• Food and beverage specialties\n" +
-                  "• Unique local products\n\n" +
-                  "**💰 Shopping Tips:**\n" +
-                  "• Bargain at markets (where appropriate)\n" +
-                  "• Check for authenticity\n" +
-                  "• Compare prices at different shops\n" +
-                  "• Keep receipts for customs\n\n" +
-                  "**🕐 Best Times:**\n" +
-                  "• Avoid peak tourist hours\n" +
-                  "• Check market opening times\n" +
-                  "• Look for sales and discounts\n" +
-                  "• Plan shopping around other activities\n\n" +
-                  "Would you like me to suggest specific shopping areas or help you find unique souvenirs?",
-        'suggestions': ['Shopping areas', 'Local markets', 'Souvenir ideas', 'Shopping tips']
+        'content': response,
+        'suggestions': ['Shopping areas', 'Local markets', 'Souvenir ideas', 'Shopping tips', 'Best deals']
     }
 
-def generate_safety_suggestion(message, trip_context):
-    """Generate safety suggestions"""
-    destination = trip_context.get('destination', 'your destination')
+def generate_sophisticated_safety(message, destination, trip_context):
+    """Generate sophisticated safety response"""
+    
+    if not destination:
+        destination = "your destination"
+    
+    response = f"Here are **comprehensive safety tips** for {destination}:\n\n" + \
+              "**🛡️ General Safety:**\n" + \
+              "• Stay aware of your surroundings and trust your instincts\n" + \
+              "• Keep valuables secure and avoid displaying expensive items\n" + \
+              "• Use well-lit areas at night and avoid isolated locations\n" + \
+              "• Be cautious of pickpockets in crowded tourist areas\n\n" + \
+              "**🚨 Emergency Information:**\n" + \
+              "• Save local emergency numbers in your phone\n" + \
+              "• Know the location of nearest hospitals and clinics\n" + \
+              "• Identify embassy or consulate locations\n" + \
+              "• Locate police stations and tourist information centers\n\n" + \
+              "**💳 Financial Safety:**\n" + \
+              "• Use ATMs in well-lit, secure locations\n" + \
+              "• Keep cards and cash in separate, secure places\n" + \
+              "• Notify your bank about travel plans in advance\n" + \
+              "• Have backup payment methods and emergency funds\n\n" + \
+              "**🏥 Health & Medical:**\n" + \
+              "• Check required vaccinations and health requirements\n" + \
+              "• Bring necessary medications and prescriptions\n" + \
+              "• Know local health facilities and medical services\n" + \
+              "• Have comprehensive travel insurance coverage\n\n" + \
+              "**🌍 Cultural Awareness:**\n" + \
+              "• Respect local customs, traditions, and cultural norms\n" + \
+              "• Dress appropriately for the local culture and climate\n" + \
+              "• Learn basic phrases in the local language\n" + \
+              "• Be mindful of cultural sensitivities and taboos\n\n" + \
+              "Would you like me to provide specific safety information for your destination?"
     
     return {
         'type': 'safety_advice',
-        'content': f"Here are **safety tips** for {destination}:\n\n" +
-                  "**🛡️ General Safety:**\n" +
-                  "• Stay aware of your surroundings\n" +
-                  "• Keep valuables secure and hidden\n" +
-                  "• Avoid displaying expensive items\n" +
-                  "• Trust your instincts\n\n" +
-                  "**🚨 Emergency Information:**\n" +
-                  "• Local emergency numbers\n" +
-                  "• Nearest hospitals and clinics\n" +
-                  "• Embassy/consulate locations\n" +
-                  "• Police station locations\n\n" +
-                  "**💳 Financial Safety:**\n" +
-                  "• Use ATMs in well-lit areas\n" +
-                  "• Keep cards and cash separate\n" +
-                  "• Notify your bank about travel\n" +
-                  "• Have backup payment methods\n\n" +
-                  "**🏥 Health & Medical:**\n" +
-                  "• Check required vaccinations\n" +
-                  "• Bring necessary medications\n" +
-                  "• Know local health facilities\n" +
-                  "• Have travel insurance\n\n" +
-                  "**🌍 Cultural Awareness:**\n" +
-                  "• Respect local customs and traditions\n" +
-                  "• Dress appropriately for the culture\n" +
-                  "• Learn basic local phrases\n" +
-                  "• Be mindful of cultural sensitivities\n\n" +
-                  "Would you like me to provide specific safety information for your destination?",
-        'suggestions': ['Emergency contacts', 'Health info', 'Cultural tips', 'Travel insurance']
+        'content': response,
+        'suggestions': ['Emergency contacts', 'Health info', 'Cultural tips', 'Travel insurance', 'Safety apps']
     }
 
-def generate_smart_suggestions(destination, dates, interests, budget, group_size):
-    """Generate smart suggestions based on trip parameters"""
-    suggestions = []
+def generate_sophisticated_clarification(message, context):
+    """Generate sophisticated clarification response"""
     
-    # Destination-specific suggestions
-    destination_lower = destination.lower()
-    
-    # Accommodation suggestions
-    if budget == 'low':
-        suggestions.append({
-            'category': 'Accommodation',
-            'title': 'Budget-Friendly Stays',
-            'description': f'Hostels, guesthouses, and budget hotels in {destination}',
-            'priority': 'high',
-            'estimated_cost': '$20-50/night',
-            'booking_tip': 'Book 2-3 months in advance for best rates'
-        })
-    elif budget == 'medium':
-        suggestions.append({
-            'category': 'Accommodation',
-            'title': 'Comfortable Hotels',
-            'description': f'Mid-range hotels and vacation rentals in {destination}',
-            'priority': 'high',
-            'estimated_cost': '$80-150/night',
-            'booking_tip': 'Look for packages with breakfast included'
-        })
-    else:
-        suggestions.append({
-            'category': 'Accommodation',
-            'title': 'Luxury Stays',
-            'description': f'Premium hotels and boutique accommodations in {destination}',
-            'priority': 'high',
-            'estimated_cost': '$200+/night',
-            'booking_tip': 'Consider loyalty programs for upgrades'
-        })
-    
-    # Destination-specific activities
-    if 'paris' in destination_lower:
-        suggestions.append({
-            'category': 'Must-See',
-            'title': 'Eiffel Tower & Louvre',
-            'description': 'Iconic landmarks and world-class museums',
-            'priority': 'high',
-            'estimated_cost': '$30-60/person',
-            'booking_tip': 'Book Louvre tickets online to skip the queue'
-        })
-        suggestions.append({
-            'category': 'Food & Dining',
-            'title': 'French Cuisine Experience',
-            'description': 'Bistros, patisseries, and wine tastings',
-            'priority': 'medium',
-            'estimated_cost': '$40-100/person',
-            'booking_tip': 'Try local bistros away from tourist areas'
-        })
-        suggestions.append({
-            'category': 'Culture',
-            'title': 'Notre-Dame & Seine River',
-            'description': 'Gothic architecture and romantic river cruises',
-            'priority': 'medium',
-            'estimated_cost': '$20-50/person',
-            'booking_tip': 'Book Seine cruise for sunset views'
-        })
-        suggestions.append({
-            'category': 'Shopping',
-            'title': 'Champs-Élysées & Luxury Shopping',
-            'description': 'Famous avenue with high-end boutiques and cafes',
-            'priority': 'medium',
-            'estimated_cost': '$50-200/person',
-            'booking_tip': 'Visit early morning to avoid crowds'
-        })
-    elif 'london' in destination_lower:
-        suggestions.append({
-            'category': 'Must-See',
-            'title': 'Big Ben & Buckingham Palace',
-            'description': 'Royal landmarks and historical sites',
-            'priority': 'high',
-            'estimated_cost': '$25-50/person',
-            'booking_tip': 'Watch the Changing of the Guard ceremony'
-        })
-        suggestions.append({
-            'category': 'Culture',
-            'title': 'West End Shows',
-            'description': 'World-class theater and musical performances',
-            'priority': 'medium',
-            'estimated_cost': '$60-150/person',
-            'booking_tip': 'Book shows in advance for best seats'
-        })
-        suggestions.append({
-            'category': 'History',
-            'title': 'Tower of London & Westminster',
-            'description': 'Medieval castle and political landmarks',
-            'priority': 'high',
-            'estimated_cost': '$30-60/person',
-            'booking_tip': 'Buy combination tickets for better value'
-        })
-    elif 'tokyo' in destination_lower:
-        suggestions.append({
-            'category': 'Must-See',
-            'title': 'Senso-ji Temple & Shibuya',
-            'description': 'Traditional temples and modern city life',
-            'priority': 'high',
-            'estimated_cost': '$20-40/person',
-            'booking_tip': 'Visit temples early morning for fewer crowds'
-        })
-        suggestions.append({
-            'category': 'Food & Dining',
-            'title': 'Sushi & Ramen Experience',
-            'description': 'Authentic Japanese cuisine and food markets',
-            'priority': 'medium',
-            'estimated_cost': '$30-80/person',
-            'booking_tip': 'Try conveyor belt sushi for budget-friendly dining'
-        })
-        suggestions.append({
-            'category': 'Technology',
-            'title': 'Akihabara & Robot Restaurant',
-            'description': 'Electronics district and futuristic entertainment',
-            'priority': 'medium',
-            'estimated_cost': '$40-100/person',
-            'booking_tip': 'Visit Akihabara on weekends for street performances'
-        })
-    elif 'new york' in destination_lower or 'nyc' in destination_lower:
-        suggestions.append({
-            'category': 'Must-See',
-            'title': 'Times Square & Central Park',
-            'description': 'Iconic landmarks and urban green spaces',
-            'priority': 'high',
-            'estimated_cost': '$0-30/person',
-            'booking_tip': 'Visit Times Square at night for the full experience'
-        })
-        suggestions.append({
-            'category': 'Culture',
-            'title': 'Broadway Shows',
-            'description': 'World-famous theater performances',
-            'priority': 'medium',
-            'estimated_cost': '$80-200/person',
-            'booking_tip': 'Check for same-day rush tickets for discounts'
-        })
-        suggestions.append({
-            'category': 'Art',
-            'title': 'Metropolitan Museum & MoMA',
-            'description': 'World-class art museums and galleries',
-            'priority': 'medium',
-            'estimated_cost': '$25-50/person',
-            'booking_tip': 'Many museums have pay-what-you-wish days'
-        })
-    elif 'los angeles' in destination_lower or 'la' in destination_lower:
-        suggestions.append({
-            'category': 'Entertainment',
-            'title': 'Hollywood Walk of Fame',
-            'description': 'Celebrity stars and entertainment history',
-            'priority': 'high',
-            'estimated_cost': '$0-20/person',
-            'booking_tip': 'Visit early morning to avoid crowds'
-        })
-        suggestions.append({
-            'category': 'Beach',
-            'title': 'Venice Beach & Santa Monica',
-            'description': 'Famous beaches and pier attractions',
-            'priority': 'medium',
-            'estimated_cost': '$10-40/person',
-            'booking_tip': 'Rent bikes to explore the beach path'
-        })
-        suggestions.append({
-            'category': 'Culture',
-            'title': 'Getty Center & LACMA',
-            'description': 'World-class art museums and cultural sites',
-            'priority': 'medium',
-            'estimated_cost': '$20-50/person',
-            'booking_tip': 'Getty Center is free, just pay for parking'
-        })
-    elif 'rome' in destination_lower:
-        suggestions.append({
-            'category': 'History',
-            'title': 'Colosseum & Roman Forum',
-            'description': 'Ancient Roman ruins and gladiator arena',
-            'priority': 'high',
-            'estimated_cost': '$30-60/person',
-            'booking_tip': 'Buy skip-the-line tickets to avoid queues'
-        })
-        suggestions.append({
-            'category': 'Religion',
-            'title': 'Vatican City & St. Peter\'s',
-            'description': 'Religious sites and Renaissance art',
-            'priority': 'high',
-            'estimated_cost': '$25-50/person',
-            'booking_tip': 'Dress modestly and book Vatican tours in advance'
-        })
-        suggestions.append({
-            'category': 'Food & Dining',
-            'title': 'Italian Cuisine Experience',
-            'description': 'Authentic pasta, pizza, and gelato',
-            'priority': 'medium',
-            'estimated_cost': '$30-80/person',
-            'booking_tip': 'Try trattorias away from tourist areas'
-        })
-        suggestions.append({
-            'category': 'Culture',
-            'title': 'Trevi Fountain & Spanish Steps',
-            'description': 'Famous landmarks and romantic spots',
-            'priority': 'medium',
-            'estimated_cost': '$0-20/person',
-            'booking_tip': 'Visit early morning or late evening for fewer crowds'
-        })
-    elif 'dubai' in destination_lower:
-        suggestions.append({
-            'category': 'Architecture',
-            'title': 'Burj Khalifa & Dubai Mall',
-            'description': 'World\'s tallest building and luxury shopping',
-            'priority': 'high',
-            'estimated_cost': '$50-100/person',
-            'booking_tip': 'Book Burj Khalifa tickets online for sunset views'
-        })
-        suggestions.append({
-            'category': 'Desert',
-            'title': 'Desert Safari Experience',
-            'description': 'Dune bashing, camel rides, and traditional dinner',
-            'priority': 'high',
-            'estimated_cost': '$80-150/person',
-            'booking_tip': 'Book through reputable tour operators'
-        })
-        suggestions.append({
-            'category': 'Luxury',
-            'title': 'Palm Jumeirah & Atlantis',
-            'description': 'Iconic palm-shaped island and luxury resort',
-            'priority': 'medium',
-            'estimated_cost': '$100-300/person',
-            'booking_tip': 'Visit Atlantis Aquaventure for water activities'
-        })
-    elif 'mumbai' in destination_lower or 'bombay' in destination_lower:
-        suggestions.append({
-            'category': 'History',
-            'title': 'Gateway of India & Marine Drive',
-            'description': 'Iconic landmarks and scenic waterfront',
-            'priority': 'high',
-            'estimated_cost': '$5-20/person',
-            'booking_tip': 'Visit Gateway at sunset for best photos'
-        })
-        suggestions.append({
-            'category': 'Food & Dining',
-            'title': 'Street Food & Local Cuisine',
-            'description': 'Famous street food and authentic Indian dishes',
-            'priority': 'medium',
-            'estimated_cost': '$10-40/person',
-            'booking_tip': 'Try vada pav, pav bhaji, and local chaat'
-        })
-        suggestions.append({
-            'category': 'Culture',
-            'title': 'Elephanta Caves & Museums',
-            'description': 'Ancient cave temples and cultural sites',
-            'priority': 'medium',
-            'estimated_cost': '$15-30/person',
-            'booking_tip': 'Take ferry to Elephanta Caves early morning'
-        })
-    elif 'sydney' in destination_lower:
-        suggestions.append({
-            'category': 'Landmarks',
-            'title': 'Sydney Opera House & Harbour Bridge',
-            'description': 'Iconic landmarks and harbor views',
-            'priority': 'high',
-            'estimated_cost': '$30-80/person',
-            'booking_tip': 'Book Opera House tours in advance'
-        })
-        suggestions.append({
-            'category': 'Beach',
-            'title': 'Bondi Beach & Coastal Walk',
-            'description': 'Famous beach and scenic coastal trail',
-            'priority': 'medium',
-            'estimated_cost': '$10-40/person',
-            'booking_tip': 'Start coastal walk early morning'
-        })
-        suggestions.append({
-            'category': 'Nature',
-            'title': 'Blue Mountains & Wildlife',
-            'description': 'Scenic mountains and native wildlife',
-            'priority': 'medium',
-            'estimated_cost': '$50-120/person',
-            'booking_tip': 'Book guided tours for best experience'
-        })
-    else:
-        # Generic suggestions for other destinations
-        suggestions.append({
-            'category': 'Local Experience',
-            'title': 'Local Attractions',
-            'description': f'Discover the best attractions in {destination}',
-            'priority': 'high',
-            'estimated_cost': '$20-60/person',
-            'booking_tip': 'Research local attractions and book in advance'
-        })
-        suggestions.append({
-            'category': 'Food & Dining',
-            'title': 'Local Cuisine',
-            'description': f'Taste authentic local dishes in {destination}',
-            'priority': 'medium',
-            'estimated_cost': '$25-75/person',
-            'booking_tip': 'Ask locals for restaurant recommendations'
-        })
-        suggestions.append({
-            'category': 'Culture',
-            'title': 'Cultural Sites',
-            'description': f'Explore museums and cultural landmarks in {destination}',
-            'priority': 'medium',
-            'estimated_cost': '$15-50/person',
-            'booking_tip': 'Many museums have free admission days'
-        })
-    
-    # Activity suggestions based on interests
-    for interest in interests:
-        if interest == 'food':
-            suggestions.append({
-                'category': 'Food & Dining',
-                'title': 'Local Cuisine Experience',
-                'description': f'Food tours, cooking classes, and local restaurants in {destination}',
-                'priority': 'medium',
-                'estimated_cost': '$30-80/person',
-                'booking_tip': 'Book food tours in advance, especially for groups'
-            })
-        elif interest == 'culture':
-            suggestions.append({
-                'category': 'Cultural Activities',
-                'title': 'Cultural Immersion',
-                'description': f'Museums, historical sites, and cultural tours in {destination}',
-                'priority': 'medium',
-                'estimated_cost': '$15-40/person',
-                'booking_tip': 'Many museums have free days or student discounts'
-            })
-        elif interest == 'adventure':
-            suggestions.append({
-                'category': 'Adventure',
-                'title': 'Outdoor Adventures',
-                'description': f'Hiking, water sports, and adventure activities in {destination}',
-                'priority': 'medium',
-                'estimated_cost': '$50-120/person',
-                'booking_tip': 'Check weather conditions and book guided tours for safety'
-            })
-    
-    # Transportation suggestions
-    suggestions.append({
-        'category': 'Transportation',
-        'title': 'Getting Around',
-        'description': f'Public transport, rideshares, and walking tours in {destination}',
-        'priority': 'high',
-        'estimated_cost': '$5-20/day',
-        'booking_tip': 'Consider city passes for unlimited public transport'
-    })
-    
-    return suggestions
-
-def generate_smart_reminders(trip_context):
-    """Generate smart reminders based on trip context"""
-    reminders = []
-    
-    destination = trip_context.get('destination', '')
-    dates = trip_context.get('dates', {})
-    group_size = trip_context.get('group_size', 1)
-    
-    # Visa and documentation reminders
-    if destination and destination.lower() not in ['united states', 'usa', 'canada', 'mexico']:
-        reminders.append({
-            'type': 'documentation',
-            'title': 'Visa Requirements',
-            'message': f'Check if you need a visa for {destination}',
-            'priority': 'high',
-            'due_date': '2-3 months before trip',
-            'icon': 'passport'
-        })
-    
-    # Weather reminders
-    reminders.append({
-        'type': 'weather',
-        'title': 'Weather Check',
-        'message': 'Check weather forecast and pack accordingly',
-        'priority': 'medium',
-        'due_date': '1 week before trip',
-        'icon': 'cloud-sun'
-    })
-    
-    # Booking reminders
-    reminders.append({
-        'type': 'booking',
-        'title': 'Activity Bookings',
-        'message': 'Book popular activities and restaurants in advance',
-        'priority': 'medium',
-        'due_date': '2-4 weeks before trip',
-        'icon': 'calendar-check'
-    })
-    
-    # Financial reminders
-    reminders.append({
-        'type': 'financial',
-        'title': 'Travel Notifications',
-        'message': 'Notify your bank and credit card companies about travel',
-        'priority': 'high',
-        'due_date': '1 week before trip',
-        'icon': 'credit-card'
-    })
-    
-    # Health reminders
-    reminders.append({
-        'type': 'health',
-        'title': 'Health Preparations',
-        'message': 'Check if vaccinations are required and pack medications',
-        'priority': 'high',
-        'due_date': '1 month before trip',
-        'icon': 'heartbeat'
-    })
-    
-    return reminders
-
-def generate_weather_alerts(latitude, longitude, trip_dates):
-    """Generate weather alerts and packing suggestions"""
-    alerts = []
-    
-    # Simulated weather data (in production, use actual weather API)
-    weather_conditions = {
-        'rain': {
-            'alert': 'Rain expected during your trip',
-            'suggestion': 'Pack an umbrella and waterproof gear',
-            'priority': 'medium'
-        },
-        'sunny': {
-            'alert': 'Sunny weather expected',
-            'suggestion': 'Pack sunscreen, hat, and sunglasses',
-            'priority': 'low'
-        },
-        'cold': {
-            'alert': 'Cold temperatures expected',
-            'suggestion': 'Pack warm clothing and layers',
-            'priority': 'medium'
-        }
+    return {
+        'type': 'clarification',
+        'content': "I want to make sure I understand you correctly! 🤔\n\n" +
+                  "Could you please rephrase your question or provide more specific details about what you're looking for? I'm here to help with:\n\n" +
+                  "• **Weather information** for any destination\n" +
+                  "• **Activity recommendations** and attractions\n" + \
+                  "• **Budget planning** and cost estimates\n" + \
+                  "• **Trip planning** and itineraries\n" + \
+                  "• **Accommodation** and transportation options\n" + \
+                  "• **Food and dining** suggestions\n" + \
+                  "• **Safety tips** and travel advice\n\n" + \
+                  "Just let me know what specific aspect you'd like help with!",
+        'suggestions': ['Weather check', 'Plan activities', 'Budget advice', 'Find restaurants', 'Safety tips']
     }
+
+def generate_sophisticated_follow_up(message, context, destination):
+    """Generate sophisticated follow-up response"""
     
-    # Generate weather-based alerts
-    for condition, info in weather_conditions.items():
-        alerts.append({
-            'type': 'weather',
-            'condition': condition,
-            'alert': info['alert'],
-            'suggestion': info['suggestion'],
-            'priority': info['priority'],
-            'icon': 'cloud-rain' if condition == 'rain' else 'sun' if condition == 'sunny' else 'thermometer-half'
-        })
+    return {
+        'type': 'follow_up',
+        'content': f"Great! I'm happy to help you with more details about {destination or 'your trip'}! 🎉\n\n" + \
+                  "What specific aspect would you like to explore further? I can provide:\n\n" + \
+                  "• **More detailed recommendations** for your interests\n" + \
+                  "• **Specific locations and addresses** for the best spots\n" + \
+                  "• **Cost estimates and budget breakdowns**\n" + \
+                  "• **Alternative options** and backup plans\n" + \
+                  "• **Local insider tips** and hidden gems\n" + \
+                  "• **Practical advice** for your travel style\n\n" + \
+                  "Just let me know what additional information would be most helpful!",
+        'suggestions': ['More details', 'Specific locations', 'Cost estimates', 'Alternative options', 'Local tips']
+    }
+
+def generate_sophisticated_general(message, context, destination):
+    """Generate sophisticated general response"""
     
-    # General packing suggestions
-    alerts.append({
-        'type': 'packing',
-        'condition': 'general',
-        'alert': 'Packing Reminders',
-        'suggestion': 'Don\'t forget: travel documents, chargers, medications, and comfortable shoes',
-        'priority': 'high',
-        'icon': 'suitcase'
-    })
-    
-    return alerts
+    return {
+        'type': 'general',
+        'content': f"I understand you're asking about travel! ✈️\n\n" + \
+                  f"For {destination or 'your destination'}, I can help you with:\n\n" + \
+                  "• **Weather information** and packing suggestions\n" + \
+                  "• **Activity recommendations** and attractions\n" + \
+                  "• **Budget planning** and cost estimates\n" + \
+                  "• **Trip planning** and itineraries\n" + \
+                  "• **Accommodation** and transportation options\n" + \
+                  "• **Food and dining** suggestions\n" + \
+                  "• **Safety tips** and travel advice\n\n" + \
+                  "Try asking me something more specific like:\n" + \
+                  "• 'What's the weather like in [destination]?'\n" + \
+                  "• 'Suggest activities for [destination]'\n" + \
+                  "• 'Help me plan a budget for [destination]'\n" + \
+                  "• 'What are the best restaurants in [destination]?'\n\n" + \
+                  "I'm here to make your travel planning amazing! 🌟",
+        'suggestions': ['Weather check', 'Activity ideas', 'Budget help', 'Food recommendations', 'Safety advice']
+    }
 
 @ai_recommendations_bp.route('/api/groups/<int:group_id>/weather', methods=['GET'])
 @jwt_required()

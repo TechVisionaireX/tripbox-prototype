@@ -918,6 +918,124 @@
             transform: translateY(-1px);
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
+        
+        .message-appear {
+            animation: messageSlideIn 0.3s ease-out;
+        }
+        
+        @keyframes messageSlideIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .ai-message {
+            transition: all 0.2s ease;
+        }
+        
+        .ai-message:hover {
+            transform: translateX(2px);
+        }
+        
+        .ai-content {
+            position: relative;
+        }
+        
+        .ai-content::before {
+            content: '';
+            position: absolute;
+            left: -8px;
+            top: 0;
+            bottom: 0;
+            width: 3px;
+            background: linear-gradient(to bottom, var(--primary-color), var(--accent-color));
+            border-radius: 2px;
+            opacity: 0;
+            transition: opacity 0.2s ease;
+        }
+        
+        .ai-message.assistant .ai-content::before {
+            opacity: 1;
+        }
+        
+        .ai-chat-input {
+            position: relative;
+        }
+        
+        .ai-chat-input::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(to right, transparent, var(--primary-color), transparent);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        
+        .ai-chat-input:focus-within::after {
+            opacity: 1;
+        }
+        
+        .ai-message.user .ai-content {
+            background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+            color: white;
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+        }
+        
+        .ai-message.assistant .ai-content {
+            background: linear-gradient(135deg, white, #f8fafc);
+            border: 1px solid var(--border-color);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        }
+        
+        .ai-avatar {
+            transition: all 0.2s ease;
+        }
+        
+        .ai-message:hover .ai-avatar {
+            transform: scale(1.05);
+        }
+        
+        .ai-suggestions {
+            border-top: 1px solid var(--border-color);
+            padding-top: 0.75rem;
+            margin-top: 0.75rem;
+        }
+        
+        .suggestion-btn {
+            border-radius: 20px;
+            font-weight: 500;
+            letter-spacing: 0.025em;
+        }
+        
+        .ai-chat-messages {
+            scroll-behavior: smooth;
+        }
+        
+        .ai-chat-messages::-webkit-scrollbar {
+            width: 6px;
+        }
+        
+        .ai-chat-messages::-webkit-scrollbar-track {
+            background: var(--bg-secondary);
+            border-radius: 3px;
+        }
+        
+        .ai-chat-messages::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 3px;
+        }
+        
+        .ai-chat-messages::-webkit-scrollbar-thumb:hover {
+            background: var(--text-secondary);
+        }
 
         .ai-chat-input {
             padding: 1rem;
@@ -5145,6 +5263,7 @@
 
         // AI Assistant Functions
         let currentConversationId = null;
+        let isTyping = false;
         
         async function loadAiAssistant() {
             try {
@@ -5169,7 +5288,7 @@
                 // Add welcome message if chat is empty
                 const chatMessages = document.getElementById('aiChatMessages');
                 if (chatMessages.children.length === 0) {
-                    addAiMessage("Hello! I'm your AI travel assistant. How can I help you plan your trip today?\n\nI can help with:\n• Weather information and packing suggestions\n• Activity recommendations and attractions\n• Budget planning and cost estimates\n• Trip planning and itineraries\n• Accommodation and transportation options\n• Local cuisine and restaurant suggestions\n• Safety tips and travel advice\n\nWhat would you like to explore?", 'assistant', ['Check weather', 'Plan activities', 'Budget advice', 'Find restaurants', 'Safety tips']);
+                    addAiMessage("Hello! 👋 I'm your AI travel companion, and I'm excited to help you plan an amazing trip! Whether you're heading to your destination or still figuring out where to go, I've got you covered.\n\nI can help with:\n• 🌤️ Weather information and packing suggestions\n• 🎯 Activity recommendations and attractions\n• 💰 Budget planning and cost estimates\n• 📅 Trip planning and itineraries\n• 🏨 Accommodation and transportation options\n• 🍽️ Local cuisine and restaurant suggestions\n• 🛡️ Safety tips and travel advice\n\nWhat would you like to explore?", 'assistant', ['Check weather', 'Plan activities', 'Budget advice', 'Find restaurants', 'Safety tips']);
                 }
                 
             } catch (error) {
@@ -5181,7 +5300,7 @@
             const messageInput = document.getElementById('aiMessageInput');
             const message = messageInput.value.trim();
             
-            if (!message) return;
+            if (!message || isTyping) return;
             
             console.log('Sending AI message:', message);
             
@@ -5191,6 +5310,7 @@
             
             // Show typing indicator
             showTypingIndicator();
+            isTyping = true;
             
             try {
                 // Get current group context
@@ -5199,6 +5319,7 @@
                 
                 if (!groups || groups.length === 0) {
                     hideTypingIndicator();
+                    isTyping = false;
                     addAiMessage('Please create a group first to use the AI assistant.', 'assistant');
                     return;
                 }
@@ -5233,6 +5354,7 @@
                 console.log('AI response:', response);
                 
                 hideTypingIndicator();
+                isTyping = false;
                 
                 if (response && response.response) {
                     addAiMessage(response.response.content, 'assistant', response.response.suggestions);
@@ -5243,6 +5365,7 @@
             } catch (error) {
                 console.error('Error sending AI message:', error);
                 hideTypingIndicator();
+                isTyping = false;
                 addAiMessage('Sorry, I encountered an error. Please try again.', 'assistant');
             }
         }
@@ -5281,6 +5404,9 @@
             const messageDiv = document.createElement('div');
             messageDiv.className = `ai-message ${sender}`;
             
+            // Add animation class
+            messageDiv.classList.add('message-appear');
+            
             const avatar = document.createElement('div');
             avatar.className = 'ai-avatar';
             avatar.innerHTML = sender === 'user' ? '<i class="fas fa-user"></i>' : '<i class="fas fa-robot"></i>';
@@ -5288,11 +5414,30 @@
             const contentDiv = document.createElement('div');
             contentDiv.className = 'ai-content';
             
-            // Convert markdown-like formatting to HTML
+            // Convert markdown-like formatting to HTML with better formatting
             const formattedContent = content
                 .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
                 .replace(/\*(.*?)\*/g, '<em>$1</em>')
-                .replace(/\n/g, '<br>');
+                .replace(/\n/g, '<br>')
+                .replace(/•/g, '•')
+                .replace(/🌤️/g, '🌤️')
+                .replace(/🎯/g, '🎯')
+                .replace(/💰/g, '💰')
+                .replace(/📅/g, '📅')
+                .replace(/🏨/g, '🏨')
+                .replace(/🍽️/g, '🍽️')
+                .replace(/🛡️/g, '🛡️')
+                .replace(/👋/g, '👋')
+                .replace(/✨/g, '✨')
+                .replace(/🌟/g, '🌟')
+                .replace(/🎉/g, '🎉')
+                .replace(/🌍/g, '🌍')
+                .replace(/🛡️/g, '🛡️')
+                .replace(/🎒/g, '🎒')
+                .replace(/✈️/g, '✈️')
+                .replace(/🌟/g, '🌟')
+                .replace(/🎨/g, '🎨')
+                .replace(/🤔/g, '🤔');
             
             contentDiv.innerHTML = formattedContent;
             
@@ -5309,10 +5454,19 @@
                     suggestionBtn.style.marginBottom = '0.25rem';
                     suggestionBtn.style.fontSize = '0.8rem';
                     suggestionBtn.style.padding = '0.25rem 0.5rem';
+                    suggestionBtn.style.transition = 'all 0.2s ease';
                     suggestionBtn.textContent = suggestion;
                     suggestionBtn.onclick = () => {
                         document.getElementById('aiMessageInput').value = suggestion;
                         document.getElementById('aiMessageInput').focus();
+                    };
+                    suggestionBtn.onmouseenter = () => {
+                        suggestionBtn.style.transform = 'translateY(-1px)';
+                        suggestionBtn.style.boxShadow = '0 2px 4px rgba(0,0,0,0.1)';
+                    };
+                    suggestionBtn.onmouseleave = () => {
+                        suggestionBtn.style.transform = 'translateY(0)';
+                        suggestionBtn.style.boxShadow = 'none';
                     };
                     suggestionsDiv.appendChild(suggestionBtn);
                 });
@@ -5324,8 +5478,15 @@
             messageDiv.appendChild(contentDiv);
             chatMessages.appendChild(messageDiv);
             
-            // Scroll to bottom
-            chatMessages.scrollTop = chatMessages.scrollHeight;
+            // Scroll to bottom with smooth animation
+            setTimeout(() => {
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+            }, 100);
+            
+            // Remove animation class after animation completes
+            setTimeout(() => {
+                messageDiv.classList.remove('message-appear');
+            }, 300);
         }
 
         // Add keyboard event listener for Enter key
@@ -5337,6 +5498,17 @@
                         e.preventDefault();
                         sendAiMessage();
                     }
+                });
+                
+                // Add focus styles
+                messageInput.addEventListener('focus', function() {
+                    this.style.borderColor = 'var(--primary-color)';
+                    this.style.boxShadow = '0 0 0 2px rgba(99, 102, 241, 0.1)';
+                });
+                
+                messageInput.addEventListener('blur', function() {
+                    this.style.borderColor = 'var(--border-color)';
+                    this.style.boxShadow = 'none';
                 });
             }
         });
