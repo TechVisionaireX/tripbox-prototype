@@ -700,39 +700,205 @@ def generate_sophisticated_budget(message, destination, trip_context):
     }
 
 def generate_sophisticated_food(message, destination, trip_context):
-    """Generate sophisticated food response"""
+    """Generate sophisticated food response with specific restaurant names"""
     
     if not destination:
         destination = "your destination"
     
-    response = f"Here's my **culinary guide** for {destination}:\n\n" + \
-              "**🍽️ Must-Try Local Cuisine:**\n" + \
-              "• Traditional local specialties and signature dishes\n" + \
-              "• Street food favorites and local snacks\n" + \
-              "• Regional specialties unique to the area\n" + \
-              "• Seasonal ingredients and fresh local produce\n\n" + \
-              "**🏪 Best Places to Eat:**\n" + \
-              "• **Local Markets**: Fresh produce, street food, and local vendors\n" + \
-              "• **Family-Run Restaurants**: Authentic local cuisine and warm hospitality\n" + \
-              "• **Popular Local Spots**: Where locals actually eat\n" + \
-              "• **Hidden Gems**: Off-the-beaten-path culinary discoveries\n\n" + \
-              "**💡 Pro Food Tips:**\n" + \
-              "• Try the daily specials and chef's recommendations\n" + \
-              "• Ask locals for their favorite spots\n" + \
-              "• Be adventurous with new flavors and ingredients\n" + \
-              "• Check food safety and hygiene standards\n" + \
-              "• Learn basic food-related phrases in the local language\n\n" + \
-              "**🍷 Local Drinks & Beverages:**\n" + \
-              "• Regional wines, beers, and spirits\n" + \
-              "• Traditional non-alcoholic beverages\n" + \
-              "• Coffee and tea culture\n" + \
-              "• Seasonal drinks and specialties\n\n" + \
-              "**🌱 Dietary Considerations:**\n" + \
-              "• Vegetarian and vegan options available\n" + \
-              "• Allergen information and food labeling\n" + \
-              "• Halal and kosher dining options\n" + \
-              "• Gluten-free and special dietary needs\n\n" + \
-              "Would you like me to suggest specific restaurants or help you plan a food tour?"
+    # Real restaurant recommendations by destination
+    restaurant_recommendations = {
+        'London': {
+            'fine_dining': [
+                'The Ritz London - Classic British luxury dining',
+                'Sketch - Michelin-starred modern British cuisine',
+                'The Ivy - Iconic British restaurant',
+                'Hawksmoor - Premium steakhouse',
+                'Dishoom - Modern Indian cuisine'
+            ],
+            'casual': [
+                'Borough Market - Famous food market',
+                'Camden Market - Street food paradise',
+                'Dishoom - Popular Indian restaurant',
+                'Franco Manca - Artisan pizza',
+                'Honest Burgers - Quality burgers'
+            ],
+            'local_favorites': [
+                'The Clove Club - Modern British fine dining',
+                'Gymkhana - Colonial Indian cuisine',
+                'The Ledbury - Two Michelin stars',
+                'Barrafina - Spanish tapas',
+                'Hoppers - Sri Lankan street food'
+            ]
+        },
+        'Paris': {
+            'fine_dining': [
+                'Le Jules Verne - Eiffel Tower restaurant',
+                'L\'Astrance - Three Michelin stars',
+                'Le Comptoir du Relais - Bistro excellence',
+                'Septime - Modern French cuisine',
+                'L\'Arpège - Three Michelin stars'
+            ],
+            'casual': [
+                'L\'As du Fallafel - Famous falafel',
+                'Breizh Café - Authentic crêpes',
+                'Du Pain et des Idées - Artisan bakery',
+                'Le Chateaubriand - Modern bistro',
+                'Frenchie - Contemporary French'
+            ],
+            'local_favorites': [
+                'Le Petit Prince - Traditional bistro',
+                'Chez L\'Ami Louis - Classic French',
+                'L\'Ami Louis - Historic bistro',
+                'Le Comptoir du Relais - Popular spot',
+                'Frenchie - Modern French cuisine'
+            ]
+        },
+        'Tokyo': {
+            'fine_dining': [
+                'Sukiyabashi Jiro - Legendary sushi',
+                'Narisawa - Modern Japanese cuisine',
+                'Sukiyabashi Jiro Honten - Master sushi',
+                'Kozasa - Traditional kaiseki',
+                'Sukiyabashi Jiro - World-famous sushi'
+            ],
+            'casual': [
+                'Ichiran Ramen - Famous ramen chain',
+                'Tsukiji Outer Market - Fresh seafood',
+                'Sukiyabashi Jiro - Sushi excellence',
+                'Ichiran - Popular ramen',
+                'Tsukiji Market - Fresh fish'
+            ],
+            'local_favorites': [
+                'Sukiyabashi Jiro - Master sushi chef',
+                'Ichiran Ramen - Tonkotsu ramen',
+                'Tsukiji Outer Market - Fresh sushi',
+                'Sukiyabashi Jiro - Omakase experience',
+                'Ichiran - Famous ramen'
+            ]
+        },
+        'New York': {
+            'fine_dining': [
+                'Le Bernardin - Four-star seafood',
+                'Eleven Madison Park - Three Michelin stars',
+                'Per Se - Thomas Keller\'s restaurant',
+                'Daniel - French fine dining',
+                'Gramercy Tavern - Danny Meyer\'s restaurant'
+            ],
+            'casual': [
+                'Katz\'s Delicatessen - Famous pastrami',
+                'Joe\'s Pizza - Classic NYC pizza',
+                'Russ & Daughters - Jewish deli',
+                'Shake Shack - Modern burger chain',
+                'Magnolia Bakery - Famous cupcakes'
+            ],
+            'local_favorites': [
+                'Katz\'s Delicatessen - Pastrami sandwich',
+                'Joe\'s Pizza - NYC pizza',
+                'Russ & Daughters - Bagels and lox',
+                'Shake Shack - Quality burgers',
+                'Magnolia Bakery - Cupcakes'
+            ]
+        },
+        'Rome': {
+            'fine_dining': [
+                'La Pergola - Three Michelin stars',
+                'Imàgo - Rooftop dining',
+                'Aroma - Michelin-starred',
+                'La Pergola - Fine dining',
+                'Imàgo - Luxury dining'
+            ],
+            'casual': [
+                'Roscioli - Famous deli and restaurant',
+                'Pizzarium - Gourmet pizza by the slice',
+                'Trapizzino - Roman street food',
+                'Supplizio - Traditional supplì',
+                'Bonci Pizzarium - Artisan pizza'
+            ],
+            'local_favorites': [
+                'Roscioli - Traditional Roman',
+                'Pizzarium - Pizza al taglio',
+                'Trapizzino - Roman street food',
+                'Supplizio - Roman supplì',
+                'Bonci Pizzarium - Pizza'
+            ]
+        },
+        'Dubai': {
+            'fine_dining': [
+                'At.mosphere - Burj Khalifa restaurant',
+                'Zuma - Japanese izakaya',
+                'Nobu - Japanese-Peruvian fusion',
+                'Pierchic - Overwater dining',
+                'Al Mahara - Underwater restaurant'
+            ],
+            'casual': [
+                'Ravi Restaurant - Pakistani cuisine',
+                'Al Ustad Special Kabab - Persian kebabs',
+                'Al Mallah - Lebanese street food',
+                'Al Reef Lebanese Bakery - Fresh bread',
+                'Al Qasr - Traditional Emirati'
+            ],
+            'local_favorites': [
+                'Ravi Restaurant - Pakistani food',
+                'Al Ustad Special Kabab - Persian',
+                'Al Mallah - Lebanese',
+                'Al Reef Lebanese Bakery - Bread',
+                'Al Qasr - Emirati cuisine'
+            ]
+        }
+    }
+    
+    # Get specific recommendations for the destination
+    dest_key = destination.lower()
+    recommendations = restaurant_recommendations.get(dest_key, {})
+    
+    if recommendations:
+        response = f"Here are **specific restaurant recommendations** for {destination}:\n\n"
+        
+        if 'fine_dining' in recommendations:
+            response += "**🍽️ Fine Dining & Upscale:**\n"
+            for restaurant in recommendations['fine_dining'][:3]:
+                response += f"• {restaurant}\n"
+            response += "\n"
+        
+        if 'casual' in recommendations:
+            response += "**🍕 Casual & Popular:**\n"
+            for restaurant in recommendations['casual'][:3]:
+                response += f"• {restaurant}\n"
+            response += "\n"
+        
+        if 'local_favorites' in recommendations:
+            response += "**🏪 Local Favorites:**\n"
+            for restaurant in recommendations['local_favorites'][:3]:
+                response += f"• {restaurant}\n"
+            response += "\n"
+        
+        response += "**💡 Pro Tips:**\n"
+        response += "• Book fine dining restaurants 2-3 months in advance\n"
+        response += "• Visit markets for authentic local food\n"
+        response += "• Try street food for budget-friendly options\n"
+        response += "• Ask locals for hidden gems\n\n"
+        
+        response += "Would you like me to suggest specific dishes to try or help you make reservations?"
+        
+    else:
+        # Generic response for other destinations
+        response = f"Here are **food recommendations** for {destination}:\n\n" + \
+                  "**🍽️ Local Cuisine to Try:**\n" + \
+                  "• Traditional local dishes\n" + \
+                  "• Street food specialties\n" + \
+                  "• Regional specialties\n" + \
+                  "• Seasonal ingredients\n\n" + \
+                  "**🏪 Best Places to Eat:**\n" + \
+                  "• Local markets and food stalls\n" + \
+                  "• Family-run restaurants\n" + \
+                  "• Popular local spots\n" + \
+                  "• Hidden gems off the tourist path\n\n" + \
+                  "**💡 Food Tips:**\n" + \
+                  "• Try the daily specials\n" + \
+                  "• Ask locals for recommendations\n" + \
+                  "• Be adventurous with new flavors\n" + \
+                  "• Check food safety and hygiene\n\n" + \
+                  "Would you like me to suggest specific restaurants or help you plan a food tour?"
     
     return {
         'type': 'food_recommendations',
@@ -741,43 +907,218 @@ def generate_sophisticated_food(message, destination, trip_context):
     }
 
 def generate_sophisticated_activity(message, destination, trip_context):
-    """Generate sophisticated activity response"""
+    """Generate sophisticated activity response with specific places"""
     
     if not destination:
         destination = "your destination"
     
-    response = f"Here are **amazing activities** to experience in {destination}:\n\n" + \
-              "**🏛️ Cultural & Historical Experiences:**\n" + \
-              "• Visit iconic landmarks and architectural marvels\n" + \
-              "• Explore world-class museums and art galleries\n" + \
-              "• Take guided historical tours with local experts\n" + \
-              "• Attend cultural events, festivals, and performances\n\n" + \
-              "**🌳 Outdoor & Nature Adventures:**\n" + \
-              "• Explore beautiful parks, gardens, and green spaces\n" + \
-              "• Hike scenic trails and nature paths\n" + \
-              "• Take boat tours and water-based activities\n" + \
-              "• Visit scenic viewpoints and perfect photo spots\n\n" + \
-              "**🎭 Entertainment & Nightlife:**\n" + \
-              "• Experience local theaters, shows, and performances\n" + \
-              "• Discover live music venues and jazz clubs\n" + \
-              "• Explore vibrant bars, clubs, and entertainment districts\n" + \
-              "• Enjoy evening entertainment and cultural shows\n\n" + \
-              "**🛍️ Shopping & Market Experiences:**\n" + \
-              "• Browse local markets, bazaars, and artisan shops\n" + \
-              "• Explore shopping districts and designer boutiques\n" + \
-              "• Find unique souvenirs and local crafts\n" + \
-              "• Experience the hustle and bustle of local markets\n\n" + \
-              "**🎯 Unique & Authentic Experiences:**\n" + \
-              "• Take cooking classes and learn local recipes\n" + \
-              "• Participate in local workshops and craft sessions\n" + \
-              "• Try adventure activities and outdoor sports\n" + \
-              "• Join photography tours and cultural experiences\n\n" + \
-              "**💡 Insider Tips:**\n" + \
-              "• Book popular attractions in advance to avoid queues\n" + \
-              "• Visit museums on free days or discounted hours\n" + \
-              "• Take advantage of city passes for multiple attractions\n" + \
-              "• Ask locals for hidden gems and off-the-beaten-path spots\n\n" + \
-              "Would you like me to create a detailed itinerary or suggest specific activities based on your interests and travel style?"
+    # Real attraction recommendations by destination
+    attraction_recommendations = {
+        'London': {
+            'landmarks': [
+                'Big Ben and Houses of Parliament',
+                'Tower of London - Historic castle',
+                'Buckingham Palace - Royal residence',
+                'London Eye - Giant observation wheel',
+                'Tower Bridge - Iconic bridge'
+            ],
+            'museums': [
+                'British Museum - World-famous artifacts',
+                'Natural History Museum - Dinosaur exhibits',
+                'Tate Modern - Contemporary art',
+                'Victoria and Albert Museum - Art and design',
+                'Science Museum - Interactive exhibits'
+            ],
+            'parks': [
+                'Hyde Park - Large royal park',
+                'Regent\'s Park - Beautiful gardens',
+                'Greenwich Park - Royal Observatory',
+                'Kew Gardens - Botanical gardens',
+                'St James\'s Park - Royal park'
+            ],
+            'shopping': [
+                'Oxford Street - Major shopping street',
+                'Carnaby Street - Fashion district',
+                'Covent Garden - Market and entertainment',
+                'Camden Market - Alternative shopping',
+                'Portobello Road - Antiques market'
+            ]
+        },
+        'Paris': {
+            'landmarks': [
+                'Eiffel Tower - Iconic iron tower',
+                'Arc de Triomphe - Historic monument',
+                'Notre-Dame Cathedral - Gothic church',
+                'Sacré-Cœur - White basilica',
+                'Palace of Versailles - Royal palace'
+            ],
+            'museums': [
+                'Louvre Museum - World\'s largest art museum',
+                'Musée d\'Orsay - Impressionist art',
+                'Centre Pompidou - Modern art',
+                'Musée Rodin - Sculpture garden',
+                'Musée de l\'Orangerie - Water lilies'
+            ],
+            'parks': [
+                'Luxembourg Gardens - Beautiful park',
+                'Tuileries Garden - Formal gardens',
+                'Parc des Buttes-Chaumont - Romantic park',
+                'Bois de Vincennes - Large forest',
+                'Parc Monceau - Elegant park'
+            ],
+            'shopping': [
+                'Champs-Élysées - Famous avenue',
+                'Le Marais - Trendy district',
+                'Rue du Commerce - Local shopping',
+                'Galeries Lafayette - Department store',
+                'Rue de Rivoli - Shopping street'
+            ]
+        },
+        'Tokyo': {
+            'landmarks': [
+                'Tokyo Skytree - Tallest tower',
+                'Tokyo Tower - Iconic red tower',
+                'Senso-ji Temple - Ancient temple',
+                'Meiji Shrine - Shinto shrine',
+                'Imperial Palace - Emperor\'s residence'
+            ],
+            'museums': [
+                'Tokyo National Museum - Japanese art',
+                'Mori Art Museum - Contemporary art',
+                'Ghibli Museum - Animation museum',
+                'Edo-Tokyo Museum - History museum',
+                'National Museum of Western Art'
+            ],
+            'parks': [
+                'Ueno Park - Cherry blossoms',
+                'Yoyogi Park - Popular park',
+                'Shinjuku Gyoen - Beautiful garden',
+                'Hamarikyu Gardens - Traditional garden',
+                'Rikugien Garden - Stroll garden'
+            ],
+            'shopping': [
+                'Shibuya Crossing - Famous intersection',
+                'Harajuku - Youth fashion district',
+                'Ginza - Luxury shopping',
+                'Akihabara - Electronics district',
+                'Asakusa - Traditional district'
+            ]
+        },
+        'New York': {
+            'landmarks': [
+                'Statue of Liberty - Iconic monument',
+                'Empire State Building - Famous skyscraper',
+                'Times Square - Bright lights',
+                'Brooklyn Bridge - Historic bridge',
+                'Central Park - Urban oasis'
+            ],
+            'museums': [
+                'Metropolitan Museum of Art - World-class art',
+                'Museum of Modern Art (MoMA) - Modern art',
+                'American Museum of Natural History - Dinosaurs',
+                'Guggenheim Museum - Modern architecture',
+                'Whitney Museum - American art'
+            ],
+            'parks': [
+                'Central Park - 843-acre park',
+                'High Line - Elevated park',
+                'Bryant Park - Midtown oasis',
+                'Prospect Park - Brooklyn\'s park',
+                'Washington Square Park - Greenwich Village'
+            ],
+            'shopping': [
+                'Fifth Avenue - Luxury shopping',
+                'SoHo - Fashion district',
+                'Brooklyn Flea - Vintage market',
+                'Chelsea Market - Food and shopping',
+                'Williamsburg - Hipster district'
+            ]
+        },
+        'Rome': {
+            'landmarks': [
+                'Colosseum - Ancient amphitheater',
+                'Vatican City - Smallest country',
+                'Trevi Fountain - Baroque fountain',
+                'Pantheon - Ancient temple',
+                'Roman Forum - Ancient ruins'
+            ],
+            'museums': [
+                'Vatican Museums - Art collection',
+                'Capitoline Museums - Ancient art',
+                'Galleria Borghese - Art gallery',
+                'MAXXI - Modern art',
+                'Palazzo Barberini - Baroque art'
+            ],
+            'parks': [
+                'Villa Borghese - Large park',
+                'Villa Doria Pamphili - Public park',
+                'Gianicolo Hill - Panoramic views',
+                'Villa Ada - Natural park',
+                'Pincian Hill - Historic park'
+            ],
+            'shopping': [
+                'Via del Corso - Main shopping street',
+                'Via Condotti - Luxury shopping',
+                'Campo de\' Fiori - Market square',
+                'Trastevere - Bohemian district',
+                'Via del Governo Vecchio - Vintage shops'
+            ]
+        }
+    }
+    
+    # Get specific recommendations for the destination
+    dest_key = destination.lower()
+    recommendations = attraction_recommendations.get(dest_key, {})
+    
+    if recommendations:
+        response = f"Here are **specific attractions and activities** in {destination}:\n\n"
+        
+        if 'landmarks' in recommendations:
+            response += "**🏛️ Iconic Landmarks:**\n"
+            for landmark in recommendations['landmarks'][:4]:
+                response += f"• {landmark}\n"
+            response += "\n"
+        
+        if 'museums' in recommendations:
+            response += "**🏛️ World-Class Museums:**\n"
+            for museum in recommendations['museums'][:4]:
+                response += f"• {museum}\n"
+            response += "\n"
+        
+        if 'parks' in recommendations:
+            response += "**🌳 Beautiful Parks & Gardens:**\n"
+            for park in recommendations['parks'][:4]:
+                response += f"• {park}\n"
+            response += "\n"
+        
+        if 'shopping' in recommendations:
+            response += "**🛍️ Shopping & Entertainment:**\n"
+            for shopping in recommendations['shopping'][:4]:
+                response += f"• {shopping}\n"
+            response += "\n"
+        
+        response += "**💡 Insider Tips:**\n"
+        response += "• Book popular attractions online to skip queues\n"
+        response += "• Visit museums on free days or discounted hours\n"
+        response += "• Take advantage of city passes for multiple attractions\n"
+        response += "• Ask locals for hidden gems and off-the-beaten-path spots\n\n"
+        
+        response += "Would you like me to create a detailed itinerary or suggest specific activities based on your interests?"
+        
+    else:
+        # Generic response for other destinations
+        response = f"Here are **amazing activities** to experience in {destination}:\n\n" + \
+                  "**🏛️ Cultural & Historical Experiences:**\n" + \
+                  "• Visit iconic landmarks and architectural marvels\n" + \
+                  "• Explore world-class museums and art galleries\n" + \
+                  "• Take guided historical tours with local experts\n" + \
+                  "• Attend cultural events, festivals, and performances\n\n" + \
+                  "**🌳 Outdoor & Nature Adventures:**\n" + \
+                  "• Explore beautiful parks, gardens, and green spaces\n" + \
+                  "• Hike scenic trails and nature paths\n" + \
+                  "• Take boat tours and water-based activities\n" + \
+                  "• Visit scenic viewpoints and perfect photo spots\n\n" + \
+                  "Would you like me to create a detailed itinerary or suggest specific activities based on your interests?"
     
     return {
         'type': 'activity_recommendations',
@@ -827,34 +1168,177 @@ def generate_sophisticated_planning(message, destination, trip_context):
     }
 
 def generate_sophisticated_accommodation(message, destination, trip_context):
-    """Generate sophisticated accommodation response"""
+    """Generate sophisticated accommodation response with specific hotel names"""
     
     if not destination:
         destination = "your destination"
     
-    response = f"Here are **accommodation options** for {destination}:\n\n" + \
-              "**🏨 Hotels & Resorts:**\n" + \
-              "• **Luxury Hotels**: Full amenities, premium service, and exclusive experiences\n" + \
-              "• **Boutique Hotels**: Unique character, personalized service, and intimate atmosphere\n" + \
-              "• **Business Hotels**: Convenient locations, reliable service, and business facilities\n" + \
-              "• **Resort-Style**: Comprehensive amenities, pools, spas, and activities\n\n" + \
-              "**🏠 Alternative Accommodations:**\n" + \
-              "• **Vacation Rentals**: Apartments and houses for more space and privacy\n" + \
-              "• **Hostels**: Budget-friendly options with social atmosphere\n" + \
-              "• **Bed & Breakfast**: Charming accommodations with personal touch\n" + \
-              "• **Guesthouses**: Local hospitality and authentic experiences\n\n" + \
-              "**📍 Location Considerations:**\n" + \
-              "• **City Center**: Convenient access to attractions and transport\n" + \
-              "• **Quiet Neighborhoods**: Peaceful atmosphere away from tourist crowds\n" + \
-              "• **Near Public Transport**: Easy access to metro, bus, and train stations\n" + \
-              "• **Safe Areas**: Well-lit, secure neighborhoods with good reputation\n\n" + \
-              "**💡 Booking Strategies:**\n" + \
-              "• Book 2-3 months in advance for better rates and availability\n" + \
-              "• Read recent reviews and check ratings\n" + \
-              "• Compare prices across multiple booking platforms\n" + \
-              "• Check cancellation policies and flexibility\n" + \
-              "• Consider package deals for flights and accommodation\n\n" + \
-              "Would you like me to suggest specific hotels or help you find the best area to stay?"
+    # Real hotel recommendations by destination
+    hotel_recommendations = {
+        'London': {
+            'luxury': [
+                'The Ritz London - Classic luxury hotel',
+                'Claridge\'s - Mayfair luxury',
+                'The Savoy - Thames-side luxury',
+                'The Dorchester - Park Lane luxury',
+                'The Connaught - Exclusive luxury'
+            ],
+            'mid_range': [
+                'The Zetter - Boutique hotel',
+                'citizenM Tower Hill - Modern budget luxury',
+                'The Hoxton - Trendy boutique',
+                'Mama Shelter - Design hotel',
+                'The Ned - Historic luxury'
+            ],
+            'budget': [
+                'YHA London Central - Hostel',
+                'Generator London - Design hostel',
+                'Safestay London Elephant & Castle - Budget',
+                'Palmer\'s Lodge - Victorian hostel',
+                'Astor Hyde Park - Budget hostel'
+            ]
+        },
+        'Paris': {
+            'luxury': [
+                'The Ritz Paris - Historic luxury',
+                'Hôtel de Crillon - Palace hotel',
+                'Le Bristol - Classic luxury',
+                'Four Seasons George V - Luxury',
+                'Hôtel Plaza Athénée - Champs-Élysées luxury'
+            ],
+            'mid_range': [
+                'Hôtel du Petit Moulin - Boutique',
+                'Hôtel Fabric - Design hotel',
+                'Hôtel Les Bains - Trendy',
+                'Hôtel Providence - Boutique',
+                'Hôtel Thérèse - Charming'
+            ],
+            'budget': [
+                'Generator Paris - Design hostel',
+                'St Christopher\'s Inn - Hostel',
+                'Hôtel Henriette - Budget boutique',
+                'Hôtel Eldorado - Budget',
+                'Hôtel des Arts - Budget'
+            ]
+        },
+        'Tokyo': {
+            'luxury': [
+                'The Ritz-Carlton Tokyo - Luxury',
+                'Aman Tokyo - Ultra-luxury',
+                'Mandarin Oriental Tokyo - Luxury',
+                'Park Hyatt Tokyo - Famous luxury',
+                'The Peninsula Tokyo - Luxury'
+            ],
+            'mid_range': [
+                'Hotel Gracery Shinjuku - Godzilla hotel',
+                'Hotel Century Southern Tower - Mid-range',
+                'Shinjuku Granbell Hotel - Modern',
+                'Hotel Sunroute Plaza Shinjuku - Convenient',
+                'Hotel Gracery Asakusa - Traditional area'
+            ],
+            'budget': [
+                'UNPLAN Kagurazaka - Hostel',
+                'Grids Tokyo Akihabara - Hostel',
+                'Bunka Hostel Tokyo - Traditional',
+                'Sakura Hostel Asakusa - Budget',
+                'K\'s House Tokyo - Hostel'
+            ]
+        },
+        'New York': {
+            'luxury': [
+                'The Plaza - Historic luxury',
+                'The St. Regis New York - Luxury',
+                'The Waldorf Astoria - Classic luxury',
+                'The Peninsula New York - Luxury',
+                'The Ritz-Carlton New York - Luxury'
+            ],
+            'mid_range': [
+                'The Standard High Line - Trendy',
+                'Ace Hotel New York - Hip boutique',
+                'The Jane Hotel - Historic boutique',
+                'The Bowery Hotel - Downtown luxury',
+                'The High Line Hotel - Chelsea boutique'
+            ],
+            'budget': [
+                'HI New York City - Hostel',
+                'Jazz on the Park - Hostel',
+                'Chelsea International Hostel - Budget',
+                'Blue Moon Hotel - Budget boutique',
+                'Pod 39 - Pod hotel'
+            ]
+        },
+        'Rome': {
+            'luxury': [
+                'Hotel de Russie - Luxury',
+                'The St. Regis Rome - Luxury',
+                'Hotel Eden - Luxury',
+                'Palazzo Manfredi - Luxury',
+                'Hotel de la Ville - Luxury'
+            ],
+            'mid_range': [
+                'Hotel Artemide - Mid-range',
+                'Hotel Navona - Boutique',
+                'Hotel Campo de\' Fiori - Charming',
+                'Hotel Raphael - Historic',
+                'Hotel Condotti - Central'
+            ],
+            'budget': [
+                'Yellow Hostel - Hostel',
+                'The Beehive - Budget',
+                'Hostel Alessandro Downtown - Budget',
+                'Hotel Navona - Budget',
+                'Hotel Campo de\' Fiori - Budget'
+            ]
+        }
+    }
+    
+    # Get specific recommendations for the destination
+    dest_key = destination.lower()
+    recommendations = hotel_recommendations.get(dest_key, {})
+    
+    if recommendations:
+        response = f"Here are **specific accommodation options** in {destination}:\n\n"
+        
+        if 'luxury' in recommendations:
+            response += "**🏨 Luxury Hotels (5-star):**\n"
+            for hotel in recommendations['luxury'][:3]:
+                response += f"• {hotel}\n"
+            response += "\n"
+        
+        if 'mid_range' in recommendations:
+            response += "**🏠 Mid-Range Hotels (3-4 star):**\n"
+            for hotel in recommendations['mid_range'][:3]:
+                response += f"• {hotel}\n"
+            response += "\n"
+        
+        if 'budget' in recommendations:
+            response += "**💰 Budget Options:**\n"
+            for hotel in recommendations['budget'][:3]:
+                response += f"• {hotel}\n"
+            response += "\n"
+        
+        response += "**💡 Booking Tips:**\n"
+        response += "• Book 2-3 months in advance for better rates\n"
+        response += "• Check multiple booking sites for best prices\n"
+        response += "• Read recent reviews for current conditions\n"
+        response += "• Consider location vs. price trade-offs\n\n"
+        
+        response += "Would you like me to suggest specific hotels based on your budget and preferences?"
+        
+    else:
+        # Generic response for other destinations
+        response = f"Here are **accommodation options** for {destination}:\n\n" + \
+                  "**🏨 Hotels & Resorts:**\n" + \
+                  "• Luxury hotels with full amenities\n" + \
+                  "• Boutique hotels with character\n" + \
+                  "• Business hotels for convenience\n" + \
+                  "• Resort-style accommodations\n\n" + \
+                  "**🏠 Alternative Options:**\n" + \
+                  "• Vacation rentals and apartments\n" + \
+                  "• Hostels for budget travelers\n" + \
+                  "• Bed & breakfast establishments\n" + \
+                  "• Guesthouses and homestays\n\n" + \
+                  "Would you like me to suggest specific hotels or help you find the best area to stay?"
     
     return {
         'type': 'accommodation_advice',
@@ -981,7 +1465,7 @@ def generate_sophisticated_clarification(message, context):
         'type': 'clarification',
         'content': "I want to make sure I understand you correctly! 🤔\n\n" +
                   "Could you please rephrase your question or provide more specific details about what you're looking for? I'm here to help with:\n\n" +
-                  "• **Weather information** for any destination\n" +
+                  "• **Weather information** for any destination\n" + \
                   "• **Activity recommendations** and attractions\n" + \
                   "• **Budget planning** and cost estimates\n" + \
                   "• **Trip planning** and itineraries\n" + \
