@@ -278,20 +278,29 @@ def generate_ai_response(user_message, trip_context):
     """Generate AI response based on user message and trip context"""
     message_lower = user_message.lower()
     
-    # More specific keyword matching
-    if any(word in message_lower for word in ['weather', 'forecast', 'temperature', 'rain', 'sunny']):
+    # Extract destination from message or trip context
+    destination = trip_context.get('destination', '')
+    if not destination:
+        # Try to extract destination from the message
+        for word in message_lower.split():
+            if any(city in word for city in ['paris', 'london', 'tokyo', 'new york', 'los angeles', 'rome', 'dubai', 'mumbai', 'sydney']):
+                destination = word
+                break
+    
+    # More specific keyword matching with destination context
+    if any(word in message_lower for word in ['weather', 'forecast', 'temperature', 'rain', 'sunny', 'hot', 'cold']):
         return generate_weather_response(user_message, trip_context)
-    elif any(word in message_lower for word in ['budget', 'cost', 'money', 'expensive', 'cheap', 'price']):
+    elif any(word in message_lower for word in ['budget', 'cost', 'money', 'expensive', 'cheap', 'price', 'save', 'spend']):
         return generate_budget_suggestion(user_message, trip_context)
-    elif any(word in message_lower for word in ['food', 'restaurant', 'eat', 'dining', 'cuisine', 'meal']):
+    elif any(word in message_lower for word in ['food', 'restaurant', 'eat', 'dining', 'cuisine', 'meal', 'dish', 'local']):
         return generate_food_suggestion(user_message, trip_context)
-    elif any(word in message_lower for word in ['activity', 'things to do', 'attraction', 'visit', 'see', 'tour']):
+    elif any(word in message_lower for word in ['activity', 'things to do', 'attraction', 'visit', 'see', 'tour', 'place', 'sight']):
         return generate_activity_suggestion(user_message, trip_context)
-    elif any(word in message_lower for word in ['plan', 'itinerary', 'schedule', 'day']):
+    elif any(word in message_lower for word in ['plan', 'itinerary', 'schedule', 'day', 'trip']):
         return generate_trip_plan_suggestion(user_message, trip_context)
-    elif any(word in message_lower for word in ['remind', 'forget', 'checklist', 'pack', 'prepare']):
+    elif any(word in message_lower for word in ['remind', 'forget', 'checklist', 'pack', 'prepare', 'need']):
         return generate_reminder_response(user_message, trip_context)
-    elif any(word in message_lower for word in ['hello', 'hi', 'help', 'what can you do']):
+    elif any(word in message_lower for word in ['hello', 'hi', 'help', 'what can you do', 'start']):
         return generate_general_response(user_message, trip_context)
     else:
         # For any other message, try to provide a helpful response
@@ -557,6 +566,14 @@ def generate_smart_suggestions(destination, dates, interests, budget, group_size
             'estimated_cost': '$20-50/person',
             'booking_tip': 'Book Seine cruise for sunset views'
         })
+        suggestions.append({
+            'category': 'Shopping',
+            'title': 'Champs-Élysées & Luxury Shopping',
+            'description': 'Famous avenue with high-end boutiques and cafes',
+            'priority': 'medium',
+            'estimated_cost': '$50-200/person',
+            'booking_tip': 'Visit early morning to avoid crowds'
+        })
     elif 'london' in destination_lower:
         suggestions.append({
             'category': 'Must-See',
@@ -681,6 +698,89 @@ def generate_smart_suggestions(destination, dates, interests, budget, group_size
             'priority': 'medium',
             'estimated_cost': '$30-80/person',
             'booking_tip': 'Try trattorias away from tourist areas'
+        })
+        suggestions.append({
+            'category': 'Culture',
+            'title': 'Trevi Fountain & Spanish Steps',
+            'description': 'Famous landmarks and romantic spots',
+            'priority': 'medium',
+            'estimated_cost': '$0-20/person',
+            'booking_tip': 'Visit early morning or late evening for fewer crowds'
+        })
+    elif 'dubai' in destination_lower:
+        suggestions.append({
+            'category': 'Architecture',
+            'title': 'Burj Khalifa & Dubai Mall',
+            'description': 'World\'s tallest building and luxury shopping',
+            'priority': 'high',
+            'estimated_cost': '$50-100/person',
+            'booking_tip': 'Book Burj Khalifa tickets online for sunset views'
+        })
+        suggestions.append({
+            'category': 'Desert',
+            'title': 'Desert Safari Experience',
+            'description': 'Dune bashing, camel rides, and traditional dinner',
+            'priority': 'high',
+            'estimated_cost': '$80-150/person',
+            'booking_tip': 'Book through reputable tour operators'
+        })
+        suggestions.append({
+            'category': 'Luxury',
+            'title': 'Palm Jumeirah & Atlantis',
+            'description': 'Iconic palm-shaped island and luxury resort',
+            'priority': 'medium',
+            'estimated_cost': '$100-300/person',
+            'booking_tip': 'Visit Atlantis Aquaventure for water activities'
+        })
+    elif 'mumbai' in destination_lower or 'bombay' in destination_lower:
+        suggestions.append({
+            'category': 'History',
+            'title': 'Gateway of India & Marine Drive',
+            'description': 'Iconic landmarks and scenic waterfront',
+            'priority': 'high',
+            'estimated_cost': '$5-20/person',
+            'booking_tip': 'Visit Gateway at sunset for best photos'
+        })
+        suggestions.append({
+            'category': 'Food & Dining',
+            'title': 'Street Food & Local Cuisine',
+            'description': 'Famous street food and authentic Indian dishes',
+            'priority': 'medium',
+            'estimated_cost': '$10-40/person',
+            'booking_tip': 'Try vada pav, pav bhaji, and local chaat'
+        })
+        suggestions.append({
+            'category': 'Culture',
+            'title': 'Elephanta Caves & Museums',
+            'description': 'Ancient cave temples and cultural sites',
+            'priority': 'medium',
+            'estimated_cost': '$15-30/person',
+            'booking_tip': 'Take ferry to Elephanta Caves early morning'
+        })
+    elif 'sydney' in destination_lower:
+        suggestions.append({
+            'category': 'Landmarks',
+            'title': 'Sydney Opera House & Harbour Bridge',
+            'description': 'Iconic landmarks and harbor views',
+            'priority': 'high',
+            'estimated_cost': '$30-80/person',
+            'booking_tip': 'Book Opera House tours in advance'
+        })
+        suggestions.append({
+            'category': 'Beach',
+            'title': 'Bondi Beach & Coastal Walk',
+            'description': 'Famous beach and scenic coastal trail',
+            'priority': 'medium',
+            'estimated_cost': '$10-40/person',
+            'booking_tip': 'Start coastal walk early morning'
+        })
+        suggestions.append({
+            'category': 'Nature',
+            'title': 'Blue Mountains & Wildlife',
+            'description': 'Scenic mountains and native wildlife',
+            'priority': 'medium',
+            'estimated_cost': '$50-120/person',
+            'booking_tip': 'Book guided tours for best experience'
         })
     else:
         # Generic suggestions for other destinations
@@ -941,33 +1041,54 @@ def get_weather_for_place(place_name):
     }
     
     # Adjust weather based on place (simulated)
-    if any(city in place_lower for city in ['paris', 'london', 'rome']):
+    if any(city in place_lower for city in ['paris', 'london', 'rome', 'eiffel']):
         weather_data.update({
             'temperature': 18,
             'feels_like': 20,
             'description': 'Light rain',
             'humidity': 75
         })
-    elif any(city in place_lower for city in ['tokyo', 'seoul', 'beijing']):
+    elif any(city in place_lower for city in ['tokyo', 'seoul', 'beijing', 'japan']):
         weather_data.update({
             'temperature': 25,
             'feels_like': 28,
             'description': 'Sunny',
             'humidity': 60
         })
-    elif any(city in place_lower for city in ['los angeles', 'san francisco', 'miami']):
+    elif any(city in place_lower for city in ['los angeles', 'san francisco', 'miami', 'la', 'california']):
         weather_data.update({
             'temperature': 28,
             'feels_like': 30,
             'description': 'Sunny',
             'humidity': 55
         })
-    elif any(city in place_lower for city in ['new york', 'chicago', 'boston']):
+    elif any(city in place_lower for city in ['new york', 'chicago', 'boston', 'nyc', 'manhattan']):
         weather_data.update({
             'temperature': 15,
             'feels_like': 17,
             'description': 'Partly cloudy',
             'humidity': 70
+        })
+    elif any(city in place_lower for city in ['dubai', 'abu dhabi', 'uae']):
+        weather_data.update({
+            'temperature': 35,
+            'feels_like': 38,
+            'description': 'Hot and sunny',
+            'humidity': 40
+        })
+    elif any(city in place_lower for city in ['mumbai', 'delhi', 'india']):
+        weather_data.update({
+            'temperature': 32,
+            'feels_like': 35,
+            'description': 'Hot and humid',
+            'humidity': 80
+        })
+    elif any(city in place_lower for city in ['sydney', 'melbourne', 'australia']):
+        weather_data.update({
+            'temperature': 20,
+            'feels_like': 22,
+            'description': 'Mild and pleasant',
+            'humidity': 65
         })
     
     return weather_data 
