@@ -4262,6 +4262,11 @@
                 // Load active polls for dashboard
                 await loadActivePolls();
                 
+                // Load notifications and chat messages
+                await updateNotificationCards();
+                await loadNotifications();
+                await loadChatNotifications();
+                
                 // Also display all trips in the trips section
                 if (document.getElementById('tripsSection').style.display !== 'none') {
                     displayAllTrips();
@@ -4635,20 +4640,27 @@
 
         async function updateNotificationCards() {
             try {
+                console.log('Updating notification cards...');
+                
                 // Update unread notifications count
                 const notifications = await apiCall('/api/notifications');
+                console.log('Notifications response:', notifications);
                 const unreadCount = notifications.filter(n => !n.is_read).length;
+                console.log('Unread count:', unreadCount);
                 document.getElementById('unreadNotifications').textContent = unreadCount;
                 
                 // Update chat notifications count
-                const chatNotifications = await apiCall('/api/chat/notifications');
+                const chatNotifications = await apiCall('/api/notifications/chat');
+                console.log('Chat notifications response:', chatNotifications);
+                console.log('Chat notifications count:', chatNotifications.length);
                 document.getElementById('chatNotifications').textContent = chatNotifications.length;
                 
                 // Update active polls count
                 const activePolls = await apiCall('/api/polls/active');
+                console.log('Active polls response:', activePolls);
                 document.getElementById('activePollsCount').textContent = activePolls.length;
                 
-
+                console.log('Notification cards updated successfully');
                 
             } catch (error) {
                 console.error('Error updating notification cards:', error);
