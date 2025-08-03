@@ -1240,6 +1240,30 @@ def generate_interactive_general(message, context, destination):
         'suggestions': ['Weather check', 'Activity ideas', 'Budget help', 'Food recommendations', 'Safety advice']
     }
 
+@ai_recommendations_bp.route('/api/groups/<int:group_id>/weather/place', methods=['GET'])
+@jwt_required()
+def get_weather_by_place(group_id):
+    user_id = int(get_jwt_identity())
+    
+    # Verify user is part of the group
+    member = GroupMember.query.filter_by(group_id=group_id, user_id=user_id).first()
+    if not member:
+        return jsonify({'error': 'You are not a member of this group'}), 403
+    
+    place_name = request.args.get('place', '')
+    
+    if not place_name:
+        return jsonify({'error': 'Place name is required'}), 400
+    
+    # For now, return realistic weather data based on place name
+    # In production, integrate with OpenWeatherMap Geocoding API
+    weather_data = get_weather_for_place(place_name)
+    
+    return jsonify({
+        'weather': weather_data,
+        'place': place_name
+    })
+
 @ai_recommendations_bp.route('/api/groups/<int:group_id>/weather', methods=['GET'])
 @jwt_required()
 def get_weather_info(group_id):
@@ -1283,30 +1307,6 @@ def get_weather_info(group_id):
             
     except Exception as e:
         return jsonify({'error': f'Weather service error: {str(e)}'}), 500
-
-@ai_recommendations_bp.route('/api/groups/<int:group_id>/weather/place', methods=['GET'])
-@jwt_required()
-def get_weather_by_place(group_id):
-    user_id = int(get_jwt_identity())
-    
-    # Verify user is part of the group
-    member = GroupMember.query.filter_by(group_id=group_id, user_id=user_id).first()
-    if not member:
-        return jsonify({'error': 'You are not a member of this group'}), 403
-    
-    place_name = request.args.get('place', '')
-    
-    if not place_name:
-        return jsonify({'error': 'Place name is required'}), 400
-    
-    # For now, return realistic weather data based on place name
-    # In production, integrate with OpenWeatherMap Geocoding API
-    weather_data = get_weather_for_place(place_name)
-    
-    return jsonify({
-        'weather': weather_data,
-        'place': place_name
-    })
 
 def get_weather_for_place(place_name):
     """Get weather data for a specific place with more dynamic and realistic data"""
