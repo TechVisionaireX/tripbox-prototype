@@ -85,14 +85,12 @@ try:
 except Exception as e:
     print("FAILED to import location_bp:", e)
 
-# ✅ NEW FEATURES: Temporarily disabled for deployment fix
-# Will re-enable once basic deployment is working
-
-# try:
-#     from ai_recommendations import ai_recommendations_bp
-#     print("Imported ai_recommendations_bp successfully!")
-# except Exception as e:
-#     print("FAILED to import ai_recommendations_bp:", e)
+# ✅ NEW FEATURES: AI Assistant and Smart Recommendations
+try:
+    from ai_recommendations import ai_recommendations_bp
+    print("Imported ai_recommendations_bp successfully!")
+except Exception as e:
+    print("FAILED to import ai_recommendations_bp:", e)
 
 # try:
 #     from live_location import live_location_bp
@@ -169,8 +167,8 @@ app.register_blueprint(checklist_bp)
 app.register_blueprint(budget_bp)
 app.register_blueprint(finalize_bp)
 app.register_blueprint(location_bp)  #  NEW
+app.register_blueprint(ai_recommendations_bp)  # AI Recommendations
 # Temporarily disabled new blueprints for deployment fix
-# app.register_blueprint(ai_recommendations_bp)  # AI Recommendations
 # app.register_blueprint(live_location_bp)  # Live Location Tracking
 # app.register_blueprint(pdf_generator_bp)  # PDF Generation
 # app.register_blueprint(real_time_chat_bp)  # Enhanced Chat
