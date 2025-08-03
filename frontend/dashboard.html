@@ -1296,6 +1296,103 @@
             color: var(--success-color);
             font-weight: 500;
         }
+
+        /* Weather Section Styles */
+        .weather-display {
+            margin-top: 1rem;
+        }
+
+        .current-weather {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: var(--border-radius-lg);
+            padding: 2rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .weather-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .weather-header h3 {
+            margin: 0;
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+
+        .weather-details {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .weather-temp {
+            font-size: 3rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .weather-desc {
+            font-size: 1.2rem;
+            margin-bottom: 1rem;
+            opacity: 0.9;
+        }
+
+        .weather-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .weather-info span {
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+
+        .packing-suggestions {
+            margin-top: 1rem;
+        }
+
+        .packing-list {
+            display: grid;
+            gap: 1rem;
+        }
+
+        .packing-category {
+            background: white;
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius);
+            padding: 1.5rem;
+        }
+
+        .packing-category h4 {
+            color: var(--text-primary);
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .packing-items {
+            display: grid;
+            gap: 0.5rem;
+        }
+
+        .packing-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem;
+            background: var(--bg-secondary);
+            border-radius: var(--border-radius);
+        }
+
+        .packing-item i {
+            color: var(--accent-color);
+        }
         
         .chat-input-container {
             padding: 15px;
@@ -2925,6 +3022,12 @@
                 </a>
             </div>
             <div class="nav-item">
+                <a href="#" class="nav-link" onclick="showSection('weather')">
+                    <i class="fas fa-cloud-sun"></i>
+                    Weather
+                </a>
+            </div>
+            <div class="nav-item">
                 <a href="#" class="nav-link" onclick="alert('AI Assistant clicked!'); console.log('AI Assistant clicked'); showSection('ai-assistant'); console.log('showSection completed');" style="cursor: pointer;">
                     <i class="fas fa-robot"></i>
                     AI Assistant
@@ -3600,6 +3703,81 @@
                     <div class="card-body">
                         <div id="pollsList" class="polls-list">
                             <div class="loading-spinner">Loading polls...</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Weather Section -->
+        <section id="weatherSection" class="section" style="display: none;">
+            <div class="header">
+                <h1><i class="fas fa-cloud-sun"></i> Weather</h1>
+                <p>Get current weather information and forecasts for your destinations</p>
+            </div>
+            
+            <div class="content">
+                <!-- Current Weather -->
+                <div class="card">
+                    <div class="card-header">
+                        <h2><i class="fas fa-cloud-sun"></i> Current Weather</h2>
+                        <button class="btn btn-secondary btn-sm" onclick="loadWeatherData()">
+                            <i class="fas fa-sync-alt"></i> Refresh
+                        </button>
+                    </div>
+                    <div class="card-body">
+                        <div class="weather-input">
+                            <div class="form-group">
+                                <label for="weatherPlaceInput">Place Name</label>
+                                <div class="input-group">
+                                    <input type="text" id="weatherPlaceInput" placeholder="e.g., Paris, London, Tokyo">
+                                    <button type="button" class="btn btn-primary" onclick="getWeatherForPlace()">
+                                        <i class="fas fa-search"></i> Get Weather
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <div id="weatherDisplay" class="weather-display">
+                            <div class="empty-state">
+                                <i class="fas fa-cloud-sun"></i>
+                                <h3>Enter place name</h3>
+                                <p>Please enter a city or place name to get current weather</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Weather Alerts -->
+                <div class="card">
+                    <div class="card-header">
+                        <h2><i class="fas fa-exclamation-triangle"></i> Weather Alerts</h2>
+                        <button class="btn btn-secondary btn-sm" onclick="loadWeatherAlerts()">
+                            <i class="fas fa-sync-alt"></i> Refresh
+                        </button>
+                    </div>
+                    <div class="card-body">
+                        <div id="weatherAlertsDisplay" class="weather-alerts">
+                            <div class="empty-state">
+                                <i class="fas fa-exclamation-triangle"></i>
+                                <h3>No weather alerts</h3>
+                                <p>Weather conditions look good for your trip!</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Packing Suggestions -->
+                <div class="card">
+                    <div class="card-header">
+                        <h2><i class="fas fa-suitcase"></i> Packing Suggestions</h2>
+                    </div>
+                    <div class="card-body">
+                        <div id="packingSuggestions" class="packing-suggestions">
+                            <div class="empty-state">
+                                <i class="fas fa-suitcase"></i>
+                                <h3>Get weather first</h3>
+                                <p>Enter a destination to get personalized packing suggestions</p>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -5803,6 +5981,173 @@
             `).join('');
         }
 
+        // Weather Section Functions
+        async function loadWeatherData() {
+            try {
+                const placeName = document.getElementById('weatherPlaceInput').value;
+                
+                if (!placeName) {
+                    document.getElementById('weatherDisplay').innerHTML = '<div class="empty-state"><i class="fas fa-cloud-sun"></i><h3>Enter place name</h3><p>Please enter a city or place name to get current weather</p></div>';
+                    return;
+                }
+                
+                const groups = await apiCall('/api/groups');
+                if (!groups || groups.length === 0) {
+                    alert('Please create a group first');
+                    return;
+                }
+                
+                const groupId = groups[0].id;
+                
+                // Get current weather by place name
+                const weatherResponse = await apiCall(`/api/groups/${groupId}/weather/place?place=${encodeURIComponent(placeName)}`);
+                
+                if (weatherResponse && weatherResponse.weather) {
+                    displayWeatherData(weatherResponse.weather);
+                    generatePackingSuggestions(weatherResponse.weather);
+                } else {
+                    document.getElementById('weatherDisplay').innerHTML = '<div class="error-message">Failed to get weather data</div>';
+                }
+                
+            } catch (error) {
+                console.error('Error loading weather:', error);
+                document.getElementById('weatherDisplay').innerHTML = '<div class="error-message">Failed to load weather data</div>';
+            }
+        }
+
+        async function getWeatherForPlace() {
+            await loadWeatherData();
+        }
+
+        function displayWeatherData(weather) {
+            const container = document.getElementById('weatherDisplay');
+            const weatherHtml = `
+                <div class="current-weather">
+                    <div class="weather-header">
+                        <h3><i class="fas fa-cloud-sun"></i> Current Weather in ${weather.location}</h3>
+                    </div>
+                    <div class="weather-details">
+                        <div class="weather-temp">${weather.temperature}°C (${(weather.temperature * 9/5 + 32).toFixed(1)}°F)</div>
+                        <div class="weather-desc">${weather.description}</div>
+                        <div class="weather-info">
+                            <span>Feels like: ${weather.feels_like}°C</span>
+                            <span>Humidity: ${weather.humidity}%</span>
+                            <span>Wind: ${weather.wind_speed} km/h</span>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            container.innerHTML = weatherHtml;
+        }
+
+        function generatePackingSuggestions(weather) {
+            const container = document.getElementById('packingSuggestions');
+            const temp = weather.temperature;
+            const description = weather.description.toLowerCase();
+            
+            let clothing = [];
+            let accessories = [];
+            let essentials = [];
+            
+            // Clothing suggestions based on temperature
+            if (temp < 10) {
+                clothing = ['Warm coat or jacket', 'Thermal underwear', 'Warm socks', 'Gloves', 'Scarf', 'Winter hat'];
+            } else if (temp < 20) {
+                clothing = ['Light jacket or sweater', 'Long pants', 'Comfortable shoes', 'Light scarf'];
+            } else if (temp < 30) {
+                clothing = ['T-shirts', 'Shorts or light pants', 'Comfortable walking shoes', 'Light sweater for evenings'];
+            } else {
+                clothing = ['Light, breathable clothing', 'Shorts', 'T-shirts', 'Comfortable sandals', 'Hat for sun protection'];
+            }
+            
+            // Weather-specific accessories
+            if (description.includes('rain')) {
+                accessories = ['Umbrella', 'Waterproof jacket', 'Waterproof shoes', 'Waterproof bag cover'];
+            } else if (description.includes('snow')) {
+                accessories = ['Waterproof boots', 'Warm gloves', 'Winter hat', 'Sunglasses (for snow glare)'];
+            } else if (description.includes('sun') || temp > 25) {
+                accessories = ['Sunglasses', 'Sunscreen (SPF 30+)', 'Hat or cap', 'Light scarf for sun protection'];
+            } else {
+                accessories = ['Light jacket', 'Comfortable walking shoes'];
+            }
+            
+            // Essential items
+            essentials = ['Passport/ID', 'Phone charger', 'Camera', 'Medications', 'Travel documents', 'Money/credit cards'];
+            
+            const packingHtml = `
+                <div class="packing-list">
+                    <div class="packing-category">
+                        <h4><i class="fas fa-tshirt"></i> Clothing</h4>
+                        <div class="packing-items">
+                            ${clothing.map(item => `<div class="packing-item"><i class="fas fa-check"></i>${item}</div>`).join('')}
+                        </div>
+                    </div>
+                    <div class="packing-category">
+                        <h4><i class="fas fa-umbrella"></i> Accessories</h4>
+                        <div class="packing-items">
+                            ${accessories.map(item => `<div class="packing-item"><i class="fas fa-check"></i>${item}</div>`).join('')}
+                        </div>
+                    </div>
+                    <div class="packing-category">
+                        <h4><i class="fas fa-suitcase"></i> Essentials</h4>
+                        <div class="packing-items">
+                            ${essentials.map(item => `<div class="packing-item"><i class="fas fa-check"></i>${item}</div>`).join('')}
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            container.innerHTML = packingHtml;
+        }
+
+        async function loadWeatherAlerts() {
+            try {
+                const groups = await apiCall('/api/groups');
+                if (!groups || groups.length === 0) {
+                    alert('Please create a group first');
+                    return;
+                }
+                
+                const groupId = groups[0].id;
+                
+                // Get weather alerts
+                const alertsResponse = await apiCall(`/api/groups/${groupId}/ai-assistant/weather-alerts`);
+                
+                if (alertsResponse && alertsResponse.weather_alerts) {
+                    displayWeatherAlertsSection(alertsResponse.weather_alerts);
+                } else {
+                    document.getElementById('weatherAlertsDisplay').innerHTML = '<div class="empty-state"><i class="fas fa-exclamation-triangle"></i><h3>No weather alerts</h3><p>Weather conditions look good for your trip!</p></div>';
+                }
+                
+            } catch (error) {
+                console.error('Error loading weather alerts:', error);
+                document.getElementById('weatherAlertsDisplay').innerHTML = '<div class="error-message">Failed to load weather alerts</div>';
+            }
+        }
+
+                function displayWeatherAlertsSection(alerts) {
+            const container = document.getElementById('weatherAlertsDisplay');
+            
+            if (!alerts || alerts.length === 0) {
+                container.innerHTML = '<div class="empty-state"><i class="fas fa-exclamation-triangle"></i><h3>No weather alerts</h3><p>Weather conditions look good for your trip!</p></div>';
+                return;
+            }
+            
+            container.innerHTML = alerts.map(alert => `
+                <div class="weather-alert">
+                    <div class="weather-icon weather">
+                        <i class="fas fa-exclamation-triangle"></i>
+                    </div>
+                    <div class="weather-content">
+                        <div class="weather-alert-title">${alert}</div>
+                        <div class="weather-alert-message">Weather alert for your destination</div>
+                        <div class="weather-alert-suggestion">Check local weather updates</div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
         // Location Check-in Functions
 
         // Location Check-in Functions
@@ -7969,6 +8314,9 @@
                     break;
                 case 'ai-assistant':
                     loadAiAssistant();
+                    break;
+                case 'weather':
+                    // Weather section is loaded by default, no specific loading needed
                     break;
             }
         }
