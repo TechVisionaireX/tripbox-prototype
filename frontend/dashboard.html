@@ -2761,7 +2761,7 @@
                 </a>
             </div>
             <div class="nav-item">
-                <a href="#" class="nav-link" onclick="alert('AI Assistant clicked!'); console.log('AI Assistant clicked'); showSection('ai-assistant');" style="cursor: pointer;">
+                <a href="#" class="nav-link" onclick="alert('AI Assistant clicked!'); console.log('AI Assistant clicked'); showSection('ai-assistant'); console.log('showSection completed');" style="cursor: pointer;">
                     <i class="fas fa-robot"></i>
                     AI Assistant
                 </a>
@@ -3432,7 +3432,10 @@
         </section>
 
         <!-- AI Assistant Section -->
-        <section id="aiAssistantSection" class="section" style="display: none;">
+        <section id="aiAssistantSection" class="section" style="display: none; background: white;">
+            <div style="background: red; color: white; padding: 20px; font-size: 24px; text-align: center;">
+                AI ASSISTANT SECTION IS LOADED - IF YOU SEE THIS, THE SECTION IS WORKING!
+            </div>
             <div class="header">
                 <h1><i class="fas fa-robot"></i> AI Assistant</h1>
                 <p>Get smart suggestions, reminders, and travel advice</p>
@@ -3849,56 +3852,7 @@
             }
         }
 
-        // Navigation Functions
-        function showSection(sectionName) {
-            // Hide all sections
-            document.querySelectorAll('.section').forEach(section => {
-                section.style.display = 'none';
-            });
-            
-            // Remove active class from all nav links
-            document.querySelectorAll('.nav-link').forEach(link => {
-                link.classList.remove('active');
-            });
-            
-            // Show selected section
-            document.getElementById(sectionName + 'Section').style.display = 'block';
-            
-            // Add active class to clicked nav link
-            event.target.classList.add('active');
-            
-            // Load section-specific data
-            switch(sectionName) {
-                case 'dashboard':
-                    loadDashboardData();
-                    loadUserTripExpenses();
-                    break;
-                case 'trips':
-                    console.log('Loading trips section...');
-                    loadAllTrips();
-                    break;
-                case 'groups':
-                    loadGroups();
-                    break;
-                case 'expenses':
-                    loadExpenses();
-                    break;
-                case 'gallery':
-                    console.log('Loading gallery section...');
-                    loadGallery();
-                    break;
-                case 'checklist':
-                    loadChecklists();
-                    break;
-                case 'polls':
-                    loadPolls();
-                    break;
-                case 'ai-assistant':
-                    loadAiAssistant();
-                    break;
-                // Add cases for other sections as needed
-            }
-        }
+
 
         function toggleSidebar() {
             document.getElementById('sidebar').classList.toggle('open');
@@ -4657,13 +4611,16 @@
             } catch (error) {
                 console.error('Error loading chat notifications:', error);
                 console.error('Error details:', error.message);
-                document.getElementById('chatNotificationsList').innerHTML = `
-                    <div class="empty-state">
-                        <i class="fas fa-bell"></i>
-                        <h3>Error loading notifications</h3>
-                        <p>${error.message}</p>
-                    </div>
-                `;
+                const container = document.getElementById('chatNotificationsList');
+                if (container) {
+                    container.innerHTML = `
+                        <div class="empty-state">
+                            <i class="fas fa-bell"></i>
+                            <h3>Error loading notifications</h3>
+                            <p>${error.message}</p>
+                        </div>
+                    `;
+                }
             }
         }
 
@@ -4671,6 +4628,12 @@
             console.log('Displaying chat notifications:', notifications);
             const container = document.getElementById('chatNotificationsList');
             const notificationCount = document.getElementById('notificationCount');
+            
+            // Check if container exists
+            if (!container) {
+                console.log('Chat notifications container not found, skipping display');
+                return;
+            }
             
             if (!notifications || notifications.length === 0) {
                 console.log('No notifications to display');
@@ -5157,6 +5120,11 @@
         async function loadAiAssistant() {
             try {
                 console.log('Loading AI Assistant section...');
+                
+                // Check if section is visible
+                const aiSection = document.getElementById('aiAssistantSection');
+                console.log('AI Assistant section:', aiSection);
+                console.log('AI Assistant section display:', aiSection.style.display);
                 
                 // Load user groups for context
                 await loadUserGroups();
@@ -7545,24 +7513,43 @@
             console.log('showSection called with:', sectionName);
             
             // Hide all sections
+            console.log('Hiding all sections...');
             document.querySelectorAll('.section').forEach(section => {
+                console.log('Hiding section:', section.id, 'current display:', section.style.display);
                 section.style.display = 'none';
             });
 
             // Show selected section
-            const targetSection = document.getElementById(sectionName + 'Section');
+            let targetSection;
+            if (sectionName === 'ai-assistant') {
+                targetSection = document.getElementById('aiAssistantSection');
+            } else {
+                targetSection = document.getElementById(sectionName + 'Section');
+            }
             console.log('Target section:', targetSection);
             if (targetSection) {
                 targetSection.style.display = 'block';
+                console.log('Section display set to block');
+                
+                // Force visibility for AI Assistant section
+                if (sectionName === 'ai-assistant') {
+                    targetSection.style.visibility = 'visible';
+                    targetSection.style.opacity = '1';
+                    targetSection.style.zIndex = '1';
+                    console.log('AI Assistant section forced visible');
+                }
             } else {
-                console.error('Section not found:', sectionName + 'Section');
+                console.error('Section not found:', sectionName === 'ai-assistant' ? 'aiAssistantSection' : sectionName + 'Section');
             }
 
             // Update navigation
             document.querySelectorAll('.nav-link').forEach(link => {
                 link.classList.remove('active');
             });
-            document.querySelector(`[onclick="showSection('${sectionName}')"]`).classList.add('active');
+            const activeLink = document.querySelector(`[onclick="showSection('${sectionName}')"]`);
+            if (activeLink) {
+                activeLink.classList.add('active');
+            }
 
             // Load section-specific data
             switch (sectionName) {
