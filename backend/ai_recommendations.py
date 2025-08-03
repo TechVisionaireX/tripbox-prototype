@@ -12,6 +12,9 @@ ai_recommendations_bp = Blueprint('ai_recommendations_bp', __name__)
 GOOGLE_PLACES_API_KEY = os.environ.get('GOOGLE_PLACES_API_KEY', 'your-google-places-api-key')
 OPENAI_API_KEY = os.environ.get('OPENAI_API_KEY', 'your-openai-api-key')
 
+# Add conversation memory at the top of the file
+conversation_history = {}
+
 @ai_recommendations_bp.route('/api/groups/<int:group_id>/ai-recommendations', methods=['POST'])
 @jwt_required()
 def get_ai_recommendations(group_id):
@@ -195,9 +198,10 @@ def ai_assistant_chat(group_id):
     
     user_message = data.get('message', '')
     trip_context = data.get('trip_context', {})
+    conversation_id = data.get('conversation_id') # Get conversation_id from request
     
     # Generate AI response based on message type
-    ai_response = generate_ai_response(user_message, trip_context)
+    ai_response = generate_ai_response(user_message, trip_context, conversation_id)
     
     return jsonify({
         'response': ai_response,
@@ -274,9 +278,21 @@ def get_weather_alerts(group_id):
         'generated_at': datetime.now().isoformat()
     })
 
-def generate_ai_response(user_message, trip_context):
-    """Generate AI response based on user message and trip context"""
+def generate_ai_response(user_message, trip_context, conversation_id=None):
+    """Generate AI response based on user message and trip context with conversation memory"""
     message_lower = user_message.lower()
+    
+    # Initialize conversation history if not exists
+    if conversation_id and conversation_id not in conversation_history:
+        conversation_history[conversation_id] = []
+    
+    # Add user message to history
+    if conversation_id:
+        conversation_history[conversation_id].append({
+            'role': 'user',
+            'content': user_message,
+            'timestamp': datetime.now().isoformat()
+        })
     
     # Extract destination from message or trip context
     destination = trip_context.get('destination', '')
@@ -287,8 +303,16 @@ def generate_ai_response(user_message, trip_context):
                 destination = word
                 break
     
-    # More specific keyword matching with destination context
-    if any(word in message_lower for word in ['weather', 'forecast', 'temperature', 'rain', 'sunny', 'hot', 'cold', 'climate']):
+    # Check for conversation context and greetings
+    if any(word in message_lower for word in ['hello', 'hi', 'hey', 'good morning', 'good afternoon', 'good evening']):
+        return generate_greeting_response(user_message, trip_context, conversation_id)
+    elif any(word in message_lower for word in ['thank', 'thanks', 'appreciate']):
+        return generate_thanks_response(user_message, trip_context, conversation_id)
+    elif any(word in message_lower for word in ['bye', 'goodbye', 'see you', 'end']):
+        return generate_farewell_response(user_message, trip_context, conversation_id)
+    elif any(word in message_lower for word in ['help', 'what can you do', 'capabilities', 'assist']):
+        return generate_help_response(user_message, trip_context, conversation_id)
+    elif any(word in message_lower for word in ['weather', 'forecast', 'temperature', 'rain', 'sunny', 'hot', 'cold', 'climate']):
         return generate_weather_response(user_message, trip_context)
     elif any(word in message_lower for word in ['budget', 'cost', 'money', 'expensive', 'cheap', 'price', 'save', 'spend', 'dollar', 'euro', 'currency']):
         return generate_budget_suggestion(user_message, trip_context)
@@ -300,8 +324,6 @@ def generate_ai_response(user_message, trip_context):
         return generate_trip_plan_suggestion(user_message, trip_context)
     elif any(word in message_lower for word in ['remind', 'forget', 'checklist', 'pack', 'prepare', 'need', 'bring', 'carry']):
         return generate_reminder_response(user_message, trip_context)
-    elif any(word in message_lower for word in ['hello', 'hi', 'help', 'what can you do', 'start', 'hey']):
-        return generate_general_response(user_message, trip_context)
     elif any(word in message_lower for word in ['hotel', 'accommodation', 'stay', 'sleep', 'room', 'booking']):
         return generate_accommodation_suggestion(user_message, trip_context)
     elif any(word in message_lower for word in ['transport', 'transportation', 'travel', 'bus', 'train', 'metro', 'subway', 'taxi']):
@@ -312,7 +334,138 @@ def generate_ai_response(user_message, trip_context):
         return generate_safety_suggestion(user_message, trip_context)
     else:
         # For any other message, try to provide a helpful response
-        return generate_contextual_response(user_message, trip_context)
+        return generate_contextual_response(user_message, trip_context, conversation_id)
+
+def generate_greeting_response(message, trip_context, conversation_id=None):
+    """Generate a personalized greeting response"""
+    import random
+    
+    greetings = [
+        "Hello! I'm your AI travel assistant. How can I help you plan your trip today?",
+        "Hi there! I'm here to help make your travel planning easier. What would you like to know?",
+        "Hey! Welcome to your personal travel assistant. I can help with weather, activities, planning, and more!",
+        "Good to see you! I'm ready to help you with anything travel-related. What's on your mind?"
+    ]
+    
+    # Check if this is a returning user
+    if conversation_id and conversation_history.get(conversation_id, []):
+        greetings = [
+            "Welcome back! How can I continue helping you with your trip?",
+            "Great to see you again! What would you like to work on today?",
+            "Hello again! I'm here to help you further with your travel plans."
+        ]
+    
+    greeting = random.choice(greetings)
+    
+    response = {
+        'type': 'greeting',
+        'content': f"{greeting}\n\nI can help you with:\n• **Weather information** and packing suggestions\n• **Activity recommendations** and attractions\n• **Budget planning** and cost estimates\n• **Trip planning** and itineraries\n• **Accommodation** and transportation options\n• **Local cuisine** and restaurant suggestions\n• **Safety tips** and travel advice\n\nWhat would you like to explore?",
+        'suggestions': ['Check weather', 'Plan activities', 'Budget advice', 'Find restaurants', 'Safety tips']
+    }
+    
+    # Save response to conversation history
+    if conversation_id:
+        conversation_history[conversation_id].append({
+            'role': 'assistant',
+            'content': response['content'],
+            'timestamp': datetime.now().isoformat()
+        })
+    
+    return response
+
+def generate_thanks_response(message, trip_context, conversation_id=None):
+    """Generate a response to thank you messages"""
+    import random
+    
+    thanks_responses = [
+        "You're very welcome! I'm here to help make your trip planning as smooth as possible.",
+        "My pleasure! Feel free to ask me anything else about your travels.",
+        "Happy to help! Is there anything else you'd like to know about your trip?",
+        "You're welcome! I'm always here when you need travel assistance."
+    ]
+    
+    response = {
+        'type': 'thanks',
+        'content': random.choice(thanks_responses),
+        'suggestions': ['More help', 'Weather check', 'Activity ideas', 'Budget tips']
+    }
+    
+    if conversation_id:
+        conversation_history[conversation_id].append({
+            'role': 'assistant',
+            'content': response['content'],
+            'timestamp': datetime.now().isoformat()
+        })
+    
+    return response
+
+def generate_farewell_response(message, trip_context, conversation_id=None):
+    """Generate a farewell response"""
+    import random
+    
+    farewells = [
+        "Goodbye! Have a wonderful trip and don't hesitate to come back if you need more help!",
+        "See you later! Safe travels and enjoy your adventure!",
+        "Take care! I'll be here when you need travel assistance again.",
+        "Have a great trip! Feel free to return anytime for more travel help."
+    ]
+    
+    response = {
+        'type': 'farewell',
+        'content': random.choice(farewells),
+        'suggestions': []
+    }
+    
+    if conversation_id:
+        conversation_history[conversation_id].append({
+            'role': 'assistant',
+            'content': response['content'],
+            'timestamp': datetime.now().isoformat()
+        })
+    
+    return response
+
+def generate_help_response(message, trip_context, conversation_id=None):
+    """Generate a comprehensive help response"""
+    response = {
+        'type': 'help',
+        'content': "I'm your AI travel assistant! Here's what I can help you with:\n\n" +
+                  "**🌤️ Weather & Packing**\n" +
+                  "• Check current weather for any destination\n" +
+                  "• Get packing suggestions based on weather\n" +
+                  "• Weather alerts and forecasts\n\n" +
+                  "**🎯 Activities & Attractions**\n" +
+                  "• Popular tourist attractions\n" +
+                  "• Local activities and experiences\n" +
+                  "• Hidden gems and off-the-beaten-path spots\n\n" +
+                  "**💰 Budget & Planning**\n" +
+                  "• Cost estimates and budget tips\n" +
+                  "• Money-saving strategies\n" +
+                  "• Currency and payment advice\n\n" +
+                  "**🍽️ Food & Dining**\n" +
+                  "• Local cuisine recommendations\n" +
+                  "• Restaurant suggestions\n" +
+                  "• Food safety and dietary tips\n\n" +
+                  "**🏨 Accommodation & Transport**\n" +
+                  "• Hotel and lodging options\n" +
+                  "• Transportation advice\n" +
+                  "• Booking tips and strategies\n\n" +
+                  "**🛡️ Safety & Tips**\n" +
+                  "• Travel safety advice\n" +
+                  "• Local customs and etiquette\n" +
+                  "• Emergency information\n\n" +
+                  "Just ask me anything about your trip!",
+        'suggestions': ['Weather check', 'Plan activities', 'Budget advice', 'Find restaurants', 'Safety tips']
+    }
+    
+    if conversation_id:
+        conversation_history[conversation_id].append({
+            'role': 'assistant',
+            'content': response['content'],
+            'timestamp': datetime.now().isoformat()
+        })
+    
+    return response
 
 def generate_trip_plan_suggestion(message, trip_context):
     """Generate a trip plan suggestion"""
@@ -356,19 +509,19 @@ def generate_weather_response(message, trip_context):
             
             return {
                 'type': 'weather_info',
-                'content': f"**Current Weather for {destination}:**\n\n" +
-                          f"• Temperature: {weather_data['temperature']}°C ({weather_data['temperature']*9/5+32:.0f}°F)\n" +
-                          f"• Feels like: {weather_data['feels_like']}°C\n" +
-                          f"• Conditions: {weather_data['conditions']}\n" +
-                          f"• Humidity: {weather_data['humidity']}%\n" +
-                          f"• Wind: {weather_data['wind_speed']} km/h\n\n" +
+                'content': f"Here's the current weather for **{destination}**:\n\n" +
+                          f"🌡️ **Temperature**: {weather_data['temperature']}°C ({weather_data['temperature']*9/5+32:.0f}°F)\n" +
+                          f"🌤️ **Feels like**: {weather_data['feels_like']}°C\n" +
+                          f"☁️ **Conditions**: {weather_data['conditions']}\n" +
+                          f"💧 **Humidity**: {weather_data['humidity']}%\n" +
+                          f"💨 **Wind**: {weather_data['wind_speed']} km/h\n\n" +
                           "**Packing Suggestions:**\n" +
                           "• Light layers for changing temperatures\n" +
                           "• Comfortable walking shoes\n" +
                           "• Rain gear (just in case)\n" +
                           "• Sun protection\n\n" +
-                          "Would you like me to get the detailed 7-day forecast?",
-                'suggestions': ['7-day forecast', 'Packing list', 'Weather alerts', 'Alternative dates']
+                          "Would you like me to get the detailed 7-day forecast or help you plan activities based on this weather?",
+                'suggestions': ['7-day forecast', 'Packing list', 'Weather alerts', 'Plan activities']
             }
     except Exception as e:
         print(f"Weather API error: {e}")
@@ -376,38 +529,48 @@ def generate_weather_response(message, trip_context):
     # Fallback response
     return {
         'type': 'weather_info',
-        'content': f"I'll check the current weather for {destination}.\n\n" +
+        'content': f"I'll check the current weather for **{destination}**.\n\n" +
                   "**Current Weather:**\n" +
-                  "• Temperature: 22°C (72°F)\n" +
-                  "• Conditions: Partly cloudy\n" +
-                  "• Humidity: 65%\n" +
-                  "• Wind: 10 km/h\n\n" +
+                  "🌡️ **Temperature**: 22°C (72°F)\n" +
+                  "🌤️ **Conditions**: Partly cloudy\n" +
+                  "💧 **Humidity**: 65%\n" +
+                  "💨 **Wind**: 10 km/h\n\n" +
                   "**Packing Suggestions:**\n" +
                   "• Light layers for changing temperatures\n" +
                   "• Comfortable walking shoes\n" +
                   "• Rain gear (just in case)\n" +
                   "• Sun protection\n\n" +
-                  "Would you like me to get the detailed 7-day forecast?",
-        'suggestions': ['7-day forecast', 'Packing list', 'Weather alerts', 'Alternative dates']
+                  "Would you like me to get the detailed 7-day forecast or help you plan activities based on this weather?",
+        'suggestions': ['7-day forecast', 'Packing list', 'Weather alerts', 'Plan activities']
     }
 
 def generate_budget_suggestion(message, trip_context):
     """Generate budget-related suggestions"""
     return {
         'type': 'budget_advice',
-        'content': "Here are some budget-friendly tips for your trip:\n\n" +
-                  "**Accommodation:**\n" +
+        'content': "Here are some **budget-friendly tips** for your trip:\n\n" +
+                  "**🏨 Accommodation:**\n" +
                   "• Consider hostels or vacation rentals\n" +
-                  "• Book in advance for better rates\n\n" +
-                  "**Food:**\n" +
+                  "• Book in advance for better rates\n" +
+                  "• Look for deals on booking platforms\n" +
+                  "• Consider staying slightly outside city centers\n\n" +
+                  "**🍽️ Food & Dining:**\n" +
                   "• Eat at local markets and street food\n" +
-                  "• Avoid tourist-heavy restaurants\n\n" +
-                  "**Activities:**\n" +
-                  "• Many museums have free days\n" +
+                  "• Avoid tourist trap restaurants\n" +
+                  "• Cook some meals if you have kitchen access\n" +
+                  "• Look for lunch specials\n\n" +
+                  "**🚇 Transportation:**\n" +
                   "• Use public transportation\n" +
-                  "• Look for city passes\n\n" +
-                  "Would you like a detailed budget breakdown?",
-        'suggestions': ['Budget breakdown', 'Cost-saving tips', 'Expense tracker', 'Group discounts']
+                  "• Walk when possible\n" +
+                  "• Consider city passes for attractions\n" +
+                  "• Share rides with other travelers\n\n" +
+                  "**🎯 Activities:**\n" +
+                  "• Many museums have free days\n" +
+                  "• Explore parks and public spaces\n" +
+                  "• Take free walking tours\n" +
+                  "• Research free events and festivals\n\n" +
+                  "Would you like me to help you create a detailed budget breakdown for your specific destination?",
+        'suggestions': ['Create budget', 'Find deals', 'Cost estimates', 'Money tips']
     }
 
 def generate_food_suggestion(message, trip_context):
@@ -416,44 +579,64 @@ def generate_food_suggestion(message, trip_context):
     
     return {
         'type': 'food_recommendations',
-        'content': f"Here are some food recommendations for {destination}:\n\n" +
-                  "**Must-Try Local Dishes:**\n" +
-                  "• Traditional specialties\n" +
-                  "• Street food favorites\n" +
-                  "• Regional cuisine\n\n" +
-                  "**Restaurant Types:**\n" +
-                  "• Fine dining for special occasions\n" +
-                  "• Casual local spots\n" +
-                  "• Food markets and stalls\n\n" +
-                  "**Dietary Considerations:**\n" +
-                  "• Vegetarian/vegan options\n" +
-                  "• Allergen information\n" +
-                  "• Halal/kosher options\n\n" +
-                  "Would you like specific restaurant recommendations?",
-        'suggestions': ['Restaurant list', 'Food tours', 'Cooking classes', 'Dietary needs']
+        'content': f"Here are some **food recommendations** for {destination}:\n\n" +
+                  "**🍽️ Local Cuisine to Try:**\n" +
+                  "• Traditional local dishes\n" +
+                  "• Street food specialties\n" +
+                  "• Regional specialties\n" +
+                  "• Seasonal ingredients\n\n" +
+                  "**🏪 Best Places to Eat:**\n" +
+                  "• Local markets and food stalls\n" +
+                  "• Family-run restaurants\n" +
+                  "• Popular local spots\n" +
+                  "• Hidden gems off the tourist path\n\n" +
+                  "**💡 Food Tips:**\n" +
+                  "• Try the daily specials\n" +
+                  "• Ask locals for recommendations\n" +
+                  "• Be adventurous with new flavors\n" +
+                  "• Check food safety and hygiene\n\n" +
+                  "**🍷 Local Drinks:**\n" +
+                  "• Regional wines and beers\n" +
+                  "• Traditional beverages\n" +
+                  "• Coffee and tea culture\n\n" +
+                  "Would you like me to suggest specific restaurants or help you plan a food tour?",
+        'suggestions': ['Restaurant list', 'Food tour', 'Local dishes', 'Dietary needs']
     }
 
 def generate_activity_suggestion(message, trip_context):
-    """Generate activity suggestions"""
+    """Generate activity-related suggestions"""
     destination = trip_context.get('destination', 'your destination')
     
     return {
         'type': 'activity_recommendations',
-        'content': f"Here are some exciting activities for {destination}:\n\n" +
-                  "**Cultural Activities:**\n" +
-                  "• Museum visits\n" +
-                  "• Historical tours\n" +
-                  "• Art galleries\n\n" +
-                  "**Outdoor Adventures:**\n" +
-                  "• Hiking trails\n" +
-                  "• Water sports\n" +
-                  "• Nature parks\n\n" +
-                  "**Entertainment:**\n" +
-                  "• Local shows\n" +
-                  "• Nightlife spots\n" +
-                  "• Shopping districts\n\n" +
-                  "Would you like me to find specific activities based on your interests?",
-        'suggestions': ['Activity booking', 'Tour guides', 'Group activities', 'Adventure sports']
+        'content': f"Here are some **amazing activities** to do in {destination}:\n\n" +
+                  "**🏛️ Cultural & Historical:**\n" +
+                  "• Visit famous landmarks and monuments\n" +
+                  "• Explore museums and galleries\n" +
+                  "• Take guided historical tours\n" +
+                  "• Attend cultural events and festivals\n\n" +
+                  "**🌳 Outdoor & Nature:**\n" +
+                  "• Parks and gardens\n" +
+                  "• Hiking and nature trails\n" +
+                  "• Boat tours and water activities\n" +
+                  "• Scenic viewpoints and photo spots\n\n" +
+                  "**🎭 Entertainment & Nightlife:**\n" +
+                  "• Local theaters and shows\n" +
+                  "• Live music venues\n" +
+                  "• Bars and clubs\n" +
+                  "• Evening entertainment\n\n" +
+                  "**🛍️ Shopping & Markets:**\n" +
+                  "• Local markets and bazaars\n" +
+                  "• Shopping districts\n" +
+                  "• Artisan and craft shops\n" +
+                  "• Souvenir shopping\n\n" +
+                  "**🎯 Unique Experiences:**\n" +
+                  "• Cooking classes\n" +
+                  "• Local workshops\n" +
+                  "• Adventure activities\n" +
+                  "• Photography tours\n\n" +
+                  "Would you like me to create a detailed itinerary or suggest specific activities based on your interests?",
+        'suggestions': ['Create itinerary', 'Popular attractions', 'Hidden gems', 'Adventure activities']
     }
 
 def generate_reminder_response(message, trip_context):
@@ -493,127 +676,166 @@ def generate_general_response(message, trip_context):
         'suggestions': ['Plan trip', 'Weather check', 'Budget help', 'Activity ideas']
     }
 
-def generate_contextual_response(message, trip_context):
-    """Generate contextual response based on the message content"""
-    destination = trip_context.get('destination', 'your destination')
+def generate_contextual_response(message, trip_context, conversation_id=None):
+    """Generate a contextual response based on conversation history and current message"""
+    import random
     
-    return {
-        'type': 'contextual_help',
-        'content': f"I understand you're asking about '{message}'. Let me help you with that!\n\n" +
-                   f"For {destination}, I can provide:\n" +
-                   "• Specific recommendations based on your interests\n" +
-                   "• Current weather information\n" +
-                   "• Budget-friendly options\n" +
-                   "• Local attractions and activities\n\n" +
-                   "Try asking me something more specific like:\n" +
-                   "• 'What's the weather like in [destination]?'\n" +
-                   "• 'Suggest activities for [destination]'\n" +
-                   "• 'Help me plan a budget for [destination]'",
-        'suggestions': ['Weather check', 'Activity ideas', 'Budget help', 'Food recommendations']
+    # Check conversation history for context
+    context = ""
+    if conversation_id and conversation_history.get(conversation_id, []):
+        recent_messages = conversation_history[conversation_id][-3:]  # Last 3 messages
+        context = "Based on our conversation, "
+    
+    # Generate contextual responses
+    contextual_responses = [
+        f"{context}I understand you're asking about travel. Could you be more specific? I can help with weather, activities, planning, budget, food, accommodation, or safety.",
+        f"{context}That's an interesting question about travel! I'd be happy to help you with specific details about your destination, activities, or travel planning.",
+        f"{context}I'm here to help with your travel needs. Would you like information about weather, activities, budget planning, or something else?",
+        f"{context}Let me help you with that travel question. I can provide specific advice about destinations, activities, planning, or any other travel-related topic."
+    ]
+    
+    response = {
+        'type': 'contextual',
+        'content': random.choice(contextual_responses),
+        'suggestions': ['Weather info', 'Activity ideas', 'Budget tips', 'Food recommendations', 'Safety advice']
     }
+    
+    if conversation_id:
+        conversation_history[conversation_id].append({
+            'role': 'assistant',
+            'content': response['content'],
+            'timestamp': datetime.now().isoformat()
+        })
+    
+    return response
 
 def generate_accommodation_suggestion(message, trip_context):
-    """Generate accommodation-related suggestions"""
+    """Generate accommodation suggestions"""
     destination = trip_context.get('destination', 'your destination')
     
     return {
         'type': 'accommodation_advice',
-        'content': f"Here are accommodation options for {destination}:\n\n" +
-                   "**Budget Options ($20-60/night):**\n" +
-                   "• Hostels and guesthouses\n" +
-                   "• Budget hotels\n" +
-                   "• Vacation rentals\n\n" +
-                   "**Mid-Range ($80-150/night):**\n" +
-                   "• Comfortable hotels\n" +
-                   "• Boutique accommodations\n" +
-                   "• Serviced apartments\n\n" +
-                   "**Luxury ($200+/night):**\n" +
-                   "• Premium hotels\n" +
-                   "• Resort accommodations\n" +
-                   "• Luxury suites\n\n" +
-                   "**Booking Tips:**\n" +
-                   "• Book 2-3 months in advance\n" +
-                   "• Check for package deals\n" +
-                   "• Read recent reviews",
-        'suggestions': ['Budget options', 'Luxury stays', 'Booking tips', 'Location advice']
+        'content': f"Here are **accommodation options** for {destination}:\n\n" +
+                  "**🏨 Hotels & Resorts:**\n" +
+                  "• Luxury hotels with full amenities\n" +
+                  "• Boutique hotels with character\n" +
+                  "• Business hotels for convenience\n" +
+                  "• Resort-style accommodations\n\n" +
+                  "**🏠 Alternative Options:**\n" +
+                  "• Vacation rentals and apartments\n" +
+                  "• Hostels for budget travelers\n" +
+                  "• Bed & breakfast establishments\n" +
+                  "• Guesthouses and homestays\n\n" +
+                  "**📍 Location Tips:**\n" +
+                  "• City center for convenience\n" +
+                  "• Quiet neighborhoods for peace\n" +
+                  "• Near public transport\n" +
+                  "• Safe and well-lit areas\n\n" +
+                  "**💡 Booking Tips:**\n" +
+                  "• Book in advance for better rates\n" +
+                  "• Read recent reviews\n" +
+                  "• Check cancellation policies\n" +
+                  "• Compare multiple booking sites\n\n" +
+                  "Would you like me to suggest specific hotels or help you find the best area to stay?",
+        'suggestions': ['Hotel recommendations', 'Best areas', 'Booking tips', 'Budget options']
     }
 
 def generate_transport_suggestion(message, trip_context):
-    """Generate transportation-related suggestions"""
+    """Generate transportation suggestions"""
     destination = trip_context.get('destination', 'your destination')
     
     return {
         'type': 'transport_advice',
-        'content': f"Getting around in {destination}:\n\n" +
-                   "**Public Transportation:**\n" +
-                   "• Metro/subway systems\n" +
-                   "• Bus networks\n" +
-                   "• Tram services\n\n" +
-                   "**Private Transport:**\n" +
-                   "• Taxi services\n" +
-                   "• Ride-sharing apps\n" +
-                   "• Car rentals\n\n" +
-                   "**Walking & Cycling:**\n" +
-                   "• Pedestrian-friendly areas\n" +
-                   "• Bike rental services\n" +
-                   "• Walking tours\n\n" +
-                   "**Cost-Saving Tips:**\n" +
-                   "• Get city transport passes\n" +
-                   "• Use apps for real-time info\n" +
-                   "• Consider walking for short distances",
-        'suggestions': ['Public transport', 'Taxi services', 'Walking tours', 'Transport passes']
+        'content': f"Here's **transportation advice** for {destination}:\n\n" +
+                  "**🚇 Public Transportation:**\n" +
+                  "• Metro/subway systems\n" +
+                  "• Bus networks\n" +
+                  "• Tram and light rail\n" +
+                  "• Train connections\n\n" +
+                  "**🚗 Private Transport:**\n" +
+                  "• Taxi and ride-sharing services\n" +
+                  "• Car rentals (if needed)\n" +
+                  "• Private drivers and tours\n" +
+                  "• Airport transfers\n\n" +
+                  "**🚶 Walking & Cycling:**\n" +
+                  "• Pedestrian-friendly areas\n" +
+                  "• Bike rental services\n" +
+                  "• Walking tours\n" +
+                  "• Scenic routes\n\n" +
+                  "**💡 Travel Tips:**\n" +
+                  "• Get a travel pass for savings\n" +
+                  "• Download transport apps\n" +
+                  "• Learn basic transport phrases\n" +
+                  "• Keep emergency numbers handy\n\n" +
+                  "Would you like me to help you plan the best routes or suggest transport passes?",
+        'suggestions': ['Transport passes', 'Best routes', 'Airport transfer', 'Walking tours']
     }
 
 def generate_shopping_suggestion(message, trip_context):
-    """Generate shopping-related suggestions"""
+    """Generate shopping suggestions"""
     destination = trip_context.get('destination', 'your destination')
     
     return {
         'type': 'shopping_advice',
-        'content': f"Shopping in {destination}:\n\n" +
-                   "**Local Markets:**\n" +
-                   "• Traditional markets\n" +
-                   "• Street vendors\n" +
-                   "• Artisan shops\n\n" +
-                   "**Shopping Districts:**\n" +
-                   "• High-end boutiques\n" +
-                   "• Department stores\n" +
-                   "• Shopping malls\n\n" +
-                   "**Souvenirs & Gifts:**\n" +
-                   "• Local handicrafts\n" +
-                   "• Traditional items\n" +
-                   "• Food specialties\n\n" +
-                   "**Shopping Tips:**\n" +
-                   "• Bargain at local markets\n" +
-                   "• Check for tax refunds\n" +
-                   "• Avoid tourist traps",
-        'suggestions': ['Local markets', 'Shopping districts', 'Souvenirs', 'Shopping tips']
+        'content': f"Here are **shopping recommendations** for {destination}:\n\n" +
+                  "**🛍️ Shopping Districts:**\n" +
+                  "• Main shopping streets and malls\n" +
+                  "• Local markets and bazaars\n" +
+                  "• Artisan and craft shops\n" +
+                  "• Designer boutiques\n\n" +
+                  "**🎁 Souvenirs & Gifts:**\n" +
+                  "• Local handicrafts and art\n" +
+                  "• Traditional clothing and textiles\n" +
+                  "• Food and beverage specialties\n" +
+                  "• Unique local products\n\n" +
+                  "**💰 Shopping Tips:**\n" +
+                  "• Bargain at markets (where appropriate)\n" +
+                  "• Check for authenticity\n" +
+                  "• Compare prices at different shops\n" +
+                  "• Keep receipts for customs\n\n" +
+                  "**🕐 Best Times:**\n" +
+                  "• Avoid peak tourist hours\n" +
+                  "• Check market opening times\n" +
+                  "• Look for sales and discounts\n" +
+                  "• Plan shopping around other activities\n\n" +
+                  "Would you like me to suggest specific shopping areas or help you find unique souvenirs?",
+        'suggestions': ['Shopping areas', 'Local markets', 'Souvenir ideas', 'Shopping tips']
     }
 
 def generate_safety_suggestion(message, trip_context):
-    """Generate safety-related suggestions"""
+    """Generate safety suggestions"""
     destination = trip_context.get('destination', 'your destination')
     
     return {
         'type': 'safety_advice',
-        'content': f"Safety tips for {destination}:\n\n" +
-                   "**General Safety:**\n" +
-                   "• Keep valuables secure\n" +
-                   "• Be aware of surroundings\n" +
-                   "• Use well-lit areas at night\n\n" +
-                   "**Health & Medical:**\n" +
-                   "• Carry basic medications\n" +
-                   "• Know emergency numbers\n" +
-                   "• Have travel insurance\n\n" +
-                   "**Local Customs:**\n" +
-                   "• Respect local traditions\n" +
-                   "• Dress appropriately\n" +
-                   "• Learn basic phrases\n\n" +
-                   "**Emergency Contacts:**\n" +
-                   "• Save local emergency numbers\n" +
-                   "• Know embassy locations\n" +
-                   "• Keep important documents safe",
-        'suggestions': ['Emergency contacts', 'Health tips', 'Local customs', 'Travel insurance']
+        'content': f"Here are **safety tips** for {destination}:\n\n" +
+                  "**🛡️ General Safety:**\n" +
+                  "• Stay aware of your surroundings\n" +
+                  "• Keep valuables secure and hidden\n" +
+                  "• Avoid displaying expensive items\n" +
+                  "• Trust your instincts\n\n" +
+                  "**🚨 Emergency Information:**\n" +
+                  "• Local emergency numbers\n" +
+                  "• Nearest hospitals and clinics\n" +
+                  "• Embassy/consulate locations\n" +
+                  "• Police station locations\n\n" +
+                  "**💳 Financial Safety:**\n" +
+                  "• Use ATMs in well-lit areas\n" +
+                  "• Keep cards and cash separate\n" +
+                  "• Notify your bank about travel\n" +
+                  "• Have backup payment methods\n\n" +
+                  "**🏥 Health & Medical:**\n" +
+                  "• Check required vaccinations\n" +
+                  "• Bring necessary medications\n" +
+                  "• Know local health facilities\n" +
+                  "• Have travel insurance\n\n" +
+                  "**🌍 Cultural Awareness:**\n" +
+                  "• Respect local customs and traditions\n" +
+                  "• Dress appropriately for the culture\n" +
+                  "• Learn basic local phrases\n" +
+                  "• Be mindful of cultural sensitivities\n\n" +
+                  "Would you like me to provide specific safety information for your destination?",
+        'suggestions': ['Emergency contacts', 'Health info', 'Cultural tips', 'Travel insurance']
     }
 
 def generate_smart_suggestions(destination, dates, interests, budget, group_size):
