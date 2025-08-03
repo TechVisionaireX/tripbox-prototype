@@ -3098,6 +3098,9 @@
                         <button class="btn btn-secondary btn-sm" onclick="refreshPolls()">
                             <i class="fas fa-sync-alt"></i> Refresh
                         </button>
+                        <button class="btn btn-info btn-sm" onclick="debugPolls()" style="margin-left: 0.5rem;">
+                            <i class="fas fa-bug"></i> Debug
+                        </button>
                     </div>
                     <div class="card-body">
                         <div id="activePollsList" class="polls-list">
@@ -5243,6 +5246,33 @@
         async function refreshPolls() {
             console.log('Refreshing polls...');
             await loadActivePolls();
+        }
+        
+        async function debugPolls() {
+            try {
+                console.log('Debugging polls...');
+                const debugInfo = await apiCall('/api/polls/debug');
+                console.log('Debug info:', debugInfo);
+                
+                // Show debug info in an alert for now
+                let debugMessage = `User ID: ${debugInfo.user_id}\n`;
+                debugMessage += `User Groups: ${debugInfo.user_groups.join(', ')}\n`;
+                debugMessage += `Total Polls: ${debugInfo.total_polls}\n\n`;
+                
+                if (debugInfo.polls.length > 0) {
+                    debugMessage += 'Polls:\n';
+                    debugInfo.polls.forEach(poll => {
+                        debugMessage += `- Poll ${poll.id}: "${poll.question}" (Active: ${poll.is_active}, Finalized: ${poll.is_finalized})\n`;
+                    });
+                } else {
+                    debugMessage += 'No polls found';
+                }
+                
+                alert(debugMessage);
+            } catch (error) {
+                console.error('Error debugging polls:', error);
+                alert('Error debugging polls: ' + error.message);
+            }
         }
 
         async function testPollCreation() {

@@ -49,7 +49,9 @@ def create_poll(group_id):
             creator_id=user_id,
             question=question,
             options=json.dumps(options),
-            expires_at=expires_at
+            expires_at=expires_at,
+            is_active=True,
+            is_finalized=False
         )
         
         print(f"Poll object created: {poll}")
@@ -199,21 +201,31 @@ def vote_on_poll(poll_id):
 def get_active_polls():
     user_id = int(get_jwt_identity())
     
+    print(f"Getting active polls for user {user_id}")
+    
     # Get all groups the user is a member of
     user_groups = GroupMember.query.filter_by(user_id=user_id).all()
     group_ids = [member.group_id for member in user_groups]
     
+    print(f"User is member of groups: {group_ids}")
+    
     if not group_ids:
+        print("No groups found for user")
         return jsonify([])
     
-    # Get active polls from user's groups
+    # Get active polls from user's groups (include polls that are not finalized)
     active_polls = Poll.query.filter(
         Poll.group_id.in_(group_ids),
-        Poll.is_active == True
+        Poll.is_finalized == False
     ).order_by(Poll.created_at.desc()).all()
+    
+    print(f"Found {len(active_polls)} active polls")
     
     result = []
     for poll in active_polls:
+        print(f"Processing poll {poll.id}: {poll.question}")
+        print(f"Poll is_active: {poll.is_active}, is_finalized: {poll.is_finalized}")
+        
         # Get vote counts and user's vote
         options = json.loads(poll.options)
         vote_counts = {}
@@ -243,7 +255,80 @@ def get_active_polls():
             'creator_name': User.query.get(poll.creator_id).name if User.query.get(poll.creator_id) else 'Unknown'
         })
     
+    print(f"Returning {len(result)} polls")
     return jsonify(result)
+
+# Debug endpoint to check poll status
+@polls_bp.route('/api/polls/debug', methods=['GET'])
+@jwt_required()
+def debug_polls():
+    user_id = int(get_jwt_identity())
+    
+    print(f"Debug: Getting poll info for user {user_id}")
+    
+    # Get all groups the user is a member of
+    user_groups = GroupMember.query.filter_by(user_id=user_id).all()
+    group_ids = [member.group_id for member in user_groups]
+    
+    print(f"Debug: User groups: {group_ids}")
+    
+    # Get all polls in user's groups
+    all_polls = Poll.query.filter(Poll.group_id.in_(group_ids)).all()
+    
+    debug_info = {
+        'user_id': user_id,
+        'user_groups': group_ids,
+        'total_polls': len(all_polls),
+        'polls': []
+    }
+    
+    for poll in all_polls:
+        poll_info = {
+            'id': poll.id,
+            'question': poll.question,
+            'group_id': poll.group_id,
+            'is_active': poll.is_active,
+            'is_finalized': poll.is_finalized,
+            'created_at': poll.created_at.isoformat(),
+            'creator_id': poll.creator_id
+        }
+        debug_info['polls'].append(poll_info)
+        print(f"Debug: Poll {poll.id} - active: {poll.is_active}, finalized: {poll.is_finalized}")
+    
+    return jsonify(debug_info)
+
+# Utility endpoint to fix poll status (for debugging)
+@polls_bp.route('/api/polls/fix-status', methods=['POST'])
+@jwt_required()
+def fix_poll_status():
+    user_id = int(get_jwt_identity())
+    
+    # Only allow admin or creator to fix poll status
+    user = User.query.get(user_id)
+    if not user or user.email != 'tt@gmail.com':  # Only allow specific user for now
+        return jsonify({'error': 'Not authorized'}), 403
+    
+    # Get all polls and fix their status
+    all_polls = Poll.query.all()
+    fixed_count = 0
+    
+    for poll in all_polls:
+        if poll.is_finalized and poll.is_active:
+            # If finalized, should not be active
+            poll.is_active = False
+            fixed_count += 1
+        elif not poll.is_finalized and not poll.is_active:
+            # If not finalized, should be active
+            poll.is_active = True
+            fixed_count += 1
+    
+    db.session.commit()
+    
+    return jsonify({
+        'message': f'Fixed {fixed_count} polls',
+        'total_polls': len(all_polls),
+        'fixed_count': fixed_count
+    })
 
 # POST: Finalize a poll (only creator can finalize)
 @polls_bp.route('/api/polls/<int:poll_id>/finalize', methods=['POST'])
