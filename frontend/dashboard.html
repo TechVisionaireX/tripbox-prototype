@@ -4039,7 +4039,12 @@
         <div class="modal-content chat-modal">
             <div class="modal-header">
                 <h3 id="modalChatGroupName">Group Chat</h3>
-                <span class="close" onclick="closeGroupChatModal()">&times;</span>
+                <div class="modal-actions">
+                    <button class="btn btn-secondary btn-sm" onclick="refreshChatMessages()" title="Refresh messages">
+                        <i class="fas fa-sync-alt"></i>
+                    </button>
+                    <span class="close" onclick="closeGroupChatModal()">&times;</span>
+                </div>
             </div>
             <div class="modal-body">
                 <div class="chat-container">
@@ -4828,6 +4833,7 @@
         // Chat Functions
         let currentChatGroupId = null;
         let chatNotifications = [];
+        let chatRefreshInterval = null;
 
         async function openGroupChat(groupId, groupName) {
             console.log('Opening group chat for:', groupId, groupName);
@@ -4840,11 +4846,17 @@
             
             await loadChatMessages(groupId);
             setupChatMessageForm(groupId);
+            
+            // Start auto-refresh for chat messages
+            startChatAutoRefresh(groupId);
         }
 
         function closeGroupChatModal() {
             document.getElementById('groupChatModal').style.display = 'none';
             currentChatGroupId = null;
+            
+            // Stop auto-refresh when closing chat
+            stopChatAutoRefresh();
         }
 
         async function loadChatMessages(groupId) {
@@ -4953,11 +4965,16 @@
                     
                     console.log('Message sent successfully:', response);
                     input.value = '';
+                    
+                    // Immediately refresh chat messages to show the new message
                     await loadChatMessages(groupId);
                     
                     // Refresh notifications to show new message
                     console.log('Refreshing chat notifications...');
                     await loadChatNotifications();
+                    
+                    // Also refresh dashboard notifications
+                    await updateNotificationCards();
                     
                 } catch (error) {
                     console.error('Error sending message:', error);
@@ -4970,6 +4987,37 @@
         function formatMessageTime(timestamp) {
             const date = new Date(timestamp);
             return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        }
+
+        // Auto-refresh functions for chat
+        function startChatAutoRefresh(groupId) {
+            console.log('Starting chat auto-refresh for group:', groupId);
+            
+            // Clear any existing interval
+            stopChatAutoRefresh();
+            
+            // Set up auto-refresh every 3 seconds
+            chatRefreshInterval = setInterval(async () => {
+                if (currentChatGroupId === groupId) {
+                    console.log('Auto-refreshing chat messages...');
+                    await loadChatMessages(groupId);
+                }
+            }, 3000); // Refresh every 3 seconds
+        }
+
+        function stopChatAutoRefresh() {
+            if (chatRefreshInterval) {
+                console.log('Stopping chat auto-refresh');
+                clearInterval(chatRefreshInterval);
+                chatRefreshInterval = null;
+            }
+        }
+
+        async function refreshChatMessages() {
+            if (currentChatGroupId) {
+                console.log('Manually refreshing chat messages...');
+                await loadChatMessages(currentChatGroupId);
+            }
         }
 
         // Chat Notifications
