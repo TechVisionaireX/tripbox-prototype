@@ -283,25 +283,33 @@ def generate_ai_response(user_message, trip_context):
     if not destination:
         # Try to extract destination from the message
         for word in message_lower.split():
-            if any(city in word for city in ['paris', 'london', 'tokyo', 'new york', 'los angeles', 'rome', 'dubai', 'mumbai', 'sydney']):
+            if any(city in word for city in ['paris', 'london', 'tokyo', 'new york', 'los angeles', 'rome', 'dubai', 'mumbai', 'sydney', 'singapore', 'bangkok', 'seoul', 'beijing']):
                 destination = word
                 break
     
     # More specific keyword matching with destination context
-    if any(word in message_lower for word in ['weather', 'forecast', 'temperature', 'rain', 'sunny', 'hot', 'cold']):
+    if any(word in message_lower for word in ['weather', 'forecast', 'temperature', 'rain', 'sunny', 'hot', 'cold', 'climate']):
         return generate_weather_response(user_message, trip_context)
-    elif any(word in message_lower for word in ['budget', 'cost', 'money', 'expensive', 'cheap', 'price', 'save', 'spend']):
+    elif any(word in message_lower for word in ['budget', 'cost', 'money', 'expensive', 'cheap', 'price', 'save', 'spend', 'dollar', 'euro', 'currency']):
         return generate_budget_suggestion(user_message, trip_context)
-    elif any(word in message_lower for word in ['food', 'restaurant', 'eat', 'dining', 'cuisine', 'meal', 'dish', 'local']):
+    elif any(word in message_lower for word in ['food', 'restaurant', 'eat', 'dining', 'cuisine', 'meal', 'dish', 'local', 'hungry', 'lunch', 'dinner', 'breakfast']):
         return generate_food_suggestion(user_message, trip_context)
-    elif any(word in message_lower for word in ['activity', 'things to do', 'attraction', 'visit', 'see', 'tour', 'place', 'sight']):
+    elif any(word in message_lower for word in ['activity', 'things to do', 'attraction', 'visit', 'see', 'tour', 'place', 'sight', 'fun', 'entertainment', 'adventure']):
         return generate_activity_suggestion(user_message, trip_context)
-    elif any(word in message_lower for word in ['plan', 'itinerary', 'schedule', 'day', 'trip']):
+    elif any(word in message_lower for word in ['plan', 'itinerary', 'schedule', 'day', 'trip', 'organize', 'arrange']):
         return generate_trip_plan_suggestion(user_message, trip_context)
-    elif any(word in message_lower for word in ['remind', 'forget', 'checklist', 'pack', 'prepare', 'need']):
+    elif any(word in message_lower for word in ['remind', 'forget', 'checklist', 'pack', 'prepare', 'need', 'bring', 'carry']):
         return generate_reminder_response(user_message, trip_context)
-    elif any(word in message_lower for word in ['hello', 'hi', 'help', 'what can you do', 'start']):
+    elif any(word in message_lower for word in ['hello', 'hi', 'help', 'what can you do', 'start', 'hey']):
         return generate_general_response(user_message, trip_context)
+    elif any(word in message_lower for word in ['hotel', 'accommodation', 'stay', 'sleep', 'room', 'booking']):
+        return generate_accommodation_suggestion(user_message, trip_context)
+    elif any(word in message_lower for word in ['transport', 'transportation', 'travel', 'bus', 'train', 'metro', 'subway', 'taxi']):
+        return generate_transport_suggestion(user_message, trip_context)
+    elif any(word in message_lower for word in ['shopping', 'buy', 'shop', 'market', 'mall', 'store']):
+        return generate_shopping_suggestion(user_message, trip_context)
+    elif any(word in message_lower for word in ['safety', 'safe', 'danger', 'crime', 'security']):
+        return generate_safety_suggestion(user_message, trip_context)
     else:
         # For any other message, try to provide a helpful response
         return generate_contextual_response(user_message, trip_context)
@@ -492,16 +500,120 @@ def generate_contextual_response(message, trip_context):
     return {
         'type': 'contextual_help',
         'content': f"I understand you're asking about '{message}'. Let me help you with that!\n\n" +
-                  f"For {destination}, I can provide:\n" +
-                  "• Specific recommendations based on your interests\n" +
-                  "• Current weather information\n" +
-                  "• Budget-friendly options\n" +
-                  "• Local attractions and activities\n\n" +
-                  "Try asking me something more specific like:\n" +
-                  "• 'What's the weather like in [destination]?'\n" +
-                  "• 'Suggest activities for [destination]'\n" +
-                  "• 'Help me plan a budget for [destination]'",
+                   f"For {destination}, I can provide:\n" +
+                   "• Specific recommendations based on your interests\n" +
+                   "• Current weather information\n" +
+                   "• Budget-friendly options\n" +
+                   "• Local attractions and activities\n\n" +
+                   "Try asking me something more specific like:\n" +
+                   "• 'What's the weather like in [destination]?'\n" +
+                   "• 'Suggest activities for [destination]'\n" +
+                   "• 'Help me plan a budget for [destination]'",
         'suggestions': ['Weather check', 'Activity ideas', 'Budget help', 'Food recommendations']
+    }
+
+def generate_accommodation_suggestion(message, trip_context):
+    """Generate accommodation-related suggestions"""
+    destination = trip_context.get('destination', 'your destination')
+    
+    return {
+        'type': 'accommodation_advice',
+        'content': f"Here are accommodation options for {destination}:\n\n" +
+                   "**Budget Options ($20-60/night):**\n" +
+                   "• Hostels and guesthouses\n" +
+                   "• Budget hotels\n" +
+                   "• Vacation rentals\n\n" +
+                   "**Mid-Range ($80-150/night):**\n" +
+                   "• Comfortable hotels\n" +
+                   "• Boutique accommodations\n" +
+                   "• Serviced apartments\n\n" +
+                   "**Luxury ($200+/night):**\n" +
+                   "• Premium hotels\n" +
+                   "• Resort accommodations\n" +
+                   "• Luxury suites\n\n" +
+                   "**Booking Tips:**\n" +
+                   "• Book 2-3 months in advance\n" +
+                   "• Check for package deals\n" +
+                   "• Read recent reviews",
+        'suggestions': ['Budget options', 'Luxury stays', 'Booking tips', 'Location advice']
+    }
+
+def generate_transport_suggestion(message, trip_context):
+    """Generate transportation-related suggestions"""
+    destination = trip_context.get('destination', 'your destination')
+    
+    return {
+        'type': 'transport_advice',
+        'content': f"Getting around in {destination}:\n\n" +
+                   "**Public Transportation:**\n" +
+                   "• Metro/subway systems\n" +
+                   "• Bus networks\n" +
+                   "• Tram services\n\n" +
+                   "**Private Transport:**\n" +
+                   "• Taxi services\n" +
+                   "• Ride-sharing apps\n" +
+                   "• Car rentals\n\n" +
+                   "**Walking & Cycling:**\n" +
+                   "• Pedestrian-friendly areas\n" +
+                   "• Bike rental services\n" +
+                   "• Walking tours\n\n" +
+                   "**Cost-Saving Tips:**\n" +
+                   "• Get city transport passes\n" +
+                   "• Use apps for real-time info\n" +
+                   "• Consider walking for short distances",
+        'suggestions': ['Public transport', 'Taxi services', 'Walking tours', 'Transport passes']
+    }
+
+def generate_shopping_suggestion(message, trip_context):
+    """Generate shopping-related suggestions"""
+    destination = trip_context.get('destination', 'your destination')
+    
+    return {
+        'type': 'shopping_advice',
+        'content': f"Shopping in {destination}:\n\n" +
+                   "**Local Markets:**\n" +
+                   "• Traditional markets\n" +
+                   "• Street vendors\n" +
+                   "• Artisan shops\n\n" +
+                   "**Shopping Districts:**\n" +
+                   "• High-end boutiques\n" +
+                   "• Department stores\n" +
+                   "• Shopping malls\n\n" +
+                   "**Souvenirs & Gifts:**\n" +
+                   "• Local handicrafts\n" +
+                   "• Traditional items\n" +
+                   "• Food specialties\n\n" +
+                   "**Shopping Tips:**\n" +
+                   "• Bargain at local markets\n" +
+                   "• Check for tax refunds\n" +
+                   "• Avoid tourist traps",
+        'suggestions': ['Local markets', 'Shopping districts', 'Souvenirs', 'Shopping tips']
+    }
+
+def generate_safety_suggestion(message, trip_context):
+    """Generate safety-related suggestions"""
+    destination = trip_context.get('destination', 'your destination')
+    
+    return {
+        'type': 'safety_advice',
+        'content': f"Safety tips for {destination}:\n\n" +
+                   "**General Safety:**\n" +
+                   "• Keep valuables secure\n" +
+                   "• Be aware of surroundings\n" +
+                   "• Use well-lit areas at night\n\n" +
+                   "**Health & Medical:**\n" +
+                   "• Carry basic medications\n" +
+                   "• Know emergency numbers\n" +
+                   "• Have travel insurance\n\n" +
+                   "**Local Customs:**\n" +
+                   "• Respect local traditions\n" +
+                   "• Dress appropriately\n" +
+                   "• Learn basic phrases\n\n" +
+                   "**Emergency Contacts:**\n" +
+                   "• Save local emergency numbers\n" +
+                   "• Know embassy locations\n" +
+                   "• Keep important documents safe",
+        'suggestions': ['Emergency contacts', 'Health tips', 'Local customs', 'Travel insurance']
     }
 
 def generate_smart_suggestions(destination, dates, interests, budget, group_size):
@@ -1027,10 +1139,14 @@ def get_weather_by_place(group_id):
     })
 
 def get_weather_for_place(place_name):
-    """Get weather data for a specific place"""
-    place_lower = place_name.lower()
+    """Get weather data for a specific place with more dynamic and realistic data"""
+    import random
+    from datetime import datetime
     
-    # Simulated weather data based on place
+    place_lower = place_name.lower()
+    current_hour = datetime.now().hour
+    
+    # Base weather data
     weather_data = {
         'temperature': 22,
         'feels_like': 24,
@@ -1040,55 +1156,102 @@ def get_weather_for_place(place_name):
         'location': place_name
     }
     
-    # Adjust weather based on place (simulated)
-    if any(city in place_lower for city in ['paris', 'london', 'rome', 'eiffel']):
+    # More dynamic weather based on place and time
+    if any(city in place_lower for city in ['paris', 'london', 'rome', 'eiffel', 'france', 'uk', 'italy']):
+        # European cities - cooler, more variable
+        base_temp = 15 + random.randint(-5, 8)
         weather_data.update({
-            'temperature': 18,
-            'feels_like': 20,
-            'description': 'Light rain',
-            'humidity': 75
+            'temperature': base_temp,
+            'feels_like': base_temp + random.randint(-2, 3),
+            'description': random.choice(['Light rain', 'Partly cloudy', 'Overcast', 'Drizzle']),
+            'humidity': 70 + random.randint(-10, 15),
+            'wind_speed': 8 + random.randint(0, 12)
         })
-    elif any(city in place_lower for city in ['tokyo', 'seoul', 'beijing', 'japan']):
+    elif any(city in place_lower for city in ['tokyo', 'seoul', 'beijing', 'japan', 'korea', 'china']):
+        # Asian cities - moderate to warm
+        base_temp = 20 + random.randint(-3, 10)
         weather_data.update({
-            'temperature': 25,
-            'feels_like': 28,
-            'description': 'Sunny',
-            'humidity': 60
+            'temperature': base_temp,
+            'feels_like': base_temp + random.randint(-1, 4),
+            'description': random.choice(['Sunny', 'Partly cloudy', 'Light rain', 'Clear']),
+            'humidity': 60 + random.randint(-15, 20),
+            'wind_speed': 5 + random.randint(0, 8)
         })
-    elif any(city in place_lower for city in ['los angeles', 'san francisco', 'miami', 'la', 'california']):
+    elif any(city in place_lower for city in ['los angeles', 'san francisco', 'miami', 'la', 'california', 'florida']):
+        # US West Coast - warm and sunny
+        base_temp = 25 + random.randint(-5, 8)
         weather_data.update({
-            'temperature': 28,
-            'feels_like': 30,
-            'description': 'Sunny',
-            'humidity': 55
+            'temperature': base_temp,
+            'feels_like': base_temp + random.randint(0, 5),
+            'description': random.choice(['Sunny', 'Clear', 'Partly cloudy', 'Warm']),
+            'humidity': 50 + random.randint(-10, 15),
+            'wind_speed': 3 + random.randint(0, 7)
         })
-    elif any(city in place_lower for city in ['new york', 'chicago', 'boston', 'nyc', 'manhattan']):
+    elif any(city in place_lower for city in ['new york', 'chicago', 'boston', 'nyc', 'manhattan', 'illinois', 'massachusetts']):
+        # US East Coast - variable
+        base_temp = 12 + random.randint(-8, 12)
         weather_data.update({
-            'temperature': 15,
-            'feels_like': 17,
-            'description': 'Partly cloudy',
-            'humidity': 70
+            'temperature': base_temp,
+            'feels_like': base_temp + random.randint(-3, 2),
+            'description': random.choice(['Partly cloudy', 'Overcast', 'Light rain', 'Clear']),
+            'humidity': 65 + random.randint(-15, 20),
+            'wind_speed': 10 + random.randint(0, 15)
         })
-    elif any(city in place_lower for city in ['dubai', 'abu dhabi', 'uae']):
+    elif any(city in place_lower for city in ['dubai', 'abu dhabi', 'uae', 'saudi', 'qatar', 'kuwait']):
+        # Middle East - hot and dry
+        base_temp = 35 + random.randint(-5, 8)
         weather_data.update({
-            'temperature': 35,
-            'feels_like': 38,
-            'description': 'Hot and sunny',
-            'humidity': 40
+            'temperature': base_temp,
+            'feels_like': base_temp + random.randint(2, 6),
+            'description': random.choice(['Hot and sunny', 'Clear', 'Very hot', 'Sunny']),
+            'humidity': 35 + random.randint(-10, 15),
+            'wind_speed': 5 + random.randint(0, 10)
         })
-    elif any(city in place_lower for city in ['mumbai', 'delhi', 'india']):
+    elif any(city in place_lower for city in ['mumbai', 'delhi', 'india', 'bangalore', 'chennai']):
+        # Indian cities - hot and humid
+        base_temp = 30 + random.randint(-3, 8)
         weather_data.update({
-            'temperature': 32,
-            'feels_like': 35,
-            'description': 'Hot and humid',
-            'humidity': 80
+            'temperature': base_temp,
+            'feels_like': base_temp + random.randint(3, 7),
+            'description': random.choice(['Hot and humid', 'Partly cloudy', 'Humid', 'Warm']),
+            'humidity': 75 + random.randint(-10, 15),
+            'wind_speed': 3 + random.randint(0, 8)
         })
-    elif any(city in place_lower for city in ['sydney', 'melbourne', 'australia']):
+    elif any(city in place_lower for city in ['sydney', 'melbourne', 'australia', 'perth', 'brisbane']):
+        # Australian cities - moderate
+        base_temp = 18 + random.randint(-5, 8)
         weather_data.update({
-            'temperature': 20,
-            'feels_like': 22,
-            'description': 'Mild and pleasant',
-            'humidity': 65
+            'temperature': base_temp,
+            'feels_like': base_temp + random.randint(-1, 3),
+            'description': random.choice(['Mild and pleasant', 'Partly cloudy', 'Clear', 'Sunny']),
+            'humidity': 60 + random.randint(-15, 15),
+            'wind_speed': 8 + random.randint(0, 12)
         })
+    elif any(city in place_lower for city in ['singapore', 'malaysia', 'thailand', 'bangkok']):
+        # Southeast Asia - hot and humid
+        base_temp = 28 + random.randint(-2, 5)
+        weather_data.update({
+            'temperature': base_temp,
+            'feels_like': base_temp + random.randint(2, 5),
+            'description': random.choice(['Hot and humid', 'Partly cloudy', 'Humid', 'Warm']),
+            'humidity': 80 + random.randint(-10, 15),
+            'wind_speed': 2 + random.randint(0, 6)
+        })
+    else:
+        # Generic for other places - more random variation
+        base_temp = 20 + random.randint(-8, 12)
+        weather_data.update({
+            'temperature': base_temp,
+            'feels_like': base_temp + random.randint(-2, 4),
+            'description': random.choice(['Partly cloudy', 'Clear', 'Sunny', 'Overcast', 'Light rain']),
+            'humidity': 60 + random.randint(-20, 25),
+            'wind_speed': 5 + random.randint(0, 10)
+        })
+    
+    # Add time-based variations
+    if 6 <= current_hour <= 10:  # Morning
+        weather_data['description'] = 'Morning ' + weather_data['description'].lower()
+    elif 18 <= current_hour <= 22:  # Evening
+        weather_data['description'] = 'Evening ' + weather_data['description'].lower()
     
     return weather_data 
