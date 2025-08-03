@@ -3433,9 +3433,7 @@
 
         <!-- AI Assistant Section -->
         <section id="aiAssistantSection" class="section" style="display: none; background: white;">
-            <div style="background: red; color: white; padding: 20px; font-size: 24px; text-align: center;">
-                AI ASSISTANT SECTION IS LOADED - IF YOU SEE THIS, THE SECTION IS WORKING!
-            </div>
+
             <div class="header">
                 <h1><i class="fas fa-robot"></i> AI Assistant</h1>
                 <p>Get smart suggestions, reminders, and travel advice</p>
@@ -3562,12 +3560,8 @@
                         <div class="weather-input">
                             <div class="form-row">
                                 <div class="form-group">
-                                    <label for="weatherLat">Latitude</label>
-                                    <input type="number" id="weatherLat" placeholder="e.g., 48.8566" step="0.0001">
-                                </div>
-                                <div class="form-group">
-                                    <label for="weatherLng">Longitude</label>
-                                    <input type="number" id="weatherLng" placeholder="e.g., 2.3522" step="0.0001">
+                                    <label for="weatherPlace">Place Name</label>
+                                    <input type="text" id="weatherPlace" placeholder="e.g., Paris, London, Tokyo">
                                 </div>
                             </div>
                         </div>
@@ -5370,11 +5364,10 @@
 
         async function loadWeatherAlerts() {
             try {
-                const lat = document.getElementById('weatherLat').value;
-                const lng = document.getElementById('weatherLng').value;
+                const placeName = document.getElementById('weatherPlace').value;
                 
-                if (!lat || !lng) {
-                    document.getElementById('weatherAlerts').innerHTML = '<div class="empty-state"><i class="fas fa-cloud-sun"></i><h3>Enter coordinates</h3><p>Please enter latitude and longitude to get weather alerts</p></div>';
+                if (!placeName) {
+                    document.getElementById('weatherAlerts').innerHTML = '<div class="empty-state"><i class="fas fa-cloud-sun"></i><h3>Enter place name</h3><p>Please enter a city or place name to get weather alerts</p></div>';
                     return;
                 }
                 
@@ -5386,14 +5379,61 @@
                 
                 const groupId = groups[0].id;
                 
-                const response = await apiCall(`/api/groups/${groupId}/ai-assistant/weather-alerts?lat=${lat}&lng=${lng}`);
+                // Get weather by place name
+                const weatherResponse = await apiCall(`/api/groups/${groupId}/weather/place?place=${encodeURIComponent(placeName)}`);
                 
+                if (weatherResponse && weatherResponse.weather) {
+                    displayCurrentWeather(weatherResponse.weather);
+                }
+                
+                // Get weather alerts
+                const response = await apiCall(`/api/groups/${groupId}/ai-assistant/weather-alerts?lat=0&lng=0`);
                 displayWeatherAlerts(response.weather_alerts);
                 
             } catch (error) {
                 console.error('Error loading weather alerts:', error);
                 document.getElementById('weatherAlerts').innerHTML = '<div class="error-message">Failed to load weather alerts</div>';
             }
+        }
+
+        async function getWeatherByPlace(placeName) {
+            try {
+                const groups = await apiCall('/api/groups');
+                if (!groups || groups.length === 0) {
+                    return null;
+                }
+                
+                const groupId = groups[0].id;
+                const response = await apiCall(`/api/groups/${groupId}/weather/place?place=${encodeURIComponent(placeName)}`);
+                return response.weather;
+                
+            } catch (error) {
+                console.error('Error getting weather for place:', error);
+                return null;
+            }
+        }
+
+        function displayCurrentWeather(weather) {
+            const container = document.getElementById('weatherAlerts');
+            const weatherHtml = `
+                <div class="current-weather">
+                    <div class="weather-header">
+                        <h3><i class="fas fa-cloud-sun"></i> Current Weather in ${weather.location}</h3>
+                    </div>
+                    <div class="weather-details">
+                        <div class="weather-temp">${weather.temperature}°C (${(weather.temperature * 9/5 + 32).toFixed(1)}°F)</div>
+                        <div class="weather-desc">${weather.description}</div>
+                        <div class="weather-info">
+                            <span>Feels like: ${weather.feels_like}°C</span>
+                            <span>Humidity: ${weather.humidity}%</span>
+                            <span>Wind: ${weather.wind_speed} km/h</span>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            // Insert weather info at the top
+            container.innerHTML = weatherHtml + container.innerHTML;
         }
 
         function displayWeatherAlerts(alerts) {

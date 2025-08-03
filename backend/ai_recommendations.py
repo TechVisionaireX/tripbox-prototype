@@ -278,21 +278,24 @@ def generate_ai_response(user_message, trip_context):
     """Generate AI response based on user message and trip context"""
     message_lower = user_message.lower()
     
-    # Simple rule-based responses (in production, use OpenAI API)
-    if 'suggest' in message_lower and 'plan' in message_lower:
-        return generate_trip_plan_suggestion(user_message, trip_context)
-    elif 'weather' in message_lower:
+    # More specific keyword matching
+    if any(word in message_lower for word in ['weather', 'forecast', 'temperature', 'rain', 'sunny']):
         return generate_weather_response(user_message, trip_context)
-    elif 'budget' in message_lower or 'cost' in message_lower:
+    elif any(word in message_lower for word in ['budget', 'cost', 'money', 'expensive', 'cheap', 'price']):
         return generate_budget_suggestion(user_message, trip_context)
-    elif 'food' in message_lower or 'restaurant' in message_lower:
+    elif any(word in message_lower for word in ['food', 'restaurant', 'eat', 'dining', 'cuisine', 'meal']):
         return generate_food_suggestion(user_message, trip_context)
-    elif 'activity' in message_lower or 'things to do' in message_lower:
+    elif any(word in message_lower for word in ['activity', 'things to do', 'attraction', 'visit', 'see', 'tour']):
         return generate_activity_suggestion(user_message, trip_context)
-    elif 'remind' in message_lower or 'forget' in message_lower:
+    elif any(word in message_lower for word in ['plan', 'itinerary', 'schedule', 'day']):
+        return generate_trip_plan_suggestion(user_message, trip_context)
+    elif any(word in message_lower for word in ['remind', 'forget', 'checklist', 'pack', 'prepare']):
         return generate_reminder_response(user_message, trip_context)
-    else:
+    elif any(word in message_lower for word in ['hello', 'hi', 'help', 'what can you do']):
         return generate_general_response(user_message, trip_context)
+    else:
+        # For any other message, try to provide a helpful response
+        return generate_contextual_response(user_message, trip_context)
 
 def generate_trip_plan_suggestion(message, trip_context):
     """Generate a trip plan suggestion"""
@@ -473,6 +476,25 @@ def generate_general_response(message, trip_context):
         'suggestions': ['Plan trip', 'Weather check', 'Budget help', 'Activity ideas']
     }
 
+def generate_contextual_response(message, trip_context):
+    """Generate contextual response based on the message content"""
+    destination = trip_context.get('destination', 'your destination')
+    
+    return {
+        'type': 'contextual_help',
+        'content': f"I understand you're asking about '{message}'. Let me help you with that!\n\n" +
+                  f"For {destination}, I can provide:\n" +
+                  "• Specific recommendations based on your interests\n" +
+                  "• Current weather information\n" +
+                  "• Budget-friendly options\n" +
+                  "• Local attractions and activities\n\n" +
+                  "Try asking me something more specific like:\n" +
+                  "• 'What's the weather like in [destination]?'\n" +
+                  "• 'Suggest activities for [destination]'\n" +
+                  "• 'Help me plan a budget for [destination]'",
+        'suggestions': ['Weather check', 'Activity ideas', 'Budget help', 'Food recommendations']
+    }
+
 def generate_smart_suggestions(destination, dates, interests, budget, group_size):
     """Generate smart suggestions based on trip parameters"""
     suggestions = []
@@ -527,6 +549,14 @@ def generate_smart_suggestions(destination, dates, interests, budget, group_size
             'estimated_cost': '$40-100/person',
             'booking_tip': 'Try local bistros away from tourist areas'
         })
+        suggestions.append({
+            'category': 'Culture',
+            'title': 'Notre-Dame & Seine River',
+            'description': 'Gothic architecture and romantic river cruises',
+            'priority': 'medium',
+            'estimated_cost': '$20-50/person',
+            'booking_tip': 'Book Seine cruise for sunset views'
+        })
     elif 'london' in destination_lower:
         suggestions.append({
             'category': 'Must-See',
@@ -543,6 +573,14 @@ def generate_smart_suggestions(destination, dates, interests, budget, group_size
             'priority': 'medium',
             'estimated_cost': '$60-150/person',
             'booking_tip': 'Book shows in advance for best seats'
+        })
+        suggestions.append({
+            'category': 'History',
+            'title': 'Tower of London & Westminster',
+            'description': 'Medieval castle and political landmarks',
+            'priority': 'high',
+            'estimated_cost': '$30-60/person',
+            'booking_tip': 'Buy combination tickets for better value'
         })
     elif 'tokyo' in destination_lower:
         suggestions.append({
@@ -561,6 +599,14 @@ def generate_smart_suggestions(destination, dates, interests, budget, group_size
             'estimated_cost': '$30-80/person',
             'booking_tip': 'Try conveyor belt sushi for budget-friendly dining'
         })
+        suggestions.append({
+            'category': 'Technology',
+            'title': 'Akihabara & Robot Restaurant',
+            'description': 'Electronics district and futuristic entertainment',
+            'priority': 'medium',
+            'estimated_cost': '$40-100/person',
+            'booking_tip': 'Visit Akihabara on weekends for street performances'
+        })
     elif 'new york' in destination_lower or 'nyc' in destination_lower:
         suggestions.append({
             'category': 'Must-See',
@@ -577,6 +623,90 @@ def generate_smart_suggestions(destination, dates, interests, budget, group_size
             'priority': 'medium',
             'estimated_cost': '$80-200/person',
             'booking_tip': 'Check for same-day rush tickets for discounts'
+        })
+        suggestions.append({
+            'category': 'Art',
+            'title': 'Metropolitan Museum & MoMA',
+            'description': 'World-class art museums and galleries',
+            'priority': 'medium',
+            'estimated_cost': '$25-50/person',
+            'booking_tip': 'Many museums have pay-what-you-wish days'
+        })
+    elif 'los angeles' in destination_lower or 'la' in destination_lower:
+        suggestions.append({
+            'category': 'Entertainment',
+            'title': 'Hollywood Walk of Fame',
+            'description': 'Celebrity stars and entertainment history',
+            'priority': 'high',
+            'estimated_cost': '$0-20/person',
+            'booking_tip': 'Visit early morning to avoid crowds'
+        })
+        suggestions.append({
+            'category': 'Beach',
+            'title': 'Venice Beach & Santa Monica',
+            'description': 'Famous beaches and pier attractions',
+            'priority': 'medium',
+            'estimated_cost': '$10-40/person',
+            'booking_tip': 'Rent bikes to explore the beach path'
+        })
+        suggestions.append({
+            'category': 'Culture',
+            'title': 'Getty Center & LACMA',
+            'description': 'World-class art museums and cultural sites',
+            'priority': 'medium',
+            'estimated_cost': '$20-50/person',
+            'booking_tip': 'Getty Center is free, just pay for parking'
+        })
+    elif 'rome' in destination_lower:
+        suggestions.append({
+            'category': 'History',
+            'title': 'Colosseum & Roman Forum',
+            'description': 'Ancient Roman ruins and gladiator arena',
+            'priority': 'high',
+            'estimated_cost': '$30-60/person',
+            'booking_tip': 'Buy skip-the-line tickets to avoid queues'
+        })
+        suggestions.append({
+            'category': 'Religion',
+            'title': 'Vatican City & St. Peter\'s',
+            'description': 'Religious sites and Renaissance art',
+            'priority': 'high',
+            'estimated_cost': '$25-50/person',
+            'booking_tip': 'Dress modestly and book Vatican tours in advance'
+        })
+        suggestions.append({
+            'category': 'Food & Dining',
+            'title': 'Italian Cuisine Experience',
+            'description': 'Authentic pasta, pizza, and gelato',
+            'priority': 'medium',
+            'estimated_cost': '$30-80/person',
+            'booking_tip': 'Try trattorias away from tourist areas'
+        })
+    else:
+        # Generic suggestions for other destinations
+        suggestions.append({
+            'category': 'Local Experience',
+            'title': 'Local Attractions',
+            'description': f'Discover the best attractions in {destination}',
+            'priority': 'high',
+            'estimated_cost': '$20-60/person',
+            'booking_tip': 'Research local attractions and book in advance'
+        })
+        suggestions.append({
+            'category': 'Food & Dining',
+            'title': 'Local Cuisine',
+            'description': f'Taste authentic local dishes in {destination}',
+            'priority': 'medium',
+            'estimated_cost': '$25-75/person',
+            'booking_tip': 'Ask locals for restaurant recommendations'
+        })
+        suggestions.append({
+            'category': 'Culture',
+            'title': 'Cultural Sites',
+            'description': f'Explore museums and cultural landmarks in {destination}',
+            'priority': 'medium',
+            'estimated_cost': '$15-50/person',
+            'booking_tip': 'Many museums have free admission days'
         })
     
     # Activity suggestions based on interests
@@ -770,4 +900,74 @@ def get_weather_info(group_id):
             return jsonify({'error': 'Weather data not available'}), 404
             
     except Exception as e:
-        return jsonify({'error': f'Weather service error: {str(e)}'}), 500 
+        return jsonify({'error': f'Weather service error: {str(e)}'}), 500
+
+@ai_recommendations_bp.route('/api/groups/<int:group_id>/weather/place', methods=['GET'])
+@jwt_required()
+def get_weather_by_place(group_id):
+    user_id = int(get_jwt_identity())
+    
+    # Verify user is part of the group
+    member = GroupMember.query.filter_by(group_id=group_id, user_id=user_id).first()
+    if not member:
+        return jsonify({'error': 'You are not a member of this group'}), 403
+    
+    place_name = request.args.get('place', '')
+    
+    if not place_name:
+        return jsonify({'error': 'Place name is required'}), 400
+    
+    # For now, return realistic weather data based on place name
+    # In production, integrate with OpenWeatherMap Geocoding API
+    weather_data = get_weather_for_place(place_name)
+    
+    return jsonify({
+        'weather': weather_data,
+        'place': place_name
+    })
+
+def get_weather_for_place(place_name):
+    """Get weather data for a specific place"""
+    place_lower = place_name.lower()
+    
+    # Simulated weather data based on place
+    weather_data = {
+        'temperature': 22,
+        'feels_like': 24,
+        'description': 'Partly cloudy',
+        'humidity': 65,
+        'wind_speed': 10,
+        'location': place_name
+    }
+    
+    # Adjust weather based on place (simulated)
+    if any(city in place_lower for city in ['paris', 'london', 'rome']):
+        weather_data.update({
+            'temperature': 18,
+            'feels_like': 20,
+            'description': 'Light rain',
+            'humidity': 75
+        })
+    elif any(city in place_lower for city in ['tokyo', 'seoul', 'beijing']):
+        weather_data.update({
+            'temperature': 25,
+            'feels_like': 28,
+            'description': 'Sunny',
+            'humidity': 60
+        })
+    elif any(city in place_lower for city in ['los angeles', 'san francisco', 'miami']):
+        weather_data.update({
+            'temperature': 28,
+            'feels_like': 30,
+            'description': 'Sunny',
+            'humidity': 55
+        })
+    elif any(city in place_lower for city in ['new york', 'chicago', 'boston']):
+        weather_data.update({
+            'temperature': 15,
+            'feels_like': 17,
+            'description': 'Partly cloudy',
+            'humidity': 70
+        })
+    
+    return weather_data 
