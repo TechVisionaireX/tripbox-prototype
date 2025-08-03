@@ -3546,7 +3546,7 @@
                         <h2><i class="fas fa-plus"></i> Create New Poll</h2>
                     </div>
                     <div class="card-body">
-                        <form id="createPollForm" class="poll-form">
+                        <form id="createPollFormMain" class="poll-form">
                             <div class="form-group">
                                 <label for="pollQuestion">Question</label>
                                 <input type="text" id="pollQuestion" placeholder="What would you like to ask?" required>
@@ -3875,18 +3875,18 @@
                 <span class="close" onclick="closeCreatePollModal()">&times;</span>
             </div>
             <div class="modal-body">
-                <form id="createPollForm" class="poll-form">
+                <form id="createPollFormModal" class="poll-form">
                     <div class="form-group">
-                        <label for="pollQuestion">Question</label>
-                        <input type="text" id="pollQuestion" placeholder="What would you like to ask?" required>
+                        <label for="pollQuestionModal">Question</label>
+                        <input type="text" id="pollQuestionModal" placeholder="What would you like to ask?" required>
                     </div>
                     <div class="form-group">
-                        <label for="pollOptions">Options (one per line)</label>
-                        <textarea id="pollOptions" placeholder="Option 1&#10;Option 2&#10;Option 3" rows="4" required></textarea>
+                        <label for="pollOptionsModal">Options (one per line)</label>
+                        <textarea id="pollOptionsModal" placeholder="Option 1&#10;Option 2&#10;Option 3" rows="4" required></textarea>
                     </div>
                     <div class="form-group">
-                        <label for="pollExpires">Expires in (hours)</label>
-                        <select id="pollExpires">
+                        <label for="pollExpiresModal">Expires in (hours)</label>
+                        <select id="pollExpiresModal">
                             <option value="1">1 hour</option>
                             <option value="6">6 hours</option>
                             <option value="12">12 hours</option>
@@ -3910,7 +3910,7 @@
 
     <script>
         // API Base URL
-        const API_BASE = 'https://tripbox-intelliorganizer.onrender.com';
+        const API_BASE = 'http://localhost:5000';
         
         // Global State
         let currentUser = null;
@@ -5016,7 +5016,8 @@
 
         function closeCreatePollModal() {
             document.getElementById('createPollModal').style.display = 'none';
-            document.getElementById('createPollForm').reset();
+            const modalForm = document.getElementById('createPollFormModal');
+            if (modalForm) modalForm.reset();
         }
 
         async function loadUserGroups() {
@@ -5086,15 +5087,34 @@
         }
 
         function setupCreatePollForm() {
-            const form = document.getElementById('createPollForm');
+            // Set up both forms
+            const mainForm = document.getElementById('createPollFormMain');
+            const modalForm = document.getElementById('createPollFormModal');
+            
+            if (mainForm) {
+                setupPollForm(mainForm);
+            }
+            if (modalForm) {
+                setupPollForm(modalForm);
+            }
+        }
+        
+        function setupPollForm(form) {
             
             form.onsubmit = async (e) => {
                 e.preventDefault();
                 
-                const question = document.getElementById('pollQuestion').value.trim();
-                const optionsText = document.getElementById('pollOptions').value.trim();
-                const expiresInHours = parseInt(document.getElementById('pollExpires').value);
-                const selectedGroupId = document.getElementById('pollGroup').value;
+                // Determine which form is being submitted and get the appropriate field IDs
+                const isModalForm = form.id === 'createPollFormModal';
+                const questionId = isModalForm ? 'pollQuestionModal' : 'pollQuestion';
+                const optionsId = isModalForm ? 'pollOptionsModal' : 'pollOptions';
+                const expiresId = isModalForm ? 'pollExpiresModal' : 'pollExpires';
+                const groupId = 'pollGroup'; // This is shared between forms
+                
+                const question = document.getElementById(questionId).value.trim();
+                const optionsText = document.getElementById(optionsId).value.trim();
+                const expiresInHours = parseInt(document.getElementById(expiresId).value);
+                const selectedGroupId = document.getElementById(groupId).value;
                 
                 console.log('Selected group ID:', selectedGroupId);
                 console.log('Selected group ID type:', typeof selectedGroupId);
@@ -5172,7 +5192,17 @@
                     
                     console.log('Poll creation response:', response);
                     showMessage('createPollMessage', 'Poll created successfully!', 'success');
-                    form.reset();
+                    // Reset both forms
+                    const mainForm = document.getElementById('createPollFormMain');
+                    const modalForm = document.getElementById('createPollFormModal');
+                    if (mainForm) mainForm.reset();
+                    if (modalForm) modalForm.reset();
+                    
+                    // Also reset the group selector
+                    const groupSelector = document.getElementById('pollGroup');
+                    if (groupSelector) {
+                        groupSelector.innerHTML = '<option value="">Select a group...</option>';
+                    }
                     
                     // Refresh polls immediately
                     await loadActivePolls();

@@ -1,15 +1,16 @@
-from app import app, db
-from models import User
+#!/usr/bin/env python3
+"""
+Check users in the database
+"""
+from app import app
+from models import db, User
 
 def check_users():
-    print("🔍 Checking users in database...")
-    
     with app.app_context():
         users = User.query.all()
-        print(f"✅ Found {len(users)} users:")
-        
+        print(f"Found {len(users)} users:")
         for user in users:
-            print(f"   - {user.name} ({user.email}) - ID: {user.id}")
+            print(f"  - ID: {user.id}, Email: {user.email}, Name: {user.name}")
             # Don't print passwords for security
 
 if __name__ == "__main__":
