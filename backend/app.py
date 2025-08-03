@@ -124,8 +124,10 @@ CORS(app, origins=[
     "http://localhost:3001",
     "http://127.0.0.1:3001",
     "https://resilient-marshmallow-13df59.netlify.app",
-    "https://*.netlify.app"  # Allow any Netlify subdomain
-])
+    "https://*.netlify.app",  # Allow any Netlify subdomain
+    "https://netlify.app",    # Allow netlify.app domain
+    "*"  # Allow all origins for development (remove in production)
+], supports_credentials=True)
 
 # Configurations
 # Use environment variable for database URL in production, fallback to SQLite for development
@@ -205,6 +207,15 @@ def home():
 @app.route('/api/hello')
 def hello():
     return jsonify(message="Hello from backend!")
+
+# CORS preflight handler
+@app.route('/api/<path:path>', methods=['OPTIONS'])
+def handle_options(path):
+    response = jsonify({'status': 'ok'})
+    response.headers.add('Access-Control-Allow-Origin', '*')
+    response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization')
+    response.headers.add('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS')
+    return response
 
 # Run server
 if __name__ == '__main__':
