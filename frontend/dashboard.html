@@ -4831,6 +4831,9 @@
 
         async function openGroupChat(groupId, groupName) {
             console.log('Opening group chat for:', groupId, groupName);
+            console.log('Current user:', currentUser);
+            console.log('Current user ID:', currentUser?.id);
+            
             currentChatGroupId = groupId;
             document.getElementById('modalChatGroupName').textContent = `Group Chat - ${groupName}`;
             document.getElementById('groupChatModal').style.display = 'block';
@@ -4846,6 +4849,7 @@
 
         async function loadChatMessages(groupId) {
             console.log('Loading chat messages for group:', groupId);
+            console.log('Current user for chat:', currentUser);
             try {
                 const messages = await apiCall(`/api/groups/${groupId}/chat`);
                 console.log('Loaded messages:', messages);
@@ -4864,9 +4868,12 @@
         }
 
         function displayChatMessages(messages) {
+            console.log('displayChatMessages called with:', messages);
             const container = document.getElementById('chatMessages');
+            console.log('Chat messages container:', container);
             
             if (!messages || messages.length === 0) {
+                console.log('No messages to display');
                 container.innerHTML = `
                     <div class="empty-state">
                         <i class="fas fa-comments"></i>
@@ -4877,9 +4884,10 @@
                 return;
             }
 
-            const messagesHtml = messages.map(message => {
+            console.log('Processing', messages.length, 'messages');
+            const messagesHtml = messages.map((message, index) => {
                 // Debug logging
-                console.log('Message:', message);
+                console.log(`Message ${index}:`, message);
                 console.log('Current user:', currentUser);
                 console.log('Message user_id:', message.user_id);
                 console.log('Current user id:', currentUser?.id);
@@ -4906,8 +4914,10 @@
                 `;
             }).join('');
 
+            console.log('Generated HTML length:', messagesHtml.length);
             container.innerHTML = messagesHtml;
             container.scrollTop = container.scrollHeight;
+            console.log('Chat messages displayed successfully');
         }
 
         function setupChatMessageForm(groupId) {
@@ -4921,6 +4931,9 @@
             form.onsubmit = async (e) => {
                 e.preventDefault();
                 console.log('Chat form submitted');
+                console.log('Form element:', form);
+                console.log('Input element:', input);
+                console.log('Input value:', input.value);
                 
                 const message = input.value.trim();
                 if (!message) {
@@ -4929,6 +4942,7 @@
                 }
                 
                 console.log('Sending message:', message, 'to group:', groupId);
+                console.log('Current user for sending:', currentUser);
                 
                 try {
                     console.log('Sending message to API...');
