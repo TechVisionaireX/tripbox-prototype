@@ -3048,17 +3048,7 @@
                         </div>
                     </div>
                     
-                    <div class="notification-card" onclick="showSection('checklists')" style="cursor: pointer;">
-                        <div class="notification-card-header">
-                            <div class="notification-card-icon info">
-                                <i class="fas fa-tasks"></i>
-                            </div>
-                            <div class="notification-card-content">
-                                <div class="notification-card-number" id="pendingTasks">0</div>
-                                <div class="notification-card-label">Pending Tasks</div>
-                            </div>
-                        </div>
-                    </div>
+
                 </div>
 
                 <!-- My Trip Expenses Section -->
@@ -3094,6 +3084,24 @@
                     <div class="card-body">
                         <div id="recentTrips" class="trips-grid">
                             <!-- Trips will be loaded here -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Active Polls Section -->
+                <div class="card dashboard-section">
+                    <div class="card-header">
+                        <h2>
+                            <i class="fas fa-poll"></i>
+                            Active Polls
+                        </h2>
+                        <button class="btn btn-secondary btn-sm" onclick="refreshPolls()">
+                            <i class="fas fa-sync-alt"></i> Refresh
+                        </button>
+                    </div>
+                    <div class="card-body">
+                        <div id="activePollsList" class="polls-list">
+                            <div class="loading-spinner">Loading active polls...</div>
                         </div>
                     </div>
                 </div>
@@ -4082,6 +4090,9 @@
                 await updateDashboardStats();
                 displayRecentTrips();
                 
+                // Load active polls for dashboard
+                await loadActivePolls();
+                
                 // Also display all trips in the trips section
                 if (document.getElementById('tripsSection').style.display !== 'none') {
                     displayAllTrips();
@@ -4468,14 +4479,7 @@
                 const activePolls = await apiCall('/api/polls/active');
                 document.getElementById('activePollsCount').textContent = activePolls.length;
                 
-                // Update pending tasks count (checklist items)
-                const groups = await apiCall('/api/groups');
-                let pendingTasks = 0;
-                for (const group of groups) {
-                    const checklistItems = await apiCall(`/api/groups/${group.id}/checklist`);
-                    pendingTasks += checklistItems.filter(item => !item.is_completed).length;
-                }
-                document.getElementById('pendingTasks').textContent = pendingTasks;
+
                 
             } catch (error) {
                 console.error('Error updating notification cards:', error);
@@ -4483,7 +4487,7 @@
                 document.getElementById('unreadNotifications').textContent = '0';
                 document.getElementById('chatNotifications').textContent = '0';
                 document.getElementById('activePollsCount').textContent = '0';
-                document.getElementById('pendingTasks').textContent = '0';
+
             }
         }
 
@@ -4868,18 +4872,44 @@
 
         async function loadActivePolls() {
             try {
+                console.log('Loading active polls...');
                 const polls = await apiCall('/api/polls/active');
+                console.log('Active polls received:', polls);
                 activePolls = polls;
                 displayActivePolls(polls);
+                
+                // Update active polls count in dashboard
+                const activePollsCount = document.getElementById('activePollsCount');
+                if (activePollsCount) {
+                    activePollsCount.textContent = polls ? polls.length : 0;
+                }
+                
+                console.log('Polls loaded successfully');
             } catch (error) {
                 console.error('Error loading active polls:', error);
-                document.getElementById('activePollsList').innerHTML = `
+                const activePollsList = document.getElementById('activePollsList');
+                const pollsList = document.getElementById('pollsList');
+                
+                const errorHtml = `
                     <div class="empty-state">
                         <i class="fas fa-poll"></i>
                         <h3>No active polls</h3>
                         <p>Create a poll to start voting!</p>
                     </div>
                 `;
+                
+                if (activePollsList) {
+                    activePollsList.innerHTML = errorHtml;
+                }
+                if (pollsList) {
+                    pollsList.innerHTML = errorHtml;
+                }
+                
+                // Update count to 0
+                const activePollsCount = document.getElementById('activePollsCount');
+                if (activePollsCount) {
+                    activePollsCount.textContent = '0';
+                }
             }
         }
 
@@ -4951,13 +4981,19 @@
 
         async function voteOnPoll(pollId, selectedOption) {
             try {
+                console.log(`Voting on poll ${pollId} with option: ${selectedOption}`);
+                
                 await apiCall(`/api/polls/${pollId}/vote`, {
                     method: 'POST',
                     body: JSON.stringify({ selected_option: selectedOption })
                 });
                 
                 showMessage('createPollMessage', 'Vote recorded successfully!', 'success');
+                
+                // Refresh polls immediately
                 await loadActivePolls();
+                
+                console.log('Vote recorded and polls refreshed');
             } catch (error) {
                 console.error('Error voting on poll:', error);
                 showMessage('createPollMessage', 'Failed to record vote. Please try again.', 'error');
@@ -5134,7 +5170,22 @@
                     console.log('Poll creation response:', response);
                     showMessage('createPollMessage', 'Poll created successfully!', 'success');
                     form.reset();
+                    
+                    // Refresh polls immediately
                     await loadActivePolls();
+                    
+                    // Also refresh the dashboard polls if we're on the polls section
+                    const pollsSection = document.getElementById('pollsSection');
+                    if (pollsSection && pollsSection.style.display !== 'none') {
+                        await loadActivePolls();
+                    }
+                    
+                    // Update the active polls count
+                    const activePollsCount = document.getElementById('activePollsCount');
+                    if (activePollsCount) {
+                        const currentCount = parseInt(activePollsCount.textContent) || 0;
+                        activePollsCount.textContent = currentCount + 1;
+                    }
                     
                 } catch (error) {
                     console.error('Error creating poll:', error);
@@ -5190,7 +5241,8 @@
         }
 
         async function refreshPolls() {
-            await loadPolls();
+            console.log('Refreshing polls...');
+            await loadActivePolls();
         }
 
         async function testPollCreation() {
