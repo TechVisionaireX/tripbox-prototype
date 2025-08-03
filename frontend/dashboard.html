@@ -3751,7 +3751,7 @@
 
     <script>
         // API Base URL
-        const API_BASE = 'https://tripbox-intelliorganizer.onrender.com';
+        const API_BASE = 'http://localhost:5000';
         
         // Global State
         let currentUser = null;
@@ -7575,6 +7575,9 @@
                     break;
                 case 'checklist':
                     loadChecklists();
+                    break;
+                case 'ai-assistant':
+                    loadAiAssistant();
                     break;
             }
         }
