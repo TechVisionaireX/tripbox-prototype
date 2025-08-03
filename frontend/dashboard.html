@@ -2761,7 +2761,7 @@
                 </a>
             </div>
             <div class="nav-item">
-                <a href="#" class="nav-link" onclick="showSection('ai-assistant')">
+                <a href="#" class="nav-link" onclick="alert('AI Assistant clicked!'); console.log('AI Assistant clicked'); showSection('ai-assistant');" style="cursor: pointer;">
                     <i class="fas fa-robot"></i>
                     AI Assistant
                 </a>
@@ -7542,13 +7542,21 @@
 
         // Update showSection function to include groups
         function showSection(sectionName) {
+            console.log('showSection called with:', sectionName);
+            
             // Hide all sections
             document.querySelectorAll('.section').forEach(section => {
                 section.style.display = 'none';
             });
 
             // Show selected section
-            document.getElementById(sectionName + 'Section').style.display = 'block';
+            const targetSection = document.getElementById(sectionName + 'Section');
+            console.log('Target section:', targetSection);
+            if (targetSection) {
+                targetSection.style.display = 'block';
+            } else {
+                console.error('Section not found:', sectionName + 'Section');
+            }
 
             // Update navigation
             document.querySelectorAll('.nav-link').forEach(link => {
