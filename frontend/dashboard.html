@@ -3767,6 +3767,34 @@
             </div>
         </section>
 
+        <!-- Chat Notifications Section -->
+        <section id="chatSection" class="section" style="display: none; background: white;">
+            <div class="header">
+                <h1><i class="fas fa-comments"></i> Chat Messages</h1>
+                <p>Recent chat activity from your groups</p>
+            </div>
+            
+            <div class="content">
+                <div class="card">
+                    <div class="card-header">
+                        <h2><i class="fas fa-comments"></i> Recent Chat Messages</h2>
+                        <button class="btn btn-secondary btn-sm" onclick="refreshChatNotifications()">
+                            <i class="fas fa-sync-alt"></i> Refresh
+                        </button>
+                    </div>
+                    <div class="card-body">
+                        <div id="chatNotificationsList" class="chat-notifications-list">
+                            <div class="empty-state">
+                                <i class="fas fa-comments"></i>
+                                <h3>No chat messages</h3>
+                                <p>Start chatting in your groups to see messages here!</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
         <!-- AI Assistant Section -->
         <section id="aiAssistantSection" class="section" style="display: none; background: white;">
 
@@ -8253,6 +8281,9 @@
                     break;
                 case 'weather':
                     // Weather section is loaded by default, no specific loading needed
+                    break;
+                case 'chat':
+                    loadChatNotifications();
                     break;
             }
         }
