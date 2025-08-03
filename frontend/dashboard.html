@@ -3533,20 +3533,7 @@
                     </div>
                 </div>
 
-                <!-- Smart Reminders -->
-                <div class="card">
-                    <div class="card-header">
-                        <h2><i class="fas fa-bell"></i> Smart Reminders</h2>
-                        <button class="btn btn-secondary btn-sm" onclick="loadSmartReminders()">
-                            <i class="fas fa-sync-alt"></i> Refresh
-                        </button>
-                    </div>
-                    <div class="card-body">
-                        <div id="smartReminders" class="reminders-list">
-                            <!-- Reminders will be loaded here -->
-                        </div>
-                    </div>
-                </div>
+
 
                 <!-- Weather Alerts -->
                 <div class="card">
@@ -5123,8 +5110,7 @@
                 // Load user groups for context
                 await loadUserGroups();
                 
-                // Load initial reminders and current weather
-                await loadSmartReminders();
+                // Load initial current weather
                 await loadWeatherAlerts();
                 
             } catch (error) {
@@ -5309,58 +5295,7 @@
             `).join('');
         }
 
-        async function loadSmartReminders() {
-            try {
-                const groups = await apiCall('/api/groups');
-                if (!groups || groups.length === 0) {
-                    document.getElementById('smartReminders').innerHTML = '<div class="empty-state"><i class="fas fa-bell"></i><h3>No reminders available</h3><p>Create a group first to get smart reminders</p></div>';
-                    return;
-                }
-                
-                const groupId = groups[0].id;
-                
-                // Get trip context for reminders
-                const trips = await apiCall('/api/trips');
-                const tripContext = trips && trips.length > 0 ? {
-                    destination: trips[0].destination || '',
-                    dates: {
-                        start: trips[0].start_date || '',
-                        end: trips[0].end_date || ''
-                    },
-                    group_size: trips[0].group_size || 1
-                } : {};
-                
-                const response = await apiCall(`/api/groups/${groupId}/ai-assistant/reminders?trip_data=${encodeURIComponent(JSON.stringify(tripContext))}`);
-                
-                displaySmartReminders(response.reminders);
-                
-            } catch (error) {
-                console.error('Error loading reminders:', error);
-                document.getElementById('smartReminders').innerHTML = '<div class="error-message">Failed to load reminders</div>';
-            }
-        }
 
-        function displaySmartReminders(reminders) {
-            const container = document.getElementById('smartReminders');
-            
-            if (!reminders || reminders.length === 0) {
-                container.innerHTML = '<div class="empty-state"><i class="fas fa-bell"></i><h3>No reminders available</h3><p>Create a trip to get smart reminders</p></div>';
-                return;
-            }
-            
-            container.innerHTML = reminders.map(reminder => `
-                <div class="reminder-item">
-                    <div class="reminder-icon ${reminder.type}">
-                        <i class="fas fa-${reminder.icon}"></i>
-                    </div>
-                    <div class="reminder-content">
-                        <div class="reminder-title">${reminder.title}</div>
-                        <div class="reminder-message">${reminder.message}</div>
-                        <div class="reminder-due">Due: ${reminder.due_date}</div>
-                    </div>
-                </div>
-            `).join('');
-        }
 
         async function loadWeatherAlerts() {
             try {
