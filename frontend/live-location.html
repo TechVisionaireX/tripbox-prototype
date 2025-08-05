@@ -300,6 +300,56 @@
             border: 1px solid rgba(102, 126, 234, 0.3);
         }
 
+        .login-section {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+
+        .login-form {
+            margin-top: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            font-weight: 600;
+            color: #4a5568;
+            font-size: 14px;
+            margin-bottom: 5px;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .user-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 15px;
+        }
+
+        .user-info span {
+            font-weight: 600;
+            color: #4a5568;
+        }
+
         @media (max-width: 768px) {
             .location-controls {
                 grid-template-columns: 1fr;
@@ -313,60 +363,99 @@
 </head>
 <body>
     <div class="container">
-        <div class="header">
-            <h1><i class="fas fa-map-marker-alt"></i> Live Location Sharing</h1>
-            <p>Share your location with trip members and see where everyone is in real-time</p>
-        </div>
-
-        <div class="controls">
-            <div class="location-controls">
-                <div class="control-group">
-                    <label for="groupSelect">Select Trip Group:</label>
-                    <select id="groupSelect">
-                        <option value="">Loading groups...</option>
-                    </select>
-                </div>
-                <div class="control-group">
-                    <label for="locationName">Location Name (Optional):</label>
-                    <input type="text" id="locationName" placeholder="e.g., Coffee Shop, Hotel Lobby">
-                </div>
+        <!-- Login Section -->
+        <div id="loginSection" class="login-section">
+            <div class="header">
+                <h1><i class="fas fa-map-marker-alt"></i> Live Location Sharing</h1>
+                <p>Share your location with trip members and see where everyone is in real-time</p>
             </div>
-
-            <div class="status-indicator" id="statusIndicator">
-                <i class="fas fa-circle"></i>
-                <span>Location sharing is offline</span>
-            </div>
-
-            <div class="location-actions">
-                <button class="btn btn-primary" id="startSharing">
-                    <i class="fas fa-location-arrow"></i>
-                    Start Sharing Location
+            
+            <div class="login-form">
+                <h3><i class="fas fa-sign-in-alt"></i> Login Required</h3>
+                <p>Please log in to access the live location feature</p>
+                
+                <div class="form-group">
+                    <label for="loginEmail">Email:</label>
+                    <input type="email" id="loginEmail" placeholder="Enter your email" value="test@example.com">
+                </div>
+                
+                <div class="form-group">
+                    <label for="loginPassword">Password:</label>
+                    <input type="password" id="loginPassword" placeholder="Enter your password" value="testpassword123">
+                </div>
+                
+                <button class="btn btn-primary" onclick="login()">
+                    <i class="fas fa-sign-in-alt"></i>
+                    Login
                 </button>
-                <button class="btn btn-danger" id="stopSharing" disabled>
-                    <i class="fas fa-stop"></i>
-                    Stop Sharing
-                </button>
-                <button class="btn btn-success" id="refreshLocations">
-                    <i class="fas fa-sync-alt"></i>
-                    Refresh Locations
-                </button>
+                
+                <div id="loginMessage" class="alert" style="display: none;"></div>
             </div>
         </div>
 
-        <div id="alertContainer"></div>
-
-        <div class="map-container">
-            <h3><i class="fas fa-map"></i> Live Map</h3>
-            <div class="map-placeholder" id="mapPlaceholder">
-                <div>
-                    <i class="fas fa-map-marked-alt" style="font-size: 48px; margin-bottom: 15px; display: block;"></i>
-                    <p>Map will appear here when location sharing is active</p>
+        <!-- Main Content (hidden until logged in) -->
+        <div id="mainContent" style="display: none;">
+            <div class="header">
+                <h1><i class="fas fa-map-marker-alt"></i> Live Location Sharing</h1>
+                <p>Share your location with trip members and see where everyone is in real-time</p>
+                <div class="user-info">
+                    <span id="currentUser">Welcome!</span>
+                    <button class="btn btn-sm btn-danger" onclick="logout()">
+                        <i class="fas fa-sign-out-alt"></i> Logout
+                    </button>
                 </div>
             </div>
-        </div>
 
-        <div class="location-grid" id="locationGrid">
-            <!-- Location cards will be populated here -->
+            <div class="controls">
+                <div class="location-controls">
+                    <div class="control-group">
+                        <label for="groupSelect">Select Trip Group:</label>
+                        <select id="groupSelect">
+                            <option value="">Loading groups...</option>
+                        </select>
+                    </div>
+                    <div class="control-group">
+                        <label for="locationName">Location Name (Optional):</label>
+                        <input type="text" id="locationName" placeholder="e.g., Coffee Shop, Hotel Lobby">
+                    </div>
+                </div>
+
+                <div class="status-indicator" id="statusIndicator">
+                    <i class="fas fa-circle"></i>
+                    <span>Location sharing is offline</span>
+                </div>
+
+                <div class="location-actions">
+                    <button class="btn btn-primary" id="startSharing">
+                        <i class="fas fa-location-arrow"></i>
+                        Start Sharing Location
+                    </button>
+                    <button class="btn btn-danger" id="stopSharing" disabled>
+                        <i class="fas fa-stop"></i>
+                        Stop Sharing
+                    </button>
+                    <button class="btn btn-success" id="refreshLocations">
+                        <i class="fas fa-sync-alt"></i>
+                        Refresh Locations
+                    </button>
+                </div>
+            </div>
+
+            <div id="alertContainer"></div>
+
+            <div class="map-container">
+                <h3><i class="fas fa-map"></i> Live Map</h3>
+                <div class="map-placeholder" id="mapPlaceholder">
+                    <div>
+                        <i class="fas fa-map-marked-alt" style="font-size: 48px; margin-bottom: 15px; display: block;"></i>
+                        <p>Map will appear here when location sharing is active</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="location-grid" id="locationGrid">
+                <!-- Location cards will be populated here -->
+            </div>
         </div>
     </div>
 
@@ -380,42 +469,69 @@
         // Initialize the page
         document.addEventListener('DOMContentLoaded', function() {
             checkAuth();
-            loadUserGroups();
-            setupEventListeners();
         });
 
         function checkAuth() {
             const token = localStorage.getItem('token');
             if (!token) {
-                showAlert('Please log in to use location sharing', 'error');
+                // Show login section, hide main content
+                document.getElementById('loginSection').style.display = 'block';
+                document.getElementById('mainContent').style.display = 'none';
                 return false;
+            } else {
+                // Show main content, hide login section
+                document.getElementById('loginSection').style.display = 'none';
+                document.getElementById('mainContent').style.display = 'block';
+                loadUserGroups();
+                setupEventListeners();
+                return true;
             }
-            return true;
         }
 
         function loadUserGroups() {
-            if (!checkAuth()) return;
+            const token = localStorage.getItem('token');
+            if (!token) {
+                console.log('No token found, cannot load groups');
+                return;
+            }
 
             fetch('/api/groups', {
                 headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    'Authorization': `Bearer ${token}`
                 }
             })
-            .then(response => response.json())
+            .then(response => {
+                if (response.status === 401) {
+                    // Token expired or invalid
+                    localStorage.removeItem('token');
+                    checkAuth();
+                    showAlert('Session expired. Please log in again.', 'error');
+                    return;
+                }
+                return response.json();
+            })
             .then(data => {
+                if (!data) return;
+                
                 const groupSelect = document.getElementById('groupSelect');
                 groupSelect.innerHTML = '<option value="">Select a trip group...</option>';
                 
-                data.forEach(group => {
-                    const option = document.createElement('option');
-                    option.value = group.id;
-                    option.textContent = group.name;
-                    groupSelect.appendChild(option);
-                });
+                if (data.length === 0) {
+                    groupSelect.innerHTML = '<option value="">No groups available</option>';
+                    showAlert('No trip groups found. Create a trip first.', 'info');
+                } else {
+                    data.forEach(group => {
+                        const option = document.createElement('option');
+                        option.value = group.id;
+                        option.textContent = group.name;
+                        groupSelect.appendChild(option);
+                    });
+                    console.log(`Loaded ${data.length} groups`);
+                }
             })
             .catch(error => {
                 console.error('Error loading groups:', error);
-                showAlert('Failed to load trip groups', 'error');
+                showAlert('Failed to load trip groups. Please check your connection.', 'error');
             });
         }
 
@@ -636,6 +752,59 @@
         function getDirections(lat, lng) {
             const url = `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`;
             window.open(url, '_blank');
+        }
+
+        function login() {
+            const email = document.getElementById('loginEmail').value;
+            const password = document.getElementById('loginPassword').value;
+            const loginMessage = document.getElementById('loginMessage');
+
+            if (!email || !password) {
+                loginMessage.className = 'alert alert-error';
+                loginMessage.innerHTML = '<i class="fas fa-exclamation-circle"></i> Email and password are required.';
+                loginMessage.style.display = 'block';
+                return;
+            }
+
+            fetch('/api/auth/login', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ email, password })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.token) {
+                    localStorage.setItem('token', data.token);
+                    document.getElementById('loginSection').style.display = 'none';
+                    document.getElementById('mainContent').style.display = 'block';
+                    loadUserGroups(); // Reload groups after successful login
+                    showAlert('Logged in successfully!', 'success');
+                    currentUser = email; // Assuming email is the user identifier
+                    document.getElementById('currentUser').textContent = `Welcome, ${email}!`;
+                } else {
+                    loginMessage.className = 'alert alert-error';
+                    loginMessage.innerHTML = '<i class="fas fa-exclamation-circle"></i> Invalid email or password.';
+                    loginMessage.style.display = 'block';
+                }
+            })
+            .catch(error => {
+                console.error('Login error:', error);
+                loginMessage.className = 'alert alert-error';
+                loginMessage.innerHTML = '<i class="fas fa-exclamation-circle"></i> Failed to connect to the server.';
+                loginMessage.style.display = 'block';
+            });
+        }
+
+        function logout() {
+            localStorage.removeItem('token');
+            document.getElementById('loginSection').style.display = 'block';
+            document.getElementById('mainContent').style.display = 'none';
+            document.getElementById('currentUser').textContent = 'Welcome!';
+            showAlert('Logged out successfully!', 'info');
+            currentGroupId = null;
+            stopLocationRefresh();
         }
     </script>
 </body>
