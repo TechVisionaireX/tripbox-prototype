@@ -222,7 +222,7 @@ def add_trip_member(trip_id):
     return jsonify({
         'message': 'Member added to trip successfully',
         'group_id': default_group.id
-    })
+    }), 201
 
 # NEW: Get all members of a trip (from default group)
 @trips_bp.route('/api/trips/<int:trip_id>/members', methods=['GET'])

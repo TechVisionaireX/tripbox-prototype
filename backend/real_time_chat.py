@@ -46,7 +46,7 @@ def send_enhanced_message(group_id):
         message=message_text,
         message_type=message_type,
         reply_to_message_id=data.get('reply_to'),
-        metadata=json.dumps(metadata) if metadata else None
+        message_metadata=json.dumps(metadata) if metadata else None
     )
     
     db.session.add(message)
@@ -121,7 +121,7 @@ def get_enhanced_messages(group_id):
     result = []
     for message in reversed(messages):  # Show oldest first
         user = users.get(message.user_id)
-        metadata = json.loads(message.metadata) if message.metadata else {}
+        metadata = json.loads(message.message_metadata) if message.message_metadata else {}
         
         read_by_list = json.loads(message.read_by) if message.read_by else []
         
@@ -198,7 +198,7 @@ def edit_message(group_id, message_id):
     message.edited_at = datetime.utcnow()
     
     if data.get('metadata'):
-        message.metadata = json.dumps(data['metadata'])
+        message.message_metadata = json.dumps(data['metadata'])
     
     db.session.commit()
     
@@ -317,7 +317,7 @@ def search_messages(group_id):
     result = []
     for message in messages:
         user = users.get(message.user_id)
-        metadata = json.loads(message.metadata) if message.metadata else {}
+        metadata = json.loads(message.message_metadata) if message.message_metadata else {}
         
         result.append({
             'id': message.id,
@@ -366,7 +366,7 @@ def get_chat_events(group_id):
     events = []
     for message in new_messages:
         user = User.query.get(message.user_id)
-        metadata = json.loads(message.metadata) if message.metadata else {}
+        metadata = json.loads(message.message_metadata) if message.message_metadata else {}
         
         events.append({
             'type': 'new_message',

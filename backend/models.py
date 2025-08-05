@@ -37,6 +37,19 @@ class ChatMessage(db.Model):
     message = db.Column(db.Text, nullable=False)
     timestamp = db.Column(db.DateTime, server_default=db.func.now())
 
+class EnhancedChatMessage(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    group_id = db.Column(db.Integer, db.ForeignKey('group.id'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    message = db.Column(db.Text, nullable=False)
+    message_type = db.Column(db.String(20), default='text')  # text, image, location, file
+    reply_to_message_id = db.Column(db.Integer, db.ForeignKey('enhanced_chat_message.id'), nullable=True)
+    message_metadata = db.Column(db.Text, nullable=True)  # JSON string for additional data
+    is_edited = db.Column(db.Boolean, default=False)
+    edited_at = db.Column(db.DateTime, nullable=True)
+    read_by = db.Column(db.Text, nullable=True)  # JSON array of user IDs who read the message
+    timestamp = db.Column(db.DateTime, server_default=db.func.now())
+
 class Poll(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     group_id = db.Column(db.Integer, db.ForeignKey('group.id'), nullable=False)

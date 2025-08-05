@@ -111,11 +111,11 @@ except Exception as e:
 # except Exception as e:
 #     print("FAILED to import pdf_generator_bp:", e)
 
-# try:
-#     from real_time_chat import real_time_chat_bp
-#     print("Imported real_time_chat_bp successfully!")
-# except Exception as e:
-#     print("FAILED to import real_time_chat_bp:", e)
+try:
+    from real_time_chat import real_time_chat_bp
+    print("Imported real_time_chat_bp successfully!")
+except Exception as e:
+    print("FAILED to import real_time_chat_bp:", e)
 
 # Initialize app
 app = Flask(__name__)
@@ -190,7 +190,7 @@ except Exception as e:
 # Temporarily disabled new blueprints for deployment fix
 # app.register_blueprint(live_location_bp)  # Live Location Tracking
 # app.register_blueprint(pdf_generator_bp)  # PDF Generation
-# app.register_blueprint(real_time_chat_bp)  # Enhanced Chat
+app.register_blueprint(real_time_chat_bp)  # Enhanced Chat
 
 # Create tables if not present
 with app.app_context():
