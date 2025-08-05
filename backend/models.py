@@ -80,6 +80,21 @@ class LocationCheckin(db.Model):
     message = db.Column(db.String(300), nullable=True)
     checkin_time = db.Column(db.DateTime, server_default=db.func.now())
 
+class LiveLocation(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    group_id = db.Column(db.Integer, db.ForeignKey('group.id'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    latitude = db.Column(db.Float, nullable=False)
+    longitude = db.Column(db.Float, nullable=False)
+    accuracy = db.Column(db.Float, nullable=True)
+    speed = db.Column(db.Float, nullable=True)
+    heading = db.Column(db.Float, nullable=True)
+    altitude = db.Column(db.Float, nullable=True)
+    battery_level = db.Column(db.Float, nullable=True)
+    location_name = db.Column(db.String(200), nullable=True)
+    is_active = db.Column(db.Boolean, default=True)
+    timestamp = db.Column(db.DateTime, server_default=db.func.now())
+
 class Recommendation(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     group_id = db.Column(db.Integer, db.ForeignKey('group.id'), nullable=False)
