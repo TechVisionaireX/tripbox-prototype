@@ -107,6 +107,7 @@ def get_trip_groups(trip_id):
         GroupMember.user_id == user_id
     ).first()
     
+    # Trip owner should always have access, even if not explicitly added as member
     if not is_owner and not is_member:
         return jsonify({'error': 'You do not have access to this trip'}), 403
     

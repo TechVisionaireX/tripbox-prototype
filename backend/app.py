@@ -92,6 +92,13 @@ try:
 except Exception as e:
     print("FAILED to import ai_recommendations_bp:", e)
 
+# ✅ NEW: Fix Groups Blueprint
+try:
+    from fix_groups_endpoint import fix_groups_bp
+    print("Imported fix_groups_bp successfully!")
+except Exception as e:
+    print("FAILED to import fix_groups_bp:", e)
+
 # try:
 #     from live_location import live_location_bp
 #     print("Imported live_location_bp successfully!")
@@ -169,6 +176,7 @@ app.register_blueprint(checklist_bp)
 app.register_blueprint(budget_bp)
 app.register_blueprint(finalize_bp)
 app.register_blueprint(location_bp)  #  NEW
+app.register_blueprint(fix_groups_bp)  #  NEW: Fix Groups
 
 # Conditionally register AI recommendations blueprint if available
 try:

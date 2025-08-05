@@ -52,6 +52,23 @@ def send_enhanced_message(group_id):
     db.session.add(message)
     db.session.commit()
     
+    # Create notifications for other group members
+    other_members = GroupMember.query.filter(
+        GroupMember.group_id == group_id,
+        GroupMember.user_id != user_id
+    ).all()
+    
+    # Create notifications for other group members
+    from notifications import create_notification
+    for member in other_members:
+        create_notification(
+            user_id=member.user_id,
+            group_id=group_id,
+            notification_type='chat_message',
+            title=f'New message from {user.name if user else f"User {user_id}"}',
+            message=f'{user.name if user else f"User {user_id}"}: {message_text[:50]}{"..." if len(message_text) > 50 else ""}'
+        )
+    
     # Prepare response with user info
     response_data = {
         'message_id': message.id,

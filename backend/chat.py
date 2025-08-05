@@ -49,12 +49,16 @@ def send_message(group_id):
     
     print(f"Other members to notify: {[m.user_id for m in other_members]}")
     
-    # Store notifications in session or database (simplified version)
-    # In a real app, you'd use a proper notification system
+    # Create notifications for other group members
+    from notifications import create_notification
     for member in other_members:
-        # You could store this in a notifications table
-        # For now, we'll just return success
-        pass
+        create_notification(
+            user_id=member.user_id,
+            group_id=group_id,
+            notification_type='chat_message',
+            title=f'New message from {user.name}',
+            message=f'{user.name}: {message_text[:50]}{"..." if len(message_text) > 50 else ""}'
+        )
 
     return jsonify({
         'message': 'Message sent successfully',
