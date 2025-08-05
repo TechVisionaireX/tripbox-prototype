@@ -99,11 +99,11 @@ try:
 except Exception as e:
     print("FAILED to import fix_groups_bp:", e)
 
-try:
-    from live_location import live_location_bp
-    print("Imported live_location_bp successfully!")
-except Exception as e:
-    print("FAILED to import live_location_bp:", e)
+# try:
+#     from live_location import live_location_bp
+#     print("Imported live_location_bp successfully!")
+# except Exception as e:
+#     print("FAILED to import live_location_bp:", e)
 
 # try:
 #     from pdf_generator import pdf_generator_bp
@@ -188,14 +188,14 @@ try:
 except Exception as e:
     print(f"⚠️ Error registering AI Recommendations blueprint: {e}")
 # Register live location blueprint
-try:
-    if 'live_location_bp' in globals():
-        app.register_blueprint(live_location_bp)
-        print("✅ Live Location blueprint registered successfully")
-    else:
-        print("⚠️ Live Location blueprint not available - skipping registration")
-except Exception as e:
-    print(f"⚠️ Error registering Live Location blueprint: {e}")
+# try:
+#     if 'live_location_bp' in globals():
+#         app.register_blueprint(live_location_bp)
+#         print("✅ Live Location blueprint registered successfully")
+#     else:
+#         print("⚠️ Live Location blueprint not available - skipping registration")
+# except Exception as e:
+#     print(f"⚠️ Error registering Live Location blueprint: {e}")
 
 # Temporarily disabled new blueprints for deployment fix
 # app.register_blueprint(pdf_generator_bp)  # PDF Generation
